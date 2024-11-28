@@ -26,8 +26,12 @@ public class MultiplayerSessions : ModuleRules
 			new string[]
 			{
 				"Core",
-				"OnlineSubsystem",
-				"OnlineSubsystemSteam",
+                "CoreUObject",
+                "Engine",
+                "OnlineSubsystem",
+                "EnhancedInput",
+                "OnlineSubsystemUtils",
+                "OnlineSubsystemSteam",
 				"UMG",
 				"Slate",
 				"SlateCore"
