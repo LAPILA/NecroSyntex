@@ -25,6 +25,7 @@ public:
 	AWeapon();
 
 	virtual void Tick(float DeltaTime) override;
+	void ShowPickupWidget(bool bShoWidget);
 
 protected:
 	virtual void BeginPlay() override;
@@ -38,6 +39,14 @@ protected:
 		int32 OtherBoxIndex,
 		bool bFromSweap,
 		const FHitResult& SweepResult
+	);
+
+	UFUNCTION()
+	void OnShpereEndOverlap(
+		UPrimitiveComponent* OverlappedComponent,
+		AActor* OtherActor,
+		UPrimitiveComponent* OtherComp,
+		int32 OtherBoxIndex
 	);
 
 private:

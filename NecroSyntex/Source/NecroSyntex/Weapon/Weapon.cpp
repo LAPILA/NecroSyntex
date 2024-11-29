@@ -4,6 +4,7 @@
 #include "Weapon.h"
 #include "Components\WidgetComponent.h"
 #include "Components\SphereComponent.h"
+#include "NecroSyntex\Character\PlayerCharacter.h"
 
 // Sets default values
 AWeapon::AWeapon()
@@ -37,7 +38,18 @@ void AWeapon::BeginPlay()
 		AreaSphere->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 		AreaSphere->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Overlap);
 		AreaSphere->OnComponentBeginOverlap.AddDynamic(this, &AWeapon::OnSphereOverlap);
+		AreaSphere->OnComponentEndOverlap.AddDynamic(this, &AWeapon::OnShpereEndOverlap);
 	}
+	if (PickupWidget)
+	{
+		PickupWidget->SetVisibility(false);
+	}
+}
+
+void AWeapon::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+
 }
 
 void AWeapon::OnSphereOverlap(
@@ -49,12 +61,26 @@ void AWeapon::OnSphereOverlap(
 	const FHitResult& SweepResult
 )
 {
-
+	APlayerCharacter* PlayerCharacter = Cast<APlayerCharacter>(OtherActor);
+	if (PlayerCharacter && PickupWidget)
+	{
+		PlayerCharacter->SetOverlappingWeapon(this);
+	}
 }
 
-void AWeapon::Tick(float DeltaTime)
+void AWeapon::OnShpereEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBoxIndex)
 {
-	Super::Tick(DeltaTime);
-
+	APlayerCharacter* PlayerCharacter = Cast<APlayerCharacter>(OtherActor);
+	if (PlayerCharacter && PickupWidget)
+	{
+		PlayerCharacter->SetOverlappingWeapon(nullptr);
+	}
 }
 
+void AWeapon::ShowPickupWidget(bool bShoWidget)
+{
+	if (PickupWidget)
+	{
+		PickupWidget->SetVisibility(bShoWidget);
+	}
+}
