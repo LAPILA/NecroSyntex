@@ -16,11 +16,12 @@ class NECROSYNTEX_API APlayerCharacter : public ACharacter
 {
 	GENERATED_BODY()
 
+
 	/** MappingContext */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputMappingContext* DefaultMappingContext;
 
-	/** Movement Input */
+	/** Key Settings */
 	/*
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* JumpAction;
@@ -34,6 +35,12 @@ class NECROSYNTEX_API APlayerCharacter : public ACharacter
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* EquipAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UInputAction* CrouchAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UInputAction* AimAction;
 
 public:
     APlayerCharacter();
@@ -72,7 +79,13 @@ private:
 	UFUNCTION(Server, Reliable)
 	void ServerEquipButtonPressed();
 
+	//Key Settings
 	void EquipButtonPressed();
+	void CrouchButtonPressed();
+	void AimButtonPressed();
+	void AimButtonReleased();
 public:
 	void SetOverlappingWeapon(AWeapon* Weapon);
+	bool IsWeaponEquipped();
+	bool IsAiming();
 };

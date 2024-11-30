@@ -33,6 +33,8 @@ APlayerCharacter::APlayerCharacter()
 
 	Combat = CreateDefaultSubobject<UCombatComponent>(TEXT("CombatComponent"));
 	Combat->SetIsReplicated(true);
+
+	GetCharacterMovement()->NavAgentProps.bCanCrouch = true;
 }
 
 void APlayerCharacter::BeginPlay()
@@ -63,6 +65,9 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &APlayerCharacter::Move);
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &APlayerCharacter::Look);
 		EnhancedInputComponent->BindAction(EquipAction, ETriggerEvent::Triggered, this, &APlayerCharacter::EquipButtonPressed);
+		EnhancedInputComponent->BindAction(CrouchAction, ETriggerEvent::Started, this, &APlayerCharacter::CrouchButtonPressed);
+		EnhancedInputComponent->BindAction(AimAction, ETriggerEvent::Started, this, &APlayerCharacter::AimButtonPressed);
+		EnhancedInputComponent->BindAction(AimAction, ETriggerEvent::Completed, this, &APlayerCharacter::AimButtonReleased);
 	}
 }
 
@@ -125,6 +130,33 @@ void APlayerCharacter::EquipButtonPressed()
 	}
 }
 
+void APlayerCharacter::CrouchButtonPressed()
+{
+	if (bIsCrouched)
+	{
+		UnCrouch();
+	}
+	else
+	{
+		Crouch();
+	}
+}
+
+void APlayerCharacter::AimButtonPressed()
+{
+	if (Combat)
+	{
+		Combat->SetAiming(true);
+	}
+}
+void APlayerCharacter::AimButtonReleased()
+{
+	if (Combat)
+	{
+		Combat->SetAiming(false);
+	}
+}
+
 void APlayerCharacter::ServerEquipButtonPressed_Implementation()
 {
 	if (Combat)
@@ -159,4 +191,14 @@ void APlayerCharacter::SetOverlappingWeapon(AWeapon* Weapon)
 			OverlappingWeapon->ShowPickupWidget(true);
 		}
 	}
+}
+
+bool APlayerCharacter::IsWeaponEquipped()
+{
+	return (Combat && Combat->EquippedWeapon);
+}
+
+bool APlayerCharacter::IsAiming()
+{
+	return (Combat && Combat->bAiming);
 }
