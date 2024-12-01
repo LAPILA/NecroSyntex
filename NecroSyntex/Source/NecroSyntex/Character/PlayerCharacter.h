@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "Logging/LogMacros.h"
+#include "NecroSyntex/NecroSyntexType/TurningInPlace.h"
 #include "PlayerCharacter.generated.h"
 
 class UInputMappingContext;
@@ -41,6 +42,9 @@ class NECROSYNTEX_API APlayerCharacter : public ACharacter
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* AimAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UInputAction* SprintAction;
 
 public:
     APlayerCharacter();
@@ -85,15 +89,24 @@ private:
 	void AimButtonPressed();
 	void AimButtonReleased();
 	void AimOffset(float DeltaTime);
-public:
+	void SprintStart();
+	void SprintStop();
+
+	bool bIsSprinting;
 	float AO_Yaw;
 	float AO_Pitch;
+	float InterpAO_Yaw;
 	FRotator StartingAimRotation;
 
+	ETurningInPlace TurningInPlace;
+	void TurnInPlace(float DeltaTime);
+
+public:
 	void SetOverlappingWeapon(AWeapon* Weapon);
 	bool IsWeaponEquipped();
 	bool IsAiming();
 	FORCEINLINE float GetAO_Yaw() const { return AO_Yaw; }
 	FORCEINLINE float GetAO_Pitch() const { return AO_Pitch; }
 	AWeapon* GetEquippedWeapon();
+	FORCEINLINE ETurningInPlace GetTurningInPlace() const { return TurningInPlace; }
 };

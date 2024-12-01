@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Animation/AnimInstance.h"
+#include "NecroSyntex/NecroSyntexType/TurningInPlace.h"
 #include "PlayerAnimInstance.generated.h"
 
 /**
@@ -58,4 +59,6 @@ public:
 	float AO_Pitch;
 	UPROPERTY(BlueprintReadOnly, Category = Movement, meta = (AllowPrivateAccess = "true"))
 	FTransform LeftHandTransform;
+	UPROPERTY(BlueprintReadOnly, Category = Movement, meta = (AllowPrivateAccess = "true"))
+	ETurningInPlace TurningInPlace;
 };
