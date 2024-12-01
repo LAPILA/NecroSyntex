@@ -4,6 +4,8 @@
 #include "PlayerAnimInstance.h"
 #include "PlayerCharacter.h"
 #include "GameFramework\CharacterMovementComponent.h"
+#include "Kismet/KismetMathLibrary.h"
+#include "NecroSyntex\Weapon\Weapon.h"
 
 void UPlayerAnimInstance::NativeInitializeAnimation()
 {
@@ -46,4 +48,30 @@ void UPlayerAnimInstance::NativeUpdateAnimation(float DeltaTime)
 	bWeaponEquipped = PlayerCharacter->IsWeaponEquipped();
 	bIsCrouch = PlayerCharacter->bIsCrouched;
 	bAiming = PlayerCharacter->IsAiming();
+	EquippedWeapon = PlayerCharacter->GetEquippedWeapon();
+
+	FRotator AimRotation = PlayerCharacter->GetBaseAimRotation();
+	FRotator MovementRotation = UKismetMathLibrary::MakeRotFromX(PlayerCharacter->GetVelocity());
+	FRotator DeltaRot = UKismetMathLibrary::NormalizedDeltaRotator(MovementRotation, AimRotation);
+	DeltaRotation = FMath::RInterpTo(DeltaRotation, DeltaRot, DeltaTime, 6.f);
+	YawOffset = DeltaRotation.Yaw;
+	CharacterRotationLastFrame = CharacterRotation;
+	CharacterRotation = PlayerCharacter->GetActorRotation();
+	const FRotator Delta = UKismetMathLibrary::NormalizedDeltaRotator(CharacterRotation, CharacterRotationLastFrame);
+	const float Target = Delta.Yaw / DeltaTime;
+	const float Interp = FMath::FInterpTo(Lean, Target, DeltaTime, 6.f);
+	Lean = FMath::Clamp(Interp, -90.f, 90.f);
+
+	AO_Yaw = PlayerCharacter->GetAO_Yaw();
+	AO_Pitch = PlayerCharacter->GetAO_Pitch();
+
+	if (bWeaponEquipped && EquippedWeapon && EquippedWeapon->GetWeaponMesh() && PlayerCharacter->GetMesh())
+	{
+		LeftHandTransform = EquippedWeapon->GetWeaponMesh()->GetSocketTransform(FName("LeftHandSocket"), ERelativeTransformSpace::RTS_World);
+		FVector OutPosition;
+		FRotator OutRotation;
+		PlayerCharacter->GetMesh()->TransformToBoneSpace(FName("hand_r"), LeftHandTransform.GetLocation(), FRotator::ZeroRotator, OutPosition, OutRotation);
+		LeftHandTransform.SetLocation(OutPosition);
+		LeftHandTransform.SetRotation(FQuat(OutRotation));
+	}
 }
