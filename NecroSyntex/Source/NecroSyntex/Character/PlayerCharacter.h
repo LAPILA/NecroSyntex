@@ -59,12 +59,25 @@ public:
 	virtual void PostInitializeComponents() override;
 	void PlayFireMontage(bool bAiming);
 
+	UFUNCTION(NetMulticast, Unreliable)
+	void MulticastHit();
+
 protected:
     virtual void BeginPlay() override;
 
-	/** Movement Func*/
+	//Key Settings
 	void Move(const FInputActionValue& Value);
 	void Look(const FInputActionValue& Value);
+	void EquipButtonPressed();
+	void CrouchButtonPressed();
+	void AimButtonPressed();
+	void AimButtonReleased();
+	void AimOffset(float DeltaTime);
+	void SprintStart();
+	void SprintStop();
+	void FireButtonPressed();
+	void FireButtonReleased();
+	void PlayerHitReactMontage();
 
 private:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera", meta = (AllowPrivateAccess = "true"))
@@ -88,17 +101,6 @@ private:
 	UFUNCTION(Server, Reliable)
 	void ServerEquipButtonPressed();
 
-	//Key Settings
-	void EquipButtonPressed();
-	void CrouchButtonPressed();
-	void AimButtonPressed();
-	void AimButtonReleased();
-	void AimOffset(float DeltaTime);
-	void SprintStart();
-	void SprintStop();
-	void FireButtonPressed();
-	void FireButtonReleased();
-
 	bool bIsSprinting;
 	float AO_Yaw;
 	float AO_Pitch;
@@ -111,7 +113,8 @@ private:
 	UPROPERTY(EditAnywhere, Category = Combat)
 	class UAnimMontage* FireWeaponMontage;
 
-
+	UPROPERTY(EditAnywhere, Category = Combat)
+	UAnimMontage* HitReactMontage;
 public:
 	void SetOverlappingWeapon(AWeapon* Weapon);
 	bool IsWeaponEquipped();
