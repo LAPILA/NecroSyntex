@@ -2,6 +2,24 @@
 
 
 #include "NecroSyntexHud.h"
+#include "GameFramework/PlayerController.h"
+#include "CharacterOverlay.h"
+
+void ANecroSyntexHud::BeginPlay()
+{
+	Super::BeginPlay();
+	AddCharacterOverlay();
+}
+
+void ANecroSyntexHud::AddCharacterOverlay()
+{
+	APlayerController* PlayerController = GetOwningPlayerController();
+	if (PlayerController && CharacterOverlayClass)
+	{
+		CharacterOverlay = CreateWidget<UCharacterOverlay>(PlayerController, CharacterOverlayClass);
+		CharacterOverlay->AddToViewport();
+	}
+}
 
 void ANecroSyntexHud::DrawHUD()
 {

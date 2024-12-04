@@ -15,6 +15,7 @@
 #include "Kismet/KismetMathLibrary.h"
 #include "PlayerAnimInstance.h"
 #include "NecroSyntex\NecroSyntex.h"
+#include "NecroSyntex\PlayerController\NecroSyntexPlayerController.h"
 
 APlayerCharacter::APlayerCharacter()
 {
@@ -69,6 +70,13 @@ void APlayerCharacter::BeginPlay()
 			ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
 			SubSystem->AddMappingContext(DefaultMappingContext, 0);
 	}
+	NecroSyntexPlayerController = Cast<ANecroSyntexPlayerController>(Controller);
+	if (NecroSyntexPlayerController)
+	{
+		NecroSyntexPlayerController->SetHUDHealth(Health, MaxHealth);
+		NecroSyntexPlayerController->SetHUDShield(Sheild, MaxSheild);
+	}
+	
 }
 
 void APlayerCharacter::Tick(float DeltaTime)
@@ -124,6 +132,8 @@ void APlayerCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 	//Net 복제를위해 매크로 사용, 소유주 전용
 	DOREPLIFETIME_CONDITION(APlayerCharacter, OverlappingWeapon,COND_OwnerOnly);
+	DOREPLIFETIME(APlayerCharacter, Health);
+	DOREPLIFETIME(APlayerCharacter, Sheild);
 }
 
 void APlayerCharacter::PlayFireMontage(bool bAiming)
@@ -362,6 +372,16 @@ void APlayerCharacter::SimProxiesTurn()
 void APlayerCharacter::MulticastHit_Implementation()
 {
 	PlayerHitReactMontage();
+}
+
+void APlayerCharacter::OnRep_Health()
+{
+
+}
+
+void APlayerCharacter::OnRep_Sheild()
+{
+
 }
 
 void APlayerCharacter::SetOverlappingWeapon(AWeapon* Weapon)

@@ -13,5 +13,11 @@ UCLASS()
 class NECROSYNTEX_API ANecroSyntexPlayerController : public APlayerController
 {
 	GENERATED_BODY()
-	
+public:
+	void SetHUDHealth(float Health, float MaxHealth);
+	void SetHUDShield(float Shield, float MaxShield);
+protected:
+	virtual void BeginPlay() override;
+private:
+	class ANecroSyntexHud* NecroSyntexHUD;
 };
