@@ -51,6 +51,7 @@ void UPlayerAnimInstance::NativeUpdateAnimation(float DeltaTime)
 	bAiming = PlayerCharacter->IsAiming();
 	EquippedWeapon = PlayerCharacter->GetEquippedWeapon();
 	TurningInPlace = PlayerCharacter->GetTurningInPlace();
+	bRotateRootBone = PlayerCharacter->ShouldRotateRootBone();
 
 	FRotator AimRotation = PlayerCharacter->GetBaseAimRotation();
 	FRotator MovementRotation = UKismetMathLibrary::MakeRotFromX(PlayerCharacter->GetVelocity());
