@@ -92,6 +92,7 @@ void APlayerCharacter::PostInitializeComponents()
 	Super::PostInitializeComponents();
 	if (Combat)
 	{
+		Combat->PrimaryComponentTick.bCanEverTick = true;
 		Combat->Character = this;
 	}
 }
@@ -329,4 +330,10 @@ void APlayerCharacter::TurnInPlace(float DeltaTime)
 			StartingAimRotation = FRotator(0.f, GetBaseAimRotation().Yaw, 0.f);
 		}
 	}
+}
+
+FVector APlayerCharacter::GetHitTarget() const
+{
+	if (Combat == nullptr) return FVector();
+	return Combat->HitTarget;
 }

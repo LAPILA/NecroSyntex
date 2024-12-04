@@ -31,6 +31,7 @@ AProjectile::AProjectile()
 void AProjectile::BeginPlay()
 {
 	Super::BeginPlay();
+
 	if (Tracer)
 	{
 		TracerComponent = UGameplayStatics::SpawnEmitterAttached(
@@ -42,17 +43,7 @@ void AProjectile::BeginPlay()
 			EAttachLocation::KeepWorldPosition
 		);
 	}
-	// 투사체의 방향과 속도를 동기화
-	FVector LaunchDirection = GetActorForwardVector(); // Actor의 정면 방향
-	if (!InitialDirection.IsNearlyZero())
-	{
-		LaunchDirection = InitialDirection.GetSafeNormal(); // 설정된 초기 방향 우선 사용
-	}
-	ProjectileMovementComponent->Velocity = LaunchDirection * InitialSpeed;
 
-	// 디버그 로그 (방향과 속도 확인)
-	UE_LOG(LogTemp, Warning, TEXT("Projectile Velocity: %s"), *ProjectileMovementComponent->Velocity.ToString());
-	UE_LOG(LogTemp, Warning, TEXT("Projectile Forward Vector: %s"), *LaunchDirection.ToString());
 	if (HasAuthority())
 	{
 		CollisionBox->OnComponentHit.AddDynamic(this, &AProjectile::OnHit);
