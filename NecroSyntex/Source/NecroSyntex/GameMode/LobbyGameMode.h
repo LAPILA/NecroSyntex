@@ -15,5 +15,14 @@ class NECROSYNTEX_API ALobbyGameMode : public AGameMode
 	GENERATED_BODY()
 	
 public:
+	ALobbyGameMode();
+
 	virtual void PostLogin(APlayerController* NewPlayer) override;
+
+protected:
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Game Mode")
+	int32 RequiredNumberOfPlayers;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Game Mode")
+	FString DestinationMapPath;
 };
