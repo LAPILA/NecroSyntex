@@ -6,6 +6,7 @@
 #include "GameFramework/Character.h"
 #include "Logging/LogMacros.h"
 #include "NecroSyntex/NecroSyntexType/TurningInPlace.h"
+#include "NecroSyntex/Interfaces/InteractWithCrossHairsInterface.h"
 #include "PlayerCharacter.generated.h"
 
 class UInputMappingContext;
@@ -13,7 +14,7 @@ class UInputAction;
 struct FInputActionValue;
 
 UCLASS()
-class NECROSYNTEX_API APlayerCharacter : public ACharacter
+class NECROSYNTEX_API APlayerCharacter : public ACharacter, public IInteractWithCrossHairsInterface
 {
 	GENERATED_BODY()
 
@@ -110,6 +111,7 @@ private:
 	UPROPERTY(EditAnywhere, Category = Combat)
 	class UAnimMontage* FireWeaponMontage;
 
+
 public:
 	void SetOverlappingWeapon(AWeapon* Weapon);
 	bool IsWeaponEquipped();
@@ -119,4 +121,5 @@ public:
 	AWeapon* GetEquippedWeapon();
 	FORCEINLINE ETurningInPlace GetTurningInPlace() const { return TurningInPlace; }
 	FVector GetHitTarget() const;
+	FORCEINLINE UCameraComponent* GetFollowCamera() const { return FollowCamera; }
 };
