@@ -36,9 +36,9 @@ protected:
 	void FireButtonPressed(bool bPressed);
 
 	UFUNCTION(Server, Reliable)
-	void ServerFire();
+	void ServerFire(const FVector_NetQuantize& TraceHitTarget);
 	UFUNCTION(NetMulticast, Reliable)
-	void MulticastFire();
+	void MulticastFire(const FVector_NetQuantize& TraceHitTarget);
 
 	void TraceUnderCrosshairs(FHitResult& TraceHitResult);
 private:
@@ -57,6 +57,4 @@ private:
 	float AimWalkSpeed;
 
 	bool bFireButtonPressed;
-
-	FVector HitTarget;
 };

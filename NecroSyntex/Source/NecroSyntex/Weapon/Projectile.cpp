@@ -4,6 +4,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "Particles/ParticleSystemComponent.h"
 #include "Particles/ParticleSystem.h"
+#include "Sound/SoundCue.h"
 
 AProjectile::AProjectile()
 {
@@ -52,8 +53,29 @@ void AProjectile::BeginPlay()
 	// 디버그 로그 (방향과 속도 확인)
 	UE_LOG(LogTemp, Warning, TEXT("Projectile Velocity: %s"), *ProjectileMovementComponent->Velocity.ToString());
 	UE_LOG(LogTemp, Warning, TEXT("Projectile Forward Vector: %s"), *LaunchDirection.ToString());
+	if (HasAuthority())
+	{
+		CollisionBox->OnComponentHit.AddDynamic(this, &AProjectile::OnHit);
+	}
 }
 
+void AProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
+{
+	Destroy();
+}
+
+void AProjectile::Destroyed()
+{
+	Super::Destroyed();
+	if (ImpactParticles)
+	{
+		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ImpactParticles, GetActorTransform());
+	}
+	if (ImpactSound)
+	{
+		UGameplayStatics::PlaySoundAtLocation(this, ImpactSound, GetActorLocation());
+	}
+}
 
 void AProjectile::Tick(float DeltaTime)
 {
