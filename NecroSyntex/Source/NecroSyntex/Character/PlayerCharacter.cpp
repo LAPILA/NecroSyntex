@@ -70,13 +70,12 @@ void APlayerCharacter::BeginPlay()
 			ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
 			SubSystem->AddMappingContext(DefaultMappingContext, 0);
 	}
-	NecroSyntexPlayerController = Cast<ANecroSyntexPlayerController>(Controller);
-	if (NecroSyntexPlayerController)
+	UpdateHUDShield();
+	UpdateHUDHealth();
+	if (HasAuthority())
 	{
-		NecroSyntexPlayerController->SetHUDHealth(Health, MaxHealth);
-		NecroSyntexPlayerController->SetHUDShield(Sheild, MaxSheild);
+		OnTakeAnyDamage.AddDynamic(this, &APlayerCharacter::ReceiveDamage);
 	}
-	
 }
 
 void APlayerCharacter::Tick(float DeltaTime)
@@ -133,7 +132,7 @@ void APlayerCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 	//Net 복제를위해 매크로 사용, 소유주 전용
 	DOREPLIFETIME_CONDITION(APlayerCharacter, OverlappingWeapon,COND_OwnerOnly);
 	DOREPLIFETIME(APlayerCharacter, Health);
-	DOREPLIFETIME(APlayerCharacter, Sheild);
+	DOREPLIFETIME(APlayerCharacter, Shield);
 }
 
 void APlayerCharacter::PlayFireMontage(bool bAiming)
@@ -158,6 +157,31 @@ void APlayerCharacter::PlayerHitReactMontage()
 		AnimInstance->Montage_Play(FireWeaponMontage);
 		FName SectionName("FromFront");
 		AnimInstance->Montage_JumpToSection(SectionName);
+	}
+}
+
+void APlayerCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, AController* InstigatorController, AActor* DamageCauser)
+{
+	if (Shield > 0)
+	{
+		float NewShieldValue = FMath::Clamp(Shield - Damage, 0.f, MaxShield);
+
+		if (NewShieldValue == 0 && Shield != 0)
+		{
+			Shield = 0;
+			UpdateHUDShield();
+		}
+		else if (NewShieldValue > 0)
+		{
+			Shield = NewShieldValue;
+			UpdateHUDShield();
+		}
+	}
+	else
+	{
+		Health = FMath::Clamp(Health - Damage, 0.f, MaxHealth);
+		UpdateHUDHealth();
+		PlayerHitReactMontage();
 	}
 }
 
@@ -251,7 +275,7 @@ void APlayerCharacter::SprintStop()
 
 void APlayerCharacter::FireButtonPressed(const FInputActionValue& Value)
 {
-	if (Combat)
+	if (Combat && Combat->EquippedWeapon)
 	{
 		Combat->FireButtonPressed(true);
 	}
@@ -259,7 +283,7 @@ void APlayerCharacter::FireButtonPressed(const FInputActionValue& Value)
 
 void APlayerCharacter::FireButtonReleased(const FInputActionValue& Value)
 {
-	if (Combat)
+	if (Combat && Combat->EquippedWeapon)
 	{
 		Combat->FireButtonPressed(false);
 	}
@@ -369,19 +393,34 @@ void APlayerCharacter::SimProxiesTurn()
 	TurningInPlace = ETurningInPlace::ETIP_NotTurning;
 }
 
-void APlayerCharacter::MulticastHit_Implementation()
+void APlayerCharacter::OnRep_Health()
 {
+	UpdateHUDHealth();
 	PlayerHitReactMontage();
 }
 
-void APlayerCharacter::OnRep_Health()
+void APlayerCharacter::UpdateHUDHealth()
 {
-
+	NecroSyntexPlayerController = NecroSyntexPlayerController == nullptr ? Cast<ANecroSyntexPlayerController>(Controller) : NecroSyntexPlayerController;
+	if (NecroSyntexPlayerController)
+	{
+		NecroSyntexPlayerController->SetHUDHealth(Health, MaxHealth);
+	}
 }
 
-void APlayerCharacter::OnRep_Sheild()
+void APlayerCharacter::OnRep_Shield()
 {
+	UpdateHUDShield();
+	PlayerHitReactMontage();
+}
 
+void APlayerCharacter::UpdateHUDShield()
+{
+	NecroSyntexPlayerController = NecroSyntexPlayerController == nullptr ? Cast<ANecroSyntexPlayerController>(Controller) : NecroSyntexPlayerController;
+	if (NecroSyntexPlayerController)
+	{
+		NecroSyntexPlayerController->SetHUDShield(Shield, MaxShield);
+	}
 }
 
 void APlayerCharacter::SetOverlappingWeapon(AWeapon* Weapon)

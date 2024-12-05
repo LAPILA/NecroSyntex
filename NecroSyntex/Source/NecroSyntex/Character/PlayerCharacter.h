@@ -58,8 +58,6 @@ public:
 	virtual void PostInitializeComponents() override;
 	void PlayFireMontage(bool bAiming);
 
-	UFUNCTION(NetMulticast, Unreliable)
-	void MulticastHit();
 	virtual void OnRep_ReplicatedMovement() override;
 protected:
     virtual void BeginPlay() override;
@@ -80,6 +78,10 @@ protected:
 	void FireButtonReleased(const FInputActionValue& Value);
 	void PlayerHitReactMontage();
 
+	UFUNCTION()
+	void ReceiveDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, class AController* InstigatorController, AActor* DamageCauser);
+	void UpdateHUDHealth();
+	void UpdateHUDShield();
 private:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera", meta = (AllowPrivateAccess = "true"))
     class USpringArmComponent* CameraBoom;
@@ -139,11 +141,11 @@ private:
 	* Player sheild
 	*/
 	UPROPERTY(EditAnywhere, Category = "Player Stats")
-	float MaxSheild = 200.f;
-	UPROPERTY(ReplicatedUsing = OnRep_Sheild, VisibleAnywhere, Category = "Player Stats")
-	float Sheild = 200.f;
+	float MaxShield = 200.f;
+	UPROPERTY(ReplicatedUsing = OnRep_Shield, VisibleAnywhere, Category = "Player Stats")
+	float Shield = 200.f;
 	UFUNCTION()
-	void OnRep_Sheild();
+	void OnRep_Shield();
 
 public:
 	void SetOverlappingWeapon(AWeapon* Weapon);
