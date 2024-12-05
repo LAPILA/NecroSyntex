@@ -168,6 +168,7 @@ void APlayerCharacter::PlayerHitReactMontage()
 
 void APlayerCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, AController* InstigatorController, AActor* DamageCauser)
 {
+	PlayerHitReactMontage();
 	if (Shield > 0)
 	{
 		float NewShieldValue = FMath::Clamp(Shield - Damage, 0.f, MaxShield);
@@ -187,7 +188,6 @@ void APlayerCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, const U
 	{
 		Health = FMath::Clamp(Health - Damage, 0.f, MaxHealth);
 		UpdateHUDHealth();
-		PlayerHitReactMontage();
 	}
 }
 
