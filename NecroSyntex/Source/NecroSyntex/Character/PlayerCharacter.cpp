@@ -16,6 +16,7 @@
 #include "PlayerAnimInstance.h"
 #include "NecroSyntex\NecroSyntex.h"
 #include "NecroSyntex\PlayerController\NecroSyntexPlayerController.h"
+#include "NecroSyntex\GameMode\NecroSyntexGameMode.h"
 
 APlayerCharacter::APlayerCharacter()
 {
@@ -58,6 +59,11 @@ void APlayerCharacter::OnRep_ReplicatedMovement()
 	Super::OnRep_ReplicatedMovement();
 	SimProxiesTurn();
 	TimeSinceLastMovementReplication = 0.f;
+}
+
+void APlayerCharacter::Elim()
+{
+
 }
 
 void APlayerCharacter::BeginPlay()
@@ -397,6 +403,17 @@ void APlayerCharacter::OnRep_Health()
 {
 	UpdateHUDHealth();
 	PlayerHitReactMontage();
+
+	if (Health == 0.0f)
+	{
+		ANecroSyntexGameMode* NecroSyntexGameMode = GetWorld()->GetAuthGameMode<ANecroSyntexGameMode>();
+		if (NecroSyntexGameMode)
+		{
+			NecroSyntexPlayerController = NecroSyntexPlayerController == nullptr ? Cast<ANecroSyntexPlayerController>(Controller) : NecroSyntexPlayerController;
+			ANecroSyntexPlayerController* AttackerController = Cast<ANecroSyntexPlayerController>(GetInstigatorController());
+			NecroSyntexGameMode->PlayerEliminated(this, NecroSyntexPlayerController, AttackerController);
+		}
+	}
 }
 
 void APlayerCharacter::UpdateHUDHealth()
