@@ -28,6 +28,7 @@ public:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	void ShowPickupWidget(bool bShoWidget);
 	virtual void Fire(const FVector& HitTarget);
+	void Dropped();
 
 	/*
 	* Cross Hair Texture

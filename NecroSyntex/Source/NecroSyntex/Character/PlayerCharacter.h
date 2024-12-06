@@ -6,6 +6,8 @@
 #include "GameFramework/Character.h"
 #include "Logging/LogMacros.h"
 #include "NecroSyntex/NecroSyntexType/TurningInPlace.h"
+#include "NiagaraFunctionLibrary.h"
+#include "NiagaraComponent.h"
 #include "NecroSyntex/Interfaces/InteractWithCrossHairsInterface.h"
 #include "PlayerCharacter.generated.h"
 
@@ -161,6 +163,18 @@ private:
 	void ElimTimerFinished();
 
 	class ANecroSyntexPlayerController* NecroSyntexPlayerController;
+
+	/**
+	* Dissolve effect
+	*/
+
+	UPROPERTY(VisibleAnywhere, Category = "Effects")
+	UNiagaraComponent* DissolveEffectComponent;
+
+	UFUNCTION()
+	void ActivateDissolveEffect();
+
+
 public:
 	void SetOverlappingWeapon(AWeapon* Weapon);
 	bool IsWeaponEquipped();

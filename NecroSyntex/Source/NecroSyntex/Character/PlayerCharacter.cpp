@@ -18,6 +18,7 @@
 #include "NecroSyntex\PlayerController\NecroSyntexPlayerController.h"
 #include "NecroSyntex\GameMode\NecroSyntexGameMode.h"
 #include "TimerManager.h"
+#include "NiagaraSystem.h"
 
 APlayerCharacter::APlayerCharacter()
 {
@@ -53,6 +54,8 @@ APlayerCharacter::APlayerCharacter()
 	NetUpdateFrequency = 66.0f;
 	MinNetUpdateFrequency = 33.0f;
 
+	DissolveEffectComponent = CreateDefaultSubobject<UNiagaraComponent>(TEXT("DissolveEffectComponent"));
+	DissolveEffectComponent->SetupAttachment(GetMesh());
 }
 
 void APlayerCharacter::OnRep_ReplicatedMovement()
@@ -64,6 +67,10 @@ void APlayerCharacter::OnRep_ReplicatedMovement()
 
 void APlayerCharacter::Elim()
 {
+	if (Combat && Combat->EquippedWeapon)
+	{
+		Combat->EquippedWeapon->Dropped();
+	}
 	MulticastElim();
 	GetWorldTimerManager().SetTimer(
 		ElimTimer,
@@ -77,6 +84,22 @@ void APlayerCharacter::MulticastElim_Implementation()
 {
 	bElimed = true;
 	PlayElimMontage();
+
+	if (DissolveEffectComponent)
+	{
+		ActivateDissolveEffect();
+	}
+
+	// Disable character movement
+	GetCharacterMovement()->DisableMovement();
+	GetCharacterMovement()->StopMovementImmediately();
+	if (NecroSyntexPlayerController)
+	{
+		DisableInput(NecroSyntexPlayerController);
+	}
+	// Disable collision
+	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	GetMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 }
 
 void APlayerCharacter::ElimTimerFinished()
@@ -472,6 +495,14 @@ void APlayerCharacter::UpdateHUDShield()
 	if (NecroSyntexPlayerController)
 	{
 		NecroSyntexPlayerController->SetHUDShield(Shield, MaxShield);
+	}
+}
+
+void APlayerCharacter::ActivateDissolveEffect()
+{
+	if (DissolveEffectComponent && !DissolveEffectComponent->IsActive())
+	{
+		DissolveEffectComponent->Activate(true);
 	}
 }
 
