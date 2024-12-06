@@ -195,7 +195,7 @@ void APlayerCharacter::PlayFireMontage(bool bAiming)
 {
 	if (Combat == nullptr || Combat->EquippedWeapon == nullptr) return;
 	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
-	if (AnimInstance && FireWeaponMontage)
+	if (AnimInstance && FireWeaponMontage && HitReactMontage && !bElimed)
 	{
 		AnimInstance->Montage_Play(FireWeaponMontage);
 		FName SectionName;
@@ -209,7 +209,12 @@ void APlayerCharacter::PlayElimMontage()
 	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
 	if (AnimInstance && ElimMongatge)
 	{
+
 		AnimInstance->Montage_Play(ElimMongatge);
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("NecroSyntexGamemode cannot find"));
 	}
 }
 
@@ -217,7 +222,7 @@ void APlayerCharacter::PlayerHitReactMontage()
 {
 	if (Combat == nullptr || Combat->EquippedWeapon == nullptr) return;
 	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
-	if (AnimInstance && HitReactMontage)
+	if (AnimInstance && HitReactMontage && !AnimInstance->IsAnyMontagePlaying())
 	{
 		AnimInstance->Montage_Play(FireWeaponMontage);
 		FName SectionName("FromFront");
