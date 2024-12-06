@@ -5,6 +5,7 @@
 #include "NecroSyntex\Character\PlayerCharacter.h"
 #include "NecroSyntex\PlayerController\NecroSyntexPlayerController.h"
 
-void ANecroSyntexGameMode::PlayerEliminated(APlayerCharacter* ElimmedCharacter, ANecroSyntexPlayerController* VictimController, ANecroSyntexPlayerController* AttackerController)
+void ANecroSyntexGameMode::PlayerEliminated(APlayerCharacter* ElimmedCharacter, ANecroSyntexPlayerController* VictimController, ANecroSyntexPlayerController* AttackController)
 {
+
 }

@@ -63,7 +63,7 @@ void APlayerCharacter::OnRep_ReplicatedMovement()
 
 void APlayerCharacter::Elim()
 {
-
+	
 }
 
 void APlayerCharacter::BeginPlay()
@@ -188,6 +188,21 @@ void APlayerCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, const U
 	{
 		Health = FMath::Clamp(Health - Damage, 0.f, MaxHealth);
 		UpdateHUDHealth();
+
+		if (Health == 0.0f)
+		{
+			ANecroSyntexGameMode* NecroSyntexGameMode = GetWorld()->GetAuthGameMode<ANecroSyntexGameMode>();
+			if (NecroSyntexGameMode)
+			{
+				NecroSyntexPlayerController = NecroSyntexPlayerController == nullptr ? Cast<ANecroSyntexPlayerController>(Controller) : NecroSyntexPlayerController;
+				ANecroSyntexPlayerController* AttackerController = Cast<ANecroSyntexPlayerController>(InstigatorController);
+				NecroSyntexGameMode->PlayerEliminated(this, NecroSyntexPlayerController, AttackerController);
+			}
+			else
+			{
+				UE_LOG(LogTemp, Warning, TEXT("NecroSyntexGamemode cannot find"));
+			}
+		}
 	}
 }
 
@@ -403,17 +418,6 @@ void APlayerCharacter::OnRep_Health()
 {
 	UpdateHUDHealth();
 	PlayerHitReactMontage();
-
-	if (Health == 0.0f)
-	{
-		ANecroSyntexGameMode* NecroSyntexGameMode = GetWorld()->GetAuthGameMode<ANecroSyntexGameMode>();
-		if (NecroSyntexGameMode)
-		{
-			NecroSyntexPlayerController = NecroSyntexPlayerController == nullptr ? Cast<ANecroSyntexPlayerController>(Controller) : NecroSyntexPlayerController;
-			ANecroSyntexPlayerController* AttackerController = Cast<ANecroSyntexPlayerController>(GetInstigatorController());
-			NecroSyntexGameMode->PlayerEliminated(this, NecroSyntexPlayerController, AttackerController);
-		}
-	}
 }
 
 void APlayerCharacter::UpdateHUDHealth()
