@@ -6,6 +6,7 @@
 #include "NecroSyntex/HUD\CharacterOverlay.h"
 #include "Components\Image.h"
 #include "Components/TextBlock.h"
+#include "Necrosyntex\Character\PlayerCharacter.h"
 
 void ANecroSyntexPlayerController::BeginPlay()
 {
@@ -42,5 +43,16 @@ void ANecroSyntexPlayerController::SetHUDShield(float Shield, float MaxShield)
 		{
 			ShieldBarMaterial->SetScalarParameterValue(FName("Percentage"), ShieldPercent);
 		}
+	}
+}
+
+void ANecroSyntexPlayerController::OnPossess(APawn* InPawn)
+{
+	Super::OnPossess(InPawn);
+	APlayerCharacter* PlayerCharacter = Cast<APlayerCharacter>(InPawn);
+	if (PlayerCharacter)
+	{
+		SetHUDHealth(PlayerCharacter->GetHealth(), PlayerCharacter->GetMaxHealth());
+		SetHUDShield(PlayerCharacter->GetShield(), PlayerCharacter->GetMaxShield());
 	}
 }

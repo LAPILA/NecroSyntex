@@ -111,6 +111,11 @@ void APlayerCharacter::ElimTimerFinished()
 	}
 }
 
+void APlayerCharacter::Destroyed()
+{
+	Super::Destroyed();
+}
+
 void APlayerCharacter::BeginPlay()
 {
 	Super::BeginPlay();
