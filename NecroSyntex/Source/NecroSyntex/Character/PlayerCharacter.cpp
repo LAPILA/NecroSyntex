@@ -17,6 +17,7 @@
 #include "NecroSyntex\NecroSyntex.h"
 #include "NecroSyntex\PlayerController\NecroSyntexPlayerController.h"
 #include "NecroSyntex\GameMode\NecroSyntexGameMode.h"
+#include "TimerManager.h"
 
 APlayerCharacter::APlayerCharacter()
 {
@@ -61,10 +62,30 @@ void APlayerCharacter::OnRep_ReplicatedMovement()
 	TimeSinceLastMovementReplication = 0.f;
 }
 
-void APlayerCharacter::Elim_Implementation()
+void APlayerCharacter::Elim()
+{
+	MulticastElim();
+	GetWorldTimerManager().SetTimer(
+		ElimTimer,
+		this,
+		&APlayerCharacter::ElimTimerFinished,
+		ElimDelay
+	);
+}
+
+void APlayerCharacter::MulticastElim_Implementation()
 {
 	bElimed = true;
 	PlayElimMontage();
+}
+
+void APlayerCharacter::ElimTimerFinished()
+{
+	ANecroSyntexGameMode* NecroSyntexGameMode = GetWorld()->GetAuthGameMode<ANecroSyntexGameMode>();
+	if (NecroSyntexGameMode)
+	{
+		NecroSyntexGameMode->RequestRespawn(this, Controller);
+	}
 }
 
 void APlayerCharacter::BeginPlay()

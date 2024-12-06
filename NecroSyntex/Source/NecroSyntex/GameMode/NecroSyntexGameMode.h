@@ -16,4 +16,5 @@ class NECROSYNTEX_API ANecroSyntexGameMode : public AGameMode
 	
 public:
 	virtual void PlayerEliminated(class APlayerCharacter* ElimmedCharacter, class ANecroSyntexPlayerController* VictimController, class ANecroSyntexPlayerController* AttackController);
+	virtual void RequestRespawn(ACharacter* ElimmedCharacter, AController* ElimmedController);
 };
