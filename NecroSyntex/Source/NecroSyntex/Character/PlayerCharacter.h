@@ -51,6 +51,9 @@ class NECROSYNTEX_API APlayerCharacter : public ACharacter, public IInteractWith
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* FireAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UInputAction* FlashAction;
 public:
     APlayerCharacter();
 
@@ -83,6 +86,7 @@ protected:
 	void SprintStop();
 	void FireButtonPressed(const FInputActionValue& Value);
 	void FireButtonReleased(const FInputActionValue& Value);
+	void FlashButtonPressed();
 	void PlayerHitReactMontage();
 
 	UFUNCTION()

@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
+#include "Components/Image.h"
 #include "CharacterOverlay.generated.h"
 
 /**
@@ -19,4 +20,10 @@ public:
 	class UImage* HealthBar;
 	UPROPERTY(meta = (BindWidget))
 	class UImage* ShieldBar;
+
+	UPROPERTY(meta = (BindWidget))
+	UImage* UIHitEffect;
+
+	UPROPERTY(meta = (BindWidget))
+	UImage* UISkillPosEffect;
 };

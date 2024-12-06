@@ -169,6 +169,7 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 		EnhancedInputComponent->BindAction(SprintAction, ETriggerEvent::Completed, this, &APlayerCharacter::SprintStop);
 		EnhancedInputComponent->BindAction(FireAction, ETriggerEvent::Started, this, &APlayerCharacter::FireButtonPressed);
 		EnhancedInputComponent->BindAction(FireAction, ETriggerEvent::Completed, this, &APlayerCharacter::FireButtonReleased);
+		EnhancedInputComponent->BindAction(FlashAction, ETriggerEvent::Triggered, this, &APlayerCharacter::FlashButtonPressed);
 	}
 }
 
@@ -372,6 +373,11 @@ void APlayerCharacter::FireButtonReleased(const FInputActionValue& Value)
 	{
 		Combat->FireButtonPressed(false);
 	}
+}
+
+void APlayerCharacter::FlashButtonPressed()
+{
+
 }
 
 void APlayerCharacter::ServerEquipButtonPressed_Implementation()
