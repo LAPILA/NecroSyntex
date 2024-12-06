@@ -7,5 +7,8 @@
 
 void ANecroSyntexGameMode::PlayerEliminated(APlayerCharacter* ElimmedCharacter, ANecroSyntexPlayerController* VictimController, ANecroSyntexPlayerController* AttackController)
 {
-
+	if (ElimmedCharacter)
+	{
+		ElimmedCharacter->Elim();
+	}
 }

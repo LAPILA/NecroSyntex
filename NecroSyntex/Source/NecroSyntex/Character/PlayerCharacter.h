@@ -57,8 +57,10 @@ public:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	virtual void PostInitializeComponents() override;
 	void PlayFireMontage(bool bAiming);
+	void PlayElimMontage();
 	virtual void OnRep_ReplicatedMovement() override;
 
+	UFUNCTION(NetMulticast, Reliable)
 	void Elim();
 protected:
     virtual void BeginPlay() override;
@@ -120,6 +122,9 @@ private:
 	UPROPERTY(EditAnywhere, Category = Combat)
 	UAnimMontage* HitReactMontage;
 
+	UPROPERTY(EditAnywhere, Category = Combat)
+	UAnimMontage* ElimMongatge;
+
 	bool bRotateRootBone;
 	float TurnThreshold = 0.5f;
 	FRotator ProxyRotationLastFrame;
@@ -137,7 +142,6 @@ private:
 	float Health = 100.f;
 	UFUNCTION()
 	void OnRep_Health();
-	class ANecroSyntexPlayerController* NecroSyntexPlayerController;
 	/**
 	* Player sheild
 	*/
@@ -148,6 +152,8 @@ private:
 	UFUNCTION()
 	void OnRep_Shield();
 
+	bool bElimed = false;
+	class ANecroSyntexPlayerController* NecroSyntexPlayerController;
 public:
 	void SetOverlappingWeapon(AWeapon* Weapon);
 	bool IsWeaponEquipped();
@@ -159,4 +165,5 @@ public:
 	FVector GetHitTarget() const;
 	FORCEINLINE UCameraComponent* GetFollowCamera() const { return FollowCamera; }
 	FORCEINLINE bool ShouldRotateRootBone() const { return bRotateRootBone; }
+	FORCEINLINE bool IsElimed() const { return bElimed; }
 };
