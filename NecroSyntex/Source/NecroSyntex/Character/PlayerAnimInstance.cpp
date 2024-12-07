@@ -5,7 +5,8 @@
 #include "PlayerCharacter.h"
 #include "GameFramework\CharacterMovementComponent.h"
 #include "Kismet/KismetMathLibrary.h"
-#include "NecroSyntex\Weapon\Weapon.h"
+#include "NecroSyntex/Weapon/Weapon.h"
+#include "NecroSyntex/NecroSyntexType/CombatState.h"
 
 void UPlayerAnimInstance::NativeInitializeAnimation()
 {
@@ -78,7 +79,6 @@ void UPlayerAnimInstance::NativeUpdateAnimation(float DeltaTime)
 		LeftHandTransform.SetLocation(OutPosition);
 		LeftHandTransform.SetRotation(FQuat(OutRotation));
 
-
 		/*
 		if (PlayerCharacter->IsLocallyControlled())
 		{
@@ -90,4 +90,6 @@ void UPlayerAnimInstance::NativeUpdateAnimation(float DeltaTime)
 		}
 		*/
 	}
+
+	bUseFABRIK = PlayerCharacter->GetCombatState() != ECombatState::ECS_Reloading;
 }

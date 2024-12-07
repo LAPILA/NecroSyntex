@@ -4,8 +4,9 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
-#include "NecroSyntex\HUD\NecroSyntexHud.h"
+#include "NecroSyntex/HUD/NecroSyntexHud.h"
 #include "NecroSyntex/Weapon/WeaponTypes.h"
+#include "NecroSyntex/NecroSyntexType/CombatState.h"
 #include "CombatComponent.generated.h"
 
 //길이 설정 맘대루
@@ -25,6 +26,8 @@ public:
 
 	void EquipWeapon(class AWeapon* WeaponToEquip);
 	void Reload();
+	UFUNCTION(BlueprintCallable)
+	void FinishReloading();
 
 protected:
 	virtual void BeginPlay() override;
@@ -42,6 +45,7 @@ protected:
 
 	UFUNCTION(Server, Reliable)
 	void ServerFire(const FVector_NetQuantize& TraceHitTarget);
+
 	UFUNCTION(NetMulticast, Reliable)
 	void MulticastFire(const FVector_NetQuantize& TraceHitTarget);
 
@@ -51,6 +55,9 @@ protected:
 
 	UFUNCTION(Server, Reliable)
 	void ServerReload();
+
+
+	void HandleReload();
 private:
 	UPROPERTY()
 	class APlayerCharacter* Character;
@@ -119,4 +126,9 @@ private:
 	void InitalizeCarriedAmmo();
 	void StartFireTimer();
 	void FireTimerFinished();
+
+	UPROPERTY(ReplicatedUsing = OnRep_CombatState)
+	ECombatState CombatState = ECombatState::ECS_Unoccupied;
+	UFUNCTION()
+	void OnRep_CombatState();
 };

@@ -9,6 +9,7 @@
 #include "NiagaraFunctionLibrary.h"
 #include "NiagaraComponent.h"
 #include "NecroSyntex/Interfaces/InteractWithCrossHairsInterface.h"
+#include "NecroSyntex/NecroSyntexType/CombatState.h"
 #include "PlayerCharacter.generated.h"
 
 class UInputMappingContext;
@@ -121,7 +122,7 @@ private:
 	UFUNCTION()
 	void OnRep_OverlappingWeapon(AWeapon* LastWeapon);
 
-	UPROPERTY(VisibleAnywhere)
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	class UCombatComponent* Combat;
 
 	UFUNCTION(Server, Reliable)
@@ -212,4 +213,5 @@ public:
 	FORCEINLINE float GetMaxHealth() const { return MaxHealth; }
 	FORCEINLINE float GetShield() const { return Shield; }
 	FORCEINLINE float GetMaxShield() const { return MaxShield; }
+	ECombatState GetCombatState() const;
 };
