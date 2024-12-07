@@ -58,6 +58,7 @@ protected:
 
 
 	void HandleReload();
+	int32 AmountToReload();
 private:
 	UPROPERTY()
 	class APlayerCharacter* Character;
@@ -131,4 +132,6 @@ private:
 	ECombatState CombatState = ECombatState::ECS_Unoccupied;
 	UFUNCTION()
 	void OnRep_CombatState();
+
+	void UpdateAmmoValues();
 };

@@ -158,6 +158,12 @@ void AWeapon::SetWeaponState(EWeaponState State)
 	}
 }
 
+void AWeapon::AddAmmo(int32 AmmoToAdd)
+{
+	Ammo = FMath::Clamp(Ammo - AmmoToAdd, 0, MagCapacity);
+	SetHUDAmmo();
+}
+
 bool AWeapon::IsEmpty()
 {
 	return Ammo <= 0;
