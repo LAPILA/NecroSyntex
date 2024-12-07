@@ -14,6 +14,7 @@
 #include "NecroSyntex/PlayerController/NecroSyntexPlayerController.h"
 #include "Camera\CameraComponent.h"
 #include "TimerManager.h"
+#include "Sound/SoundCue.h"
 
 // Sets default values for this component's properties
 UCombatComponent::UCombatComponent()
@@ -131,6 +132,10 @@ void UCombatComponent::FireTimerFinished()
 	{
 		Fire();
 	}
+	if (EquippedWeapon->IsEmpty())
+	{
+		Reload();
+	}
 }
 
 void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
@@ -163,6 +168,18 @@ void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 		Controller->SetHUDCarriedAmmo(CarriedAmmo);
 	}
 
+	if (EquippedWeapon->EquipSound)
+	{
+		UGameplayStatics::PlaySoundAtLocation(
+			this,
+			EquippedWeapon->EquipSound,
+			Character->GetActorLocation()
+		);
+	}
+	if (EquippedWeapon->IsEmpty())
+	{
+		Reload();
+	}
 	Character->GetCharacterMovement()->bOrientRotationToMovement = false;
 	Character->bUseControllerRotationYaw = true;
 }
@@ -192,6 +209,15 @@ void UCombatComponent::OnRep_EquippedWeapon()
 		}
 		Character->GetCharacterMovement()->bOrientRotationToMovement = false;
 		Character->bUseControllerRotationYaw = true;
+
+		if (EquippedWeapon->EquipSound)
+		{
+			UGameplayStatics::PlaySoundAtLocation(
+				this,
+				EquippedWeapon->EquipSound,
+				Character->GetActorLocation()
+			);
+		}
 	}
 }
 

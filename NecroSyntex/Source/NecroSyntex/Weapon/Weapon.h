@@ -64,6 +64,10 @@ public:
 	float FireDelay = .15f;
 	UPROPERTY(EditAnywhere, Category = Combat)
 	bool bAutomatic = true;
+	UPROPERTY(EditAnywhere, Category = Combat)
+	class USoundCue* EquipSound;
+
+
 protected:
 	virtual void BeginPlay() override;
 
