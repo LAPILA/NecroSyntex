@@ -93,6 +93,13 @@ protected:
 	void ReceiveDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, class AController* InstigatorController, AActor* DamageCauser);
 	void UpdateHUDHealth();
 	void UpdateHUDShield();
+
+	UFUNCTION(Server, Reliable, WithValidation)
+	void ServerSprintStart();
+
+	UFUNCTION(Server, Reliable, WithValidation)
+	void ServerSprintStop();
+
 private:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera", meta = (AllowPrivateAccess = "true"))
     class USpringArmComponent* CameraBoom;
@@ -164,9 +171,10 @@ private:
 
 	FTimerHandle ElimTimer;
 	UPROPERTY(EditDefaultsOnly)
-	float ElimDelay = 3.f;
+	float ElimDelay = 10.f;
 	void ElimTimerFinished();
 
+	UPROPERTY()
 	class ANecroSyntexPlayerController* NecroSyntexPlayerController;
 
 	/**

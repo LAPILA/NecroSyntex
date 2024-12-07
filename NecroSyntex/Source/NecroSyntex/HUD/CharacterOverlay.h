@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
 #include "Components/Image.h"
+#include "Components/TextBlock.h"
 #include "CharacterOverlay.generated.h"
 
 /**
@@ -26,4 +27,10 @@ public:
 
 	UPROPERTY(meta = (BindWidget))
 	UImage* UISkillPosEffect;
+
+	UPROPERTY(meta = (BindWidget))
+	UTextBlock* WeaponAmmoAmount;
+
+	UPROPERTY(meta = (BindWidget))
+	UTextBlock* CarriedAmmoAmount;
 };

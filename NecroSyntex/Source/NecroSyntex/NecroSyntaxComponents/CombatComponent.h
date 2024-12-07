@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
 #include "NecroSyntex\HUD\NecroSyntexHud.h"
+#include "NecroSyntex/Weapon/WeaponTypes.h"
 #include "CombatComponent.generated.h"
 
 //길이 설정 맘대루
@@ -47,9 +48,11 @@ protected:
 
 	void SetHUDCrosshairs(float DeltaTime);
 private:
+	UPROPERTY()
 	class APlayerCharacter* Character;
-
+	UPROPERTY()
 	class ANecroSyntexPlayerController* Controller;
+	UPROPERTY()
 	class ANecroSyntexHud* HUD;
 
 	UPROPERTY(ReplicatedUsing = OnRep_EquippedWeapon)
@@ -96,7 +99,20 @@ private:
 
 	FTimerHandle FireTimer;
 
+	bool CanFire();
 	bool bCanFire = true;
+
+	// Carried ammo for the currently-equipped weapon
+	UPROPERTY(ReplicatedUsing = OnRep_CarriedAmmo)
+	int32 CarriedAmmo;
+	UFUNCTION()
+	void OnRep_CarriedAmmo();
+	TMap<EWeaponType, int32> CarriedAmmoMap;
+
+	UPROPERTY(EditAnywhere)
+	int32 StartingARAmmo = 30;
+
+	void InitalizeCarriedAmmo();
 	void StartFireTimer();
 	void FireTimerFinished();
 };

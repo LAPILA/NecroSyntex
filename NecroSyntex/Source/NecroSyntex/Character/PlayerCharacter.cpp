@@ -26,7 +26,7 @@ APlayerCharacter::APlayerCharacter()
 	//Camera
 	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
 	CameraBoom->SetupAttachment(RootComponent);
-	CameraBoom->TargetArmLength = 600.0f;
+	CameraBoom->TargetArmLength = 120.0f;
 	CameraBoom->bUsePawnControlRotation = true;
 
 	FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
@@ -82,6 +82,10 @@ void APlayerCharacter::Elim()
 
 void APlayerCharacter::MulticastElim_Implementation()
 {
+	if (NecroSyntexPlayerController)
+	{
+		NecroSyntexPlayerController->SetHUDWeaponAmmo(0);
+	}
 	bElimed = true;
 	PlayElimMontage();
 
@@ -98,8 +102,10 @@ void APlayerCharacter::MulticastElim_Implementation()
 		DisableInput(NecroSyntexPlayerController);
 	}
 	// Disable collision
+	// To Do: Nedd Check Rifle  
+	GetMesh()->SetSimulatePhysics(true);
+	GetMesh()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-	GetMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 }
 
 void APlayerCharacter::ElimTimerFinished()
@@ -346,7 +352,15 @@ void APlayerCharacter::SprintStart()
 	if (!bIsSprinting)
 	{
 		bIsSprinting = true;
-		GetCharacterMovement()->MaxWalkSpeed = 1000;
+
+		if (HasAuthority())
+		{
+			GetCharacterMovement()->MaxWalkSpeed = 1000;
+		}
+		else
+		{
+			ServerSprintStart();
+		}
 	}
 }
 
@@ -355,9 +369,38 @@ void APlayerCharacter::SprintStop()
 	if (bIsSprinting)
 	{
 		bIsSprinting = false;
-		GetCharacterMovement()->MaxWalkSpeed = 550;
+
+		if (HasAuthority())
+		{
+			GetCharacterMovement()->MaxWalkSpeed = 550;
+		}
+		else
+		{
+			ServerSprintStop();
+		}
 	}
 }
+
+void APlayerCharacter::ServerSprintStart_Implementation()
+{
+	GetCharacterMovement()->MaxWalkSpeed = 1000;
+}
+
+void APlayerCharacter::ServerSprintStop_Implementation()
+{
+	GetCharacterMovement()->MaxWalkSpeed = 550;
+}
+
+bool APlayerCharacter::ServerSprintStart_Validate()
+{
+	return true;
+}
+
+bool APlayerCharacter::ServerSprintStop_Validate()
+{
+	return true;
+}
+
 
 void APlayerCharacter::FireButtonPressed(const FInputActionValue& Value)
 {
