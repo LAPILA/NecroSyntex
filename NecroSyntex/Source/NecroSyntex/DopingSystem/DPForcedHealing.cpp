@@ -13,15 +13,15 @@ void UDPForcedHealing::BuffOn(UPlayerInformData* PID)
 {
 	targetRecover = (PID->MaxHealth * 0.3);
 	BuffRecoverAPS = targetRecover / BuffDuration;
-	PID->RecoverAPS = PID->RecoverAPS + BuffRecoverAPS;
 
-	BuffRemainDuration = BuffDuration;
 	CheckBuff = true;
+	StartBuff(PID);
 }
 
 void UDPForcedHealing::BuffOff(UPlayerInformData* PID)
 {
-	PID->RecoverAPS = PID->RecoverAPS - BuffRecoverAPS;
+
+	DeBuffOn(PID);
 }
 
 void UDPForcedHealing::DeBuffOn(UPlayerInformData* PID)
@@ -29,8 +29,8 @@ void UDPForcedHealing::DeBuffOn(UPlayerInformData* PID)
 	DebuffMaxHP = PID->MaxHealth * 0.2;
 	PID->MaxHealth = PID->MaxHealth - DebuffMaxHP;
 
-	DeBuffRemainDuration = DeBuffDuration;
 	CheckDeBuff = true;
+	StartDeBuff(PID);
 }
 
 void UDPForcedHealing::DeBuffOff(UPlayerInformData* PID)
@@ -43,7 +43,6 @@ void UDPForcedHealing::UseDopingItem(UPlayerInformData* PID)
 	if (Able && DopingItemNum > 0)
 	{
 		--DopingItemNum;
-		CurrentCoolTime = DopingCoolTime; // 쿨타임 시작
 		Able = false;
 
 
@@ -52,6 +51,7 @@ void UDPForcedHealing::UseDopingItem(UPlayerInformData* PID)
 
 
 		//
+		StartCooldown();
 	}
 }
 

@@ -5,15 +5,16 @@
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
 #include "DopingComponent.h"
-#include "DopingSelectWidget.generated.h"
+#include "DopingUI.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class NECROSYNTEX_API UDopingSelectWidget : public UUserWidget
+class NECROSYNTEX_API UDopingUI : public UUserWidget
 {
 	GENERATED_BODY()
+	
 
 protected:
 	virtual void NativeConstruct() override;
@@ -22,19 +23,12 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Doping")
 	UDopingComponent* GetDopingComponent();
 
-	UFUNCTION(BlueprintCallable, Category = "Doping")
-	APlayerCharacter* GetDopingPlayerCharacter();
-
 	UPROPERTY()
 	UDopingComponent* UDC;
 
-	UPROPERTY()
-	APlayerCharacter* Player;
+	UFUNCTION(BlueprintCallable, Category = "Doping")
+	bool GetFirstDopingAble();
 
-	UFUNCTION(BlueprintCallable)
-	void FirstKeyDopingChoice(int32 num);
-
-	UFUNCTION(BlueprintCallable)
-	void SecondkeyDopingChoice(int32 num);
-
+	UFUNCTION(BlueprintCallable, Category = "Doping")
+	bool GetSecondDopingAble();
 };
