@@ -1,11 +1,11 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "DopingSelectWidget.h"
+#include "DopingUI.h"
 #include "NecroSyntex\Character\PlayerCharacter.h"
 #include "Kismet/GameplayStatics.h"
 
-void UDopingSelectWidget::NativeConstruct()
+void UDopingUI::NativeConstruct()
 {
     Super::NativeConstruct();
 
@@ -22,19 +22,7 @@ void UDopingSelectWidget::NativeConstruct()
 }
 
 
-void UDopingSelectWidget::FirstKeyDopingChoice(int32 num)
-{
-
-    UDC->SetFirstDopingKey(num);
-}
-
-void UDopingSelectWidget::SecondkeyDopingChoice(int32 num)
-{
-
-    UDC->SetSecondDopingKey(num);
-}
-
-UDopingComponent* UDopingSelectWidget::GetDopingComponent()
+UDopingComponent* UDopingUI::GetDopingComponent()
 {
     // 플레이어 컨트롤러 가져오기
     APlayerController* PlayerController = UGameplayStatics::GetPlayerController(GetWorld(), 0);
@@ -52,8 +40,6 @@ UDopingComponent* UDopingSelectWidget::GetDopingComponent()
         return nullptr;
     }
 
-    Player = PlayerCharacter;
-
     // 도핑 컴포넌트 가져오기
     UDopingComponent* DopingComponent = PlayerCharacter->FindComponentByClass<UDopingComponent>();
     if (!DopingComponent)
@@ -65,8 +51,32 @@ UDopingComponent* UDopingSelectWidget::GetDopingComponent()
     return DopingComponent;
 }
 
-APlayerCharacter* UDopingSelectWidget::GetDopingPlayerCharacter()
+bool UDopingUI::GetFirstDopingAble()
 {
+    bool Able = true;
+    
+    if (!UDC->OneKeyDoping->Able) {
+        Able = false;
+    }
 
-    return Player;
+    if (UDC->OneKeyDoping->DopingItemNum <= 0) {
+        Able = false;
+    }
+
+    return Able;
+}
+
+bool UDopingUI::GetSecondDopingAble()
+{
+    bool Able = true;
+
+    if (!UDC->TwoKeyDoping->Able) {
+        Able = false;
+    }
+
+    if (UDC->TwoKeyDoping->DopingItemNum <= 0) {
+        Able = false;
+    }
+
+    return Able;
 }
