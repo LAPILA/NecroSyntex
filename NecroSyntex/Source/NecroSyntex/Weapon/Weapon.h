@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "WeaponTypes.h"
 #include "Weapon.generated.h"
 
 UENUM(BlueprintType)
@@ -26,8 +27,12 @@ public:
 
 	virtual void Tick(float DeltaTime) override;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+	virtual void OnRep_Owner() override;
+	void SetHUDAmmo();
 	void ShowPickupWidget(bool bShoWidget);
 	virtual void Fire(const FVector& HitTarget);
+	void Dropped();
+	void AddAmmo(int32 AmmoToAdd);
 
 	/*
 	* Cross Hair Texture
@@ -59,6 +64,10 @@ public:
 	float FireDelay = .15f;
 	UPROPERTY(EditAnywhere, Category = Combat)
 	bool bAutomatic = true;
+	UPROPERTY(EditAnywhere, Category = Combat)
+	class USoundCue* EquipSound;
+
+
 protected:
 	virtual void BeginPlay() override;
 
@@ -101,10 +110,31 @@ private:
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<class ACasing> CasingClass;
 
+	//źȯ
+	UPROPERTY(EditAnywhere, ReplicatedUsing = OnRep_Ammo)
+	int32 Ammo;
+
+	UFUNCTION()
+	void OnRep_Ammo();
+
+	void SpendRound();
+	UPROPERTY(EditAnywhere)
+	int32 MagCapacity;
+	UPROPERTY()
+	class APlayerCharacter* PlayerOwnerCharacter;
+	UPROPERTY()
+	class ANecroSyntexPlayerController* NecroSyntexPlayerController;
+
+	UPROPERTY(EditAnywhere)
+	EWeaponType WeaponType;
 public:
 	void SetWeaponState(EWeaponState State);
 	FORCEINLINE USphereComponent* GetAreaSphere() const { return AreaSphere; }
 	FORCEINLINE USkeletalMeshComponent* GetWeaponMesh() const { return WeaponMesh; }
 	FORCEINLINE float GetZoomedFOV() const { return ZoomFOV; }
 	FORCEINLINE float GetZoomedInterpedSpeed() const { return ZoomInterpSpeed; }
+	bool IsEmpty();
+	FORCEINLINE EWeaponType GetWeaponType() const { return WeaponType; }
+	FORCEINLINE int32 GetAmmo() const { return Ammo; }
+	FORCEINLINE int32 GetMagCapacity() const { return MagCapacity; }
 };

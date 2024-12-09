@@ -6,7 +6,10 @@
 #include "GameFramework/Character.h"
 #include "Logging/LogMacros.h"
 #include "NecroSyntex/NecroSyntexType/TurningInPlace.h"
+#include "NiagaraFunctionLibrary.h"
+#include "NiagaraComponent.h"
 #include "NecroSyntex/Interfaces/InteractWithCrossHairsInterface.h"
+#include "NecroSyntex/NecroSyntexType/CombatState.h"
 #include "PlayerCharacter.generated.h"
 
 class UInputMappingContext;
@@ -49,6 +52,12 @@ class NECROSYNTEX_API APlayerCharacter : public ACharacter, public IInteractWith
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* FireAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UInputAction* FlashAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UInputAction* ReloadAction;
 public:
     APlayerCharacter();
 
@@ -57,9 +66,14 @@ public:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	virtual void PostInitializeComponents() override;
 	void PlayFireMontage(bool bAiming);
-
+	void PlayReloadMontage();
+	void PlayElimMontage();
 	virtual void OnRep_ReplicatedMovement() override;
+
 	void Elim();
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastElim();
+	virtual void Destroyed() override;
 protected:
     virtual void BeginPlay() override;
 
@@ -77,12 +91,21 @@ protected:
 	void SprintStop();
 	void FireButtonPressed(const FInputActionValue& Value);
 	void FireButtonReleased(const FInputActionValue& Value);
+	void FlashButtonPressed();
+	void ReloadButtonPressed();
 	void PlayerHitReactMontage();
 
 	UFUNCTION()
 	void ReceiveDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, class AController* InstigatorController, AActor* DamageCauser);
 	void UpdateHUDHealth();
 	void UpdateHUDShield();
+
+	UFUNCTION(Server, Reliable, WithValidation)
+	void ServerSprintStart();
+
+	UFUNCTION(Server, Reliable, WithValidation)
+	void ServerSprintStop();
+
 private:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera", meta = (AllowPrivateAccess = "true"))
     class USpringArmComponent* CameraBoom;
@@ -99,7 +122,7 @@ private:
 	UFUNCTION()
 	void OnRep_OverlappingWeapon(AWeapon* LastWeapon);
 
-	UPROPERTY(VisibleAnywhere)
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	class UCombatComponent* Combat;
 
 	UFUNCTION(Server, Reliable)
@@ -120,6 +143,12 @@ private:
 	UPROPERTY(EditAnywhere, Category = Combat)
 	UAnimMontage* HitReactMontage;
 
+	UPROPERTY(EditAnywhere, Category = Combat)
+	UAnimMontage* ElimMongatge;
+
+	UPROPERTY(EditAnywhere, Category = Combat)
+	UAnimMontage* ReloadMontage;
+
 	bool bRotateRootBone;
 	float TurnThreshold = 0.5f;
 	FRotator ProxyRotationLastFrame;
@@ -137,7 +166,6 @@ private:
 	float Health = 100.f;
 	UFUNCTION()
 	void OnRep_Health();
-	class ANecroSyntexPlayerController* NecroSyntexPlayerController;
 	/**
 	* Player sheild
 	*/
@@ -147,6 +175,27 @@ private:
 	float Shield = 200.f;
 	UFUNCTION()
 	void OnRep_Shield();
+
+	bool bElimed = false;
+
+	FTimerHandle ElimTimer;
+	UPROPERTY(EditDefaultsOnly)
+	float ElimDelay = 10.f;
+	void ElimTimerFinished();
+
+	UPROPERTY()
+	class ANecroSyntexPlayerController* NecroSyntexPlayerController;
+
+	/**
+	* Dissolve effect
+	*/
+
+	UPROPERTY(VisibleAnywhere, Category = "Effects")
+	UNiagaraComponent* DissolveEffectComponent;
+
+	UFUNCTION()
+	void ActivateDissolveEffect();
+
 
 public:
 	void SetOverlappingWeapon(AWeapon* Weapon);
@@ -159,4 +208,10 @@ public:
 	FVector GetHitTarget() const;
 	FORCEINLINE UCameraComponent* GetFollowCamera() const { return FollowCamera; }
 	FORCEINLINE bool ShouldRotateRootBone() const { return bRotateRootBone; }
+	FORCEINLINE bool IsElimed() const { return bElimed; }
+	FORCEINLINE float GetHealth() const { return Health; }
+	FORCEINLINE float GetMaxHealth() const { return MaxHealth; }
+	FORCEINLINE float GetShield() const { return Shield; }
+	FORCEINLINE float GetMaxShield() const { return MaxShield; }
+	ECombatState GetCombatState() const;
 };

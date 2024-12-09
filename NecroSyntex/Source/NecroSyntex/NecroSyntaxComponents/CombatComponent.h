@@ -4,7 +4,9 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
-#include "NecroSyntex\HUD\NecroSyntexHud.h"
+#include "NecroSyntex/HUD/NecroSyntexHud.h"
+#include "NecroSyntex/Weapon/WeaponTypes.h"
+#include "NecroSyntex/NecroSyntexType/CombatState.h"
 #include "CombatComponent.generated.h"
 
 //길이 설정 맘대루
@@ -23,6 +25,9 @@ public:
 
 
 	void EquipWeapon(class AWeapon* WeaponToEquip);
+	void Reload();
+	UFUNCTION(BlueprintCallable)
+	void FinishReloading();
 
 protected:
 	virtual void BeginPlay() override;
@@ -40,16 +45,26 @@ protected:
 
 	UFUNCTION(Server, Reliable)
 	void ServerFire(const FVector_NetQuantize& TraceHitTarget);
+
 	UFUNCTION(NetMulticast, Reliable)
 	void MulticastFire(const FVector_NetQuantize& TraceHitTarget);
 
 	void TraceUnderCrosshairs(FHitResult& TraceHitResult);
 
 	void SetHUDCrosshairs(float DeltaTime);
-private:
-	class APlayerCharacter* Character;
 
+	UFUNCTION(Server, Reliable)
+	void ServerReload();
+
+
+	void HandleReload();
+	int32 AmountToReload();
+private:
+	UPROPERTY()
+	class APlayerCharacter* Character;
+	UPROPERTY()
 	class ANecroSyntexPlayerController* Controller;
+	UPROPERTY()
 	class ANecroSyntexHud* HUD;
 
 	UPROPERTY(ReplicatedUsing = OnRep_EquippedWeapon)
@@ -96,7 +111,27 @@ private:
 
 	FTimerHandle FireTimer;
 
+	bool CanFire();
 	bool bCanFire = true;
+
+	// Carried ammo for the currently-equipped weapon
+	UPROPERTY(ReplicatedUsing = OnRep_CarriedAmmo)
+	int32 CarriedAmmo;
+	UFUNCTION()
+	void OnRep_CarriedAmmo();
+	TMap<EWeaponType, int32> CarriedAmmoMap;
+
+	UPROPERTY(EditAnywhere)
+	int32 StartingARAmmo = 30;
+
+	void InitalizeCarriedAmmo();
 	void StartFireTimer();
 	void FireTimerFinished();
+
+	UPROPERTY(ReplicatedUsing = OnRep_CombatState)
+	ECombatState CombatState = ECombatState::ECS_Unoccupied;
+	UFUNCTION()
+	void OnRep_CombatState();
+
+	void UpdateAmmoValues();
 };

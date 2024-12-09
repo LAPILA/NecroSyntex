@@ -13,6 +13,8 @@ UCLASS()
 class NECROSYNTEX_API ANecroSyntexGameMode : public AGameMode
 {
 	GENERATED_BODY()
+	
 public:
-	virtual void PlayerEliminated(class APlayerCharacter* ElimmedCharacter, class ANecroSyntexPlayerController* VictimController, ANecroSyntexPlayerController* AttackerController);
+	virtual void PlayerEliminated(class APlayerCharacter* ElimmedCharacter, class ANecroSyntexPlayerController* VictimController, class ANecroSyntexPlayerController* AttackController);
+	virtual void RequestRespawn(ACharacter* ElimmedCharacter, AController* ElimmedController);
 };

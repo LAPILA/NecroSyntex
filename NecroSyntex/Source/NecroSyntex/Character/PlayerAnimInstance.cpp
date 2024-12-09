@@ -5,7 +5,8 @@
 #include "PlayerCharacter.h"
 #include "GameFramework\CharacterMovementComponent.h"
 #include "Kismet/KismetMathLibrary.h"
-#include "NecroSyntex\Weapon\Weapon.h"
+#include "NecroSyntex/Weapon/Weapon.h"
+#include "NecroSyntex/NecroSyntexType/CombatState.h"
 
 void UPlayerAnimInstance::NativeInitializeAnimation()
 {
@@ -52,6 +53,7 @@ void UPlayerAnimInstance::NativeUpdateAnimation(float DeltaTime)
 	EquippedWeapon = PlayerCharacter->GetEquippedWeapon();
 	TurningInPlace = PlayerCharacter->GetTurningInPlace();
 	bRotateRootBone = PlayerCharacter->ShouldRotateRootBone();
+	bElimed = PlayerCharacter->IsElimed();
 
 	FRotator AimRotation = PlayerCharacter->GetBaseAimRotation();
 	FRotator MovementRotation = UKismetMathLibrary::MakeRotFromX(PlayerCharacter->GetVelocity());
@@ -77,6 +79,7 @@ void UPlayerAnimInstance::NativeUpdateAnimation(float DeltaTime)
 		LeftHandTransform.SetLocation(OutPosition);
 		LeftHandTransform.SetRotation(FQuat(OutRotation));
 
+		/*
 		if (PlayerCharacter->IsLocallyControlled())
 		{
 			bLocallyControlled = true;
@@ -85,5 +88,10 @@ void UPlayerAnimInstance::NativeUpdateAnimation(float DeltaTime)
 			FRotator LookAtRotation = UKismetMathLibrary::FindLookAtRotation(RightHandTransform.GetLocation(), RightHandTransform.GetLocation() + (RightHandTransform.GetLocation() - PlayerCharacter->GetHitTarget()));
 			RightHandRotation = FMath::RInterpTo(RightHandRotation, LookAtRotation, DeltaTime, 30.f);
 		}
+		*/
 	}
+
+	bUseFABRIK = PlayerCharacter->GetCombatState() != ECombatState::ECS_Reloading;
+	bUseAimOffsets = PlayerCharacter->GetCombatState() != ECombatState::ECS_Reloading;
+	bTransformRightHand = PlayerCharacter->GetCombatState() != ECombatState::ECS_Reloading;
 }

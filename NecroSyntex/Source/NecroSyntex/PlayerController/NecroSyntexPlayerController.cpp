@@ -6,6 +6,7 @@
 #include "NecroSyntex/HUD\CharacterOverlay.h"
 #include "Components\Image.h"
 #include "Components/TextBlock.h"
+#include "Necrosyntex\Character\PlayerCharacter.h"
 
 void ANecroSyntexPlayerController::BeginPlay()
 {
@@ -42,5 +43,42 @@ void ANecroSyntexPlayerController::SetHUDShield(float Shield, float MaxShield)
 		{
 			ShieldBarMaterial->SetScalarParameterValue(FName("Percentage"), ShieldPercent);
 		}
+	}
+}
+
+void ANecroSyntexPlayerController::SetHUDWeaponAmmo(int32 Ammo)
+{
+	NecroSyntexHUD = NecroSyntexHUD == nullptr ? Cast<ANecroSyntexHud>(GetHUD()) : NecroSyntexHUD;
+	bool bHUDValid = NecroSyntexHUD &&
+		NecroSyntexHUD->CharacterOverlay &&
+		NecroSyntexHUD->CharacterOverlay->WeaponAmmoAmount;
+	if (bHUDValid)
+	{
+		FString AmmoText = FString::Printf(TEXT("%d"), Ammo);
+		NecroSyntexHUD->CharacterOverlay->WeaponAmmoAmount->SetText(FText::FromString(AmmoText));
+	}
+}
+
+void ANecroSyntexPlayerController::SetHUDCarriedAmmo(int32 Ammo)
+{
+	NecroSyntexHUD = NecroSyntexHUD == nullptr ? Cast<ANecroSyntexHud>(GetHUD()) : NecroSyntexHUD;
+	bool bHUDValid = NecroSyntexHUD &&
+		NecroSyntexHUD->CharacterOverlay &&
+		NecroSyntexHUD->CharacterOverlay->CarriedAmmoAmount;
+	if (bHUDValid)
+	{
+		FString AmmoText = FString::Printf(TEXT("/ %d"), Ammo);
+		NecroSyntexHUD->CharacterOverlay->CarriedAmmoAmount->SetText(FText::FromString(AmmoText));
+	}
+}
+
+void ANecroSyntexPlayerController::OnPossess(APawn* InPawn)
+{
+	Super::OnPossess(InPawn);
+	APlayerCharacter* PlayerCharacter = Cast<APlayerCharacter>(InPawn);
+	if (PlayerCharacter)
+	{
+		SetHUDHealth(PlayerCharacter->GetHealth(), PlayerCharacter->GetMaxHealth());
+		SetHUDShield(PlayerCharacter->GetShield(), PlayerCharacter->GetMaxShield());
 	}
 }

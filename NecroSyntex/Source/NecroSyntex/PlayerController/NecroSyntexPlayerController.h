@@ -16,8 +16,12 @@ class NECROSYNTEX_API ANecroSyntexPlayerController : public APlayerController
 public:
 	void SetHUDHealth(float Health, float MaxHealth);
 	void SetHUDShield(float Shield, float MaxShield);
+	void SetHUDWeaponAmmo(int32 Ammo);
+	void SetHUDCarriedAmmo(int32 Ammo);
+	virtual void OnPossess(APawn* InPawn) override;
 protected:
 	virtual void BeginPlay() override;
 private:
+	UPROPERTY()
 	class ANecroSyntexHud* NecroSyntexHUD;
 };

@@ -17,6 +17,9 @@
 #include "NecroSyntex\NecroSyntex.h"
 #include "NecroSyntex\PlayerController\NecroSyntexPlayerController.h"
 #include "NecroSyntex\GameMode\NecroSyntexGameMode.h"
+#include "TimerManager.h"
+#include "NiagaraSystem.h"
+#include "NecroSyntex/Weapon/WeaponTypes.h"
 
 APlayerCharacter::APlayerCharacter()
 {
@@ -24,7 +27,7 @@ APlayerCharacter::APlayerCharacter()
 	//Camera
 	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
 	CameraBoom->SetupAttachment(RootComponent);
-	CameraBoom->TargetArmLength = 600.0f;
+	CameraBoom->TargetArmLength = 120.0f;
 	CameraBoom->bUsePawnControlRotation = true;
 
 	FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
@@ -52,6 +55,8 @@ APlayerCharacter::APlayerCharacter()
 	NetUpdateFrequency = 66.0f;
 	MinNetUpdateFrequency = 33.0f;
 
+	DissolveEffectComponent = CreateDefaultSubobject<UNiagaraComponent>(TEXT("DissolveEffectComponent"));
+	DissolveEffectComponent->SetupAttachment(GetMesh());
 }
 
 void APlayerCharacter::OnRep_ReplicatedMovement()
@@ -63,7 +68,59 @@ void APlayerCharacter::OnRep_ReplicatedMovement()
 
 void APlayerCharacter::Elim()
 {
+	if (Combat && Combat->EquippedWeapon)
+	{
+		Combat->EquippedWeapon->Dropped();
+	}
+	MulticastElim();
+	GetWorldTimerManager().SetTimer(
+		ElimTimer,
+		this,
+		&APlayerCharacter::ElimTimerFinished,
+		ElimDelay
+	);
+}
 
+void APlayerCharacter::MulticastElim_Implementation()
+{
+	if (NecroSyntexPlayerController)
+	{
+		NecroSyntexPlayerController->SetHUDWeaponAmmo(0);
+	}
+	bElimed = true;
+	PlayElimMontage();
+
+	if (DissolveEffectComponent)
+	{
+		ActivateDissolveEffect();
+	}
+
+	// Disable character movement
+	GetCharacterMovement()->DisableMovement();
+	GetCharacterMovement()->StopMovementImmediately();
+	if (NecroSyntexPlayerController)
+	{
+		DisableInput(NecroSyntexPlayerController);
+	}
+	// Disable collision
+	// To Do: Nedd Check Rifle  
+	GetMesh()->SetSimulatePhysics(true);
+	GetMesh()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+}
+
+void APlayerCharacter::ElimTimerFinished()
+{
+	ANecroSyntexGameMode* NecroSyntexGameMode = GetWorld()->GetAuthGameMode<ANecroSyntexGameMode>();
+	if (NecroSyntexGameMode)
+	{
+		NecroSyntexGameMode->RequestRespawn(this, Controller);
+	}
+}
+
+void APlayerCharacter::Destroyed()
+{
+	Super::Destroyed();
 }
 
 void APlayerCharacter::BeginPlay()
@@ -119,6 +176,8 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 		EnhancedInputComponent->BindAction(SprintAction, ETriggerEvent::Completed, this, &APlayerCharacter::SprintStop);
 		EnhancedInputComponent->BindAction(FireAction, ETriggerEvent::Started, this, &APlayerCharacter::FireButtonPressed);
 		EnhancedInputComponent->BindAction(FireAction, ETriggerEvent::Completed, this, &APlayerCharacter::FireButtonReleased);
+		EnhancedInputComponent->BindAction(FlashAction, ETriggerEvent::Triggered, this, &APlayerCharacter::FlashButtonPressed);
+		EnhancedInputComponent->BindAction(ReloadAction, ETriggerEvent::Triggered, this, &APlayerCharacter::ReloadButtonPressed);
 	}
 }
 
@@ -145,7 +204,7 @@ void APlayerCharacter::PlayFireMontage(bool bAiming)
 {
 	if (Combat == nullptr || Combat->EquippedWeapon == nullptr) return;
 	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
-	if (AnimInstance && FireWeaponMontage)
+	if (AnimInstance && FireWeaponMontage && HitReactMontage && !bElimed)
 	{
 		AnimInstance->Montage_Play(FireWeaponMontage);
 		FName SectionName;
@@ -154,11 +213,25 @@ void APlayerCharacter::PlayFireMontage(bool bAiming)
 	}
 }
 
+void APlayerCharacter::PlayElimMontage()
+{
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	if (AnimInstance && ElimMongatge)
+	{
+
+		AnimInstance->Montage_Play(ElimMongatge);
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("NecroSyntexGamemode cannot find"));
+	}
+}
+
 void APlayerCharacter::PlayerHitReactMontage()
 {
 	if (Combat == nullptr || Combat->EquippedWeapon == nullptr) return;
 	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
-	if (AnimInstance && HitReactMontage)
+	if (AnimInstance && HitReactMontage && !AnimInstance->IsAnyMontagePlaying())
 	{
 		AnimInstance->Montage_Play(FireWeaponMontage);
 		FName SectionName("FromFront");
@@ -166,6 +239,24 @@ void APlayerCharacter::PlayerHitReactMontage()
 	}
 }
 
+void APlayerCharacter::PlayReloadMontage()
+{
+	if (Combat == nullptr || Combat->EquippedWeapon == nullptr) return;
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	if (AnimInstance && ReloadMontage)
+	{
+		AnimInstance->Montage_Play(ReloadMontage);
+		FName SectionName;
+
+		switch (Combat->EquippedWeapon->GetWeaponType())
+		{
+		case EWeaponType::EWT_AssaultRifle:
+			SectionName = FName("Rifle");
+			break;
+		}
+		AnimInstance->Montage_JumpToSection(SectionName);
+	}
+}
 void APlayerCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, AController* InstigatorController, AActor* DamageCauser)
 {
 	PlayerHitReactMontage();
@@ -188,6 +279,21 @@ void APlayerCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, const U
 	{
 		Health = FMath::Clamp(Health - Damage, 0.f, MaxHealth);
 		UpdateHUDHealth();
+
+		if (Health == 0.0f)
+		{
+			ANecroSyntexGameMode* NecroSyntexGameMode = GetWorld()->GetAuthGameMode<ANecroSyntexGameMode>();
+			if (NecroSyntexGameMode)
+			{
+				NecroSyntexPlayerController = NecroSyntexPlayerController == nullptr ? Cast<ANecroSyntexPlayerController>(Controller) : NecroSyntexPlayerController;
+				ANecroSyntexPlayerController* AttackerController = Cast<ANecroSyntexPlayerController>(InstigatorController);
+				NecroSyntexGameMode->PlayerEliminated(this, NecroSyntexPlayerController, AttackerController);
+			}
+			else
+			{
+				UE_LOG(LogTemp, Warning, TEXT("NecroSyntexGamemode cannot find"));
+			}
+		}
 	}
 }
 
@@ -246,6 +352,14 @@ void APlayerCharacter::CrouchButtonPressed()
 	}
 }
 
+void APlayerCharacter::ReloadButtonPressed()
+{
+	if (Combat)
+	{
+		Combat->Reload();
+	}
+}
+
 void APlayerCharacter::AimButtonPressed()
 {
 	if (Combat)
@@ -266,7 +380,15 @@ void APlayerCharacter::SprintStart()
 	if (!bIsSprinting)
 	{
 		bIsSprinting = true;
-		GetCharacterMovement()->MaxWalkSpeed = 1000;
+
+		if (HasAuthority())
+		{
+			GetCharacterMovement()->MaxWalkSpeed = 1000;
+		}
+		else
+		{
+			ServerSprintStart();
+		}
 	}
 }
 
@@ -275,9 +397,38 @@ void APlayerCharacter::SprintStop()
 	if (bIsSprinting)
 	{
 		bIsSprinting = false;
-		GetCharacterMovement()->MaxWalkSpeed = 550;
+
+		if (HasAuthority())
+		{
+			GetCharacterMovement()->MaxWalkSpeed = 550;
+		}
+		else
+		{
+			ServerSprintStop();
+		}
 	}
 }
+
+void APlayerCharacter::ServerSprintStart_Implementation()
+{
+	GetCharacterMovement()->MaxWalkSpeed = 1000;
+}
+
+void APlayerCharacter::ServerSprintStop_Implementation()
+{
+	GetCharacterMovement()->MaxWalkSpeed = 550;
+}
+
+bool APlayerCharacter::ServerSprintStart_Validate()
+{
+	return true;
+}
+
+bool APlayerCharacter::ServerSprintStop_Validate()
+{
+	return true;
+}
+
 
 void APlayerCharacter::FireButtonPressed(const FInputActionValue& Value)
 {
@@ -293,6 +444,11 @@ void APlayerCharacter::FireButtonReleased(const FInputActionValue& Value)
 	{
 		Combat->FireButtonPressed(false);
 	}
+}
+
+void APlayerCharacter::FlashButtonPressed()
+{
+
 }
 
 void APlayerCharacter::ServerEquipButtonPressed_Implementation()
@@ -403,17 +559,6 @@ void APlayerCharacter::OnRep_Health()
 {
 	UpdateHUDHealth();
 	PlayerHitReactMontage();
-
-	if (Health == 0.0f)
-	{
-		ANecroSyntexGameMode* NecroSyntexGameMode = GetWorld()->GetAuthGameMode<ANecroSyntexGameMode>();
-		if (NecroSyntexGameMode)
-		{
-			NecroSyntexPlayerController = NecroSyntexPlayerController == nullptr ? Cast<ANecroSyntexPlayerController>(Controller) : NecroSyntexPlayerController;
-			ANecroSyntexPlayerController* AttackerController = Cast<ANecroSyntexPlayerController>(GetInstigatorController());
-			NecroSyntexGameMode->PlayerEliminated(this, NecroSyntexPlayerController, AttackerController);
-		}
-	}
 }
 
 void APlayerCharacter::UpdateHUDHealth()
@@ -437,6 +582,14 @@ void APlayerCharacter::UpdateHUDShield()
 	if (NecroSyntexPlayerController)
 	{
 		NecroSyntexPlayerController->SetHUDShield(Shield, MaxShield);
+	}
+}
+
+void APlayerCharacter::ActivateDissolveEffect()
+{
+	if (DissolveEffectComponent && !DissolveEffectComponent->IsActive())
+	{
+		DissolveEffectComponent->Activate(true);
 	}
 }
 
@@ -498,4 +651,16 @@ FVector APlayerCharacter::GetHitTarget() const
 {
 	if (Combat == nullptr) return FVector();
 	return Combat->HitTarget;
+}
+
+ECombatState APlayerCharacter::GetCombatState() const
+{
+	if (Combat == nullptr)
+	{
+		return ECombatState::ECS_MAX;
+	}
+	else
+	{
+		return Combat->CombatState;
+	}
 }
