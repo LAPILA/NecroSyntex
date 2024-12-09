@@ -10,9 +10,10 @@ UDPSupremeStrength::UDPSupremeStrength() :Super()
 
 void UDPSupremeStrength::BuffOn(UPlayerInformData* PID)
 {
-
-	BuffRemainDuration = BuffDuration;
 	CheckBuff = true;
+	StartBuff(PID);
+
+	DeBuffOn(PID);
 }
 
 void UDPSupremeStrength::BuffOff(UPlayerInformData* PID)
@@ -23,9 +24,8 @@ void UDPSupremeStrength::BuffOff(UPlayerInformData* PID)
 void UDPSupremeStrength::DeBuffOn(UPlayerInformData* PID)
 {
 
-
-	DeBuffRemainDuration = DeBuffDuration;
 	CheckDeBuff = true;
+	StartDeBuff(PID);
 }
 
 void UDPSupremeStrength::DeBuffOff(UPlayerInformData* PID)
@@ -38,7 +38,6 @@ void UDPSupremeStrength::UseDopingItem(UPlayerInformData* PID)
 	if (Able && DopingItemNum > 0)
 	{
 		--DopingItemNum;
-		CurrentCoolTime = DopingCoolTime; // 쿨타임 시작
 		Able = false;
 
 
@@ -47,5 +46,6 @@ void UDPSupremeStrength::UseDopingItem(UPlayerInformData* PID)
 
 
 		//
+		StartCooldown();
 	}
 }
