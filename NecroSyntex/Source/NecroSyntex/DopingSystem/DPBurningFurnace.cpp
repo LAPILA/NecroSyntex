@@ -6,32 +6,41 @@
 UDPBurningFurnace::UDPBurningFurnace()
 	:Super()
 {
-
+	BuffDuration = 10.0f;
+	DeBuffDuration = 10.0f;
 }
 
 void UDPBurningFurnace::BuffOn(UPlayerInformData* PID)
 {
+	DefenseBuffNum = PID->Defense;
+	PID->Defense = PID->Defense + DefenseBuffNum;
 
-	BuffRemainDuration = BuffDuration;
 	CheckBuff = true;
+
+	StartBuff(PID);
+	DeBuffOn(PID);
 }
 
 void UDPBurningFurnace::BuffOff(UPlayerInformData* PID)
 {
+	PID->Defense = PID->Defense - DefenseBuffNum;
 
+	CheckBuff = false;
 }
 
 void UDPBurningFurnace::DeBuffOn(UPlayerInformData* PID)
 {
 
-
-	DeBuffRemainDuration = DeBuffDuration;
 	CheckDeBuff = true;
+
+	StartDeBuff(PID);
 }
 
 void UDPBurningFurnace::DeBuffOff(UPlayerInformData* PID)
 {
 
+
+	CheckDeBuff = false;
 }
 
 void UDPBurningFurnace::UseDopingItem(UPlayerInformData* PID)
@@ -39,14 +48,14 @@ void UDPBurningFurnace::UseDopingItem(UPlayerInformData* PID)
 	if (Able && DopingItemNum > 0)
 	{
 		--DopingItemNum;
-		CurrentCoolTime = DopingCoolTime; // 쿨타임 시작
 		Able = false;
 
 
 		UE_LOG(LogTemp, Warning, TEXT("BurningFurnace Use"));
 		//효과
-		PID->Defense = PID->Defense * 2;
+		BuffOn(PID);
 
 		//
+		StartCooldown();
 	}
 }

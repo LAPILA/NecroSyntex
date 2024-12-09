@@ -29,8 +29,6 @@ public:
 	UPROPERTY(EditAnywhere)
 	float RunningSpeed; // 달리기속도
 
-	UPROPERTY(EditAnywhere)
-	float RecoverAPS; // 초당 회복량
 
 
 	//float Redbound; // 반동
