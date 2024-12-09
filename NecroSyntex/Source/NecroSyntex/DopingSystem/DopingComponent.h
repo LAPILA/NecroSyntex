@@ -30,33 +30,44 @@ protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
 
-private:
-
-
 public:
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
-	UPROPERTY()
+	void ReduceCooldown(float DeltaTime);
+	void ReduceBuffDuration(float DeltaTime);
+	void ReduceDeBuffDuration(float DeltaTime);
+
+	//UDPLegEnforce* LE;
+	//UDPReducePain* RP;
+	//UDPSupremeStrength* SS;
+	//UDPForcedHealing* FH;
+	//UDPFinalEmber* FE;
+	//UDPBurningFurnace* BF;
+	//UDPSolidFortress* SF;
+	//UDPPainless* PL;
+
+	UPlayerInformData* PID;
+
 	UDopingParent* OneKeyDoping; // 키보드 1번키 도핑
 	bool OneKeyBool;
-
-	UPROPERTY()
 	UDopingParent* TwoKeyDoping; // 키보드 2번키 도핑
 	bool TwoKeyBool;
-
-	UPROPERTY()
-	UPlayerInformData* PID;
-	UPlayerInformData* PIDCheck;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "FirstDopping")
 	int One_DopingItemNum; // 도핑 아이템 개숫
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "FirstDopping")
 	float One_DopingCoolTime; // 아이템 사용 쿨타임
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "FirstDopping")
+	float One_CurrentCoolTime; // 현재 쿨타임
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "FirstDopping")
 	float One_BuffDuration; // 버프 지속시간
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "FirstDopping")
+	float One_BuffRemainDuration; // 버프 남은지속시간
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "FirstDopping")
 	float One_DeBuffDuration; // 디버프 지속시간
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "FirstDopping")
+	float One_DeBuffRemainDuration; // 디버프 남은 지속시간
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "FirstDopping")
 	bool One_CheckBuff;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "FirstDopping")
@@ -70,9 +81,15 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "SecondDopping")
 	float Two_DopingCoolTime; // 아이템 사용 쿨타임
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "SecondDopping")
+	float Two_CurrentCoolTime; // 현재 쿨타임
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "SecondDopping")
 	float Two_BuffDuration; // 버프지속시간
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "SecondDopping")
+	float Two_BuffRemainDuration; // 버프 남은지속시간
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "SecondDopping")
 	float Two_DeBuffDuration; // 디버프 지속시간
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "SecondDopping")
+	float Two_DeBuffRemainDuration; // 디버프 남은 지속시간
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "SecondDopping")
 	bool Two_CheckBuff;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "SecondDopping")
@@ -108,16 +125,12 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void SecondDopingUse();
 
-	void SetDopingKey(UDopingParent*& DopingKey, int32 Num);
-
 
 	UFUNCTION(BlueprintCallable)
 	void SetFirstDopingKey(int32 Num);
 
 	UFUNCTION(BlueprintCallable)
 	void SetSecondDopingKey(int32 Num);
-
-	UDopingComponent* GetDopingComponent();
 
 	//TArray<UDopingParent*> ActiveDopingItems;
 

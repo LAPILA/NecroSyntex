@@ -1,3 +1,5 @@
+// Fill out your copyright notice in the Description page of Project Settings.
+
 #pragma once
 
 #include "CoreMinimal.h"
@@ -6,10 +8,12 @@
 #include "UObject/NoExportTypes.h"
 #include "DopingParent.generated.h"
 
+
+
 /**
- * Doping 아이템의 부모 클래스. Buff/DeBuff와 쿨타임 로직을 관리.
+ *
  */
-UCLASS(Blueprintable)
+UCLASS()
 class NECROSYNTEX_API UDopingParent : public UObject
 {
 	GENERATED_BODY()
@@ -17,53 +21,63 @@ class NECROSYNTEX_API UDopingParent : public UObject
 public:
 	UDopingParent();
 
-	// 아이템 개수
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	int DopingItemNum;
+	//UPlayerInformData* PID;
 
-	// 쿨타임 관련
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere)
+	int DopingItemNum; // 도핑 아이템 갯수
+
+	UPROPERTY(EditAnywhere)
 	float DopingCoolTime; // 아이템 사용 쿨타임
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
-	bool Able; // 사용 가능 여부
 
-	// Buff/DeBuff 관련
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float BuffDuration; // 버프 지속시간
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere)
+	float CurrentCoolTime; // 현재 쿨타임
+
+	UPROPERTY(EditAnywhere)
+	bool Able; // 사용 가능 & 불가능
+
+	UPROPERTY(EditAnywhere)
+	float BuffDuration;  // 버프 지속시간
+
+	UPROPERTY(EditAnywhere)
+	float BuffRemainDuration;  // 버프 남은 지속시간
+
+	UPROPERTY(EditAnywhere)
 	float DeBuffDuration; // 디버프 지속시간
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
-	bool CheckBuff; // 버프 활성 상태
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
-	bool CheckDeBuff; // 디버프 활성 상태
 
-	// 아이템 사용 함수
-	UFUNCTION(BlueprintCallable, Category = "Doping")
+	UPROPERTY(EditAnywhere)
+	float DeBuffRemainDuration; // 디버프 남은 지속시간
+
+	UPROPERTY(EditAnywhere)
+	bool CheckBuff;
+
+	UPROPERTY(EditAnywhere)
+	bool CheckDeBuff;
+
+	float XDeltaTime;
+
+	UFUNCTION(BlueprintCallable)
 	virtual void UseDopingItem(UPlayerInformData* PID);
 
-	// Buff/DeBuff 처리 함수 (오버라이드 가능)
-	UFUNCTION(BlueprintCallable, Category = "Doping")
+	UFUNCTION(BlueprintCallable)
 	virtual void BuffOn(UPlayerInformData* PID);
-	UFUNCTION(BlueprintCallable, Category = "Doping")
-	virtual void BuffOff(UPlayerInformData* PID);
-	UFUNCTION(BlueprintCallable, Category = "Doping")
+
+	UFUNCTION(BlueprintCallable)
 	virtual void DeBuffOn(UPlayerInformData* PID);
-	UFUNCTION(BlueprintCallable, Category = "Doping")
+
+	UFUNCTION(BlueprintCallable)
+	virtual void BuffOff(UPlayerInformData* PID);
+
+	UFUNCTION(BlueprintCallable)
 	virtual void DeBuffOff(UPlayerInformData* PID);
 
-protected:
-	// 내부 타이머 관리
-	FTimerHandle BuffTimerHandle;
-	FTimerHandle DeBuffTimerHandle;
-	FTimerHandle CooldownTimerHandle;
+	//void GetDeltaTime(float Deltatime);
 
-	// 타이머 시작 함수
-	void StartBuff(UPlayerInformData* PID);
-	void StartDeBuff(UPlayerInformData* PID);
+
 	void StartCooldown();
 
-	// 타이머 종료 콜백
-	void EndBuff(UPlayerInformData* PID);
-	void EndDeBuff(UPlayerInformData* PID);
-	void EndCooldown();
+private:
+
+	FTimerHandle CooldownTimerHandle;
+
+
 };

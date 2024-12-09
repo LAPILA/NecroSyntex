@@ -9,7 +9,7 @@
 #include "NecroSyntex/NecroSyntexType/CombatState.h"
 #include "CombatComponent.generated.h"
 
-//ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½
+//±æÀÌ ¼³Á¤ ¸¾´ë·ç
 #define TRACE_LENGTH 80000.f
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )

@@ -43,8 +43,6 @@ APlayerCharacter::APlayerCharacter()
 	Combat = CreateDefaultSubobject<UCombatComponent>(TEXT("CombatComponent"));
 	Combat->SetIsReplicated(true);
 
-	UDC = CreateDefaultSubobject<UDopingComponent>(TEXT("DopingComponent"));
-
 	GetCharacterMovement()->NavAgentProps.bCanCrouch = true;
 	GetCapsuleComponent()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Ignore);
 	GetMesh()->SetCollisionObjectType(ECC_SkeletalMesh);
@@ -53,7 +51,7 @@ APlayerCharacter::APlayerCharacter()
 	GetCharacterMovement()->RotationRate = FRotator(0.f, 0.f, 850.f);
 
 	TurningInPlace = ETurningInPlace::ETIP_NotTurning;
-	//ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½
+	//³Ý ¾÷µ« ºó¹øµµ
 	NetUpdateFrequency = 66.0f;
 	MinNetUpdateFrequency = 33.0f;
 
@@ -141,8 +139,6 @@ void APlayerCharacter::BeginPlay()
 	{
 		OnTakeAnyDamage.AddDynamic(this, &APlayerCharacter::ReceiveDamage);
 	}
-
-	GetCharacterMovement()->MaxWalkSpeed = UDC->MoveSpeed;
 }
 
 void APlayerCharacter::Tick(float DeltaTime)
@@ -198,7 +194,7 @@ void APlayerCharacter::PostInitializeComponents()
 void APlayerCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-	//Net ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Å©ï¿½ï¿½ ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
+	//Net º¹Á¦¸¦À§ÇØ ¸ÅÅ©·Î »ç¿ë, ¼ÒÀ¯ÁÖ Àü¿ë
 	DOREPLIFETIME_CONDITION(APlayerCharacter, OverlappingWeapon,COND_OwnerOnly);
 	DOREPLIFETIME(APlayerCharacter, Health);
 	DOREPLIFETIME(APlayerCharacter, Shield);
@@ -387,7 +383,7 @@ void APlayerCharacter::SprintStart()
 
 		if (HasAuthority())
 		{
-			GetCharacterMovement()->MaxWalkSpeed = UDC->RunningSpeed;
+			GetCharacterMovement()->MaxWalkSpeed = 1000;
 		}
 		else
 		{
@@ -404,7 +400,7 @@ void APlayerCharacter::SprintStop()
 
 		if (HasAuthority())
 		{
-			GetCharacterMovement()->MaxWalkSpeed = UDC->MoveSpeed;
+			GetCharacterMovement()->MaxWalkSpeed = 550;
 		}
 		else
 		{
@@ -415,12 +411,12 @@ void APlayerCharacter::SprintStop()
 
 void APlayerCharacter::ServerSprintStart_Implementation()
 {
-	GetCharacterMovement()->MaxWalkSpeed = UDC->RunningSpeed;
+	GetCharacterMovement()->MaxWalkSpeed = 1000;
 }
 
 void APlayerCharacter::ServerSprintStop_Implementation()
 {
-	GetCharacterMovement()->MaxWalkSpeed = UDC->MoveSpeed;
+	GetCharacterMovement()->MaxWalkSpeed = 550;
 }
 
 bool APlayerCharacter::ServerSprintStart_Validate()
