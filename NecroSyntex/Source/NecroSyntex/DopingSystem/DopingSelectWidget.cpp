@@ -52,8 +52,6 @@ UDopingComponent* UDopingSelectWidget::GetDopingComponent()
         return nullptr;
     }
 
-    Player = PlayerCharacter;
-
     // 도핑 컴포넌트 가져오기
     UDopingComponent* DopingComponent = PlayerCharacter->FindComponentByClass<UDopingComponent>();
     if (!DopingComponent)
@@ -63,10 +61,4 @@ UDopingComponent* UDopingSelectWidget::GetDopingComponent()
     }
 
     return DopingComponent;
-}
-
-APlayerCharacter* UDopingSelectWidget::GetDopingPlayerCharacter()
-{
-
-    return Player;
 }

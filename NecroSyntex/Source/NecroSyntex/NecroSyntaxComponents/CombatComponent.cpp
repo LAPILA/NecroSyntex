@@ -109,7 +109,7 @@ void UCombatComponent::OnRep_CarriedAmmo()
 
 void UCombatComponent::InitalizeCarriedAmmo()
 {
-	//ï¿½Ê±ï¿½ ÅºÈ¯
+	//ÃÊ±â ÅºÈ¯
 	CarriedAmmoMap.Emplace(EWeaponType::EWT_AssaultRifle, StartingARAmmo);
 }
 
@@ -155,10 +155,10 @@ void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 	EquippedWeapon->SetOwner(Character);
 	EquippedWeapon->SetHUDAmmo();
 
-	//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö´ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½Å¸ï¿½ï¿½ï¿½ï¿½ CarriedAmmoMapï¿½ï¿½ ï¿½ï¿½ï¿½Ôµï¿½ï¿½ï¿½ È®ï¿½ï¿½ï¿½ï¿½
+	//¼­¹ö¿¡ÀÖ´Â ÀåÂøµÈ ¹«±âÅ¸ÀÔÀÌ CarriedAmmoMap¿¡ Æ÷ÇÔµÈÁö È®ÀÎÈÄ
 	if (CarriedAmmoMap.Contains(EquippedWeapon->GetWeaponType()))
 	{
-		//ï¿½ï¿½ï¿½ï¿½ Åºï¿½à¿¡ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½Å¸ï¿½ï¿½ï¿½ï¿½ ammomapï¿½Ò´ï¿½
+		//º¸À¯ Åº¾à¿¡ ÀåÂø¹«±âÀÇ ¹«±âÅ¸ÀÔÀÇ ammomapÇÒ´ç
 		CarriedAmmo = CarriedAmmoMap[EquippedWeapon->GetWeaponType()];
 	}
 

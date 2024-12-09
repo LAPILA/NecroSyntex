@@ -17,8 +17,6 @@ class NECROSYNTEX_API UDPBurningFurnace : public UDopingParent
 public:
 	UDPBurningFurnace();
 
-	float DefenseBuffNum;
-
 	void UseDopingItem(UPlayerInformData* PID) override;
 
 	void BuffOn(UPlayerInformData* PID) override;
