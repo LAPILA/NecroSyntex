@@ -12,21 +12,22 @@ UDPFinalEmber::UDPFinalEmber()
 void UDPFinalEmber::BuffOn(UPlayerInformData* PID)
 {
 
-	BuffRemainDuration = BuffDuration;
+
 	CheckBuff = true;
+	StartBuff(PID);
 }
 
 void UDPFinalEmber::BuffOff(UPlayerInformData* PID)
 {
-
+	DeBuffOn(PID);
 }
 
 void UDPFinalEmber::DeBuffOn(UPlayerInformData* PID)
 {
 
 
-	DeBuffRemainDuration = DeBuffDuration;
 	CheckDeBuff = true;
+	StartDeBuff(PID);
 }
 
 void UDPFinalEmber::DeBuffOff(UPlayerInformData* PID)
@@ -40,15 +41,13 @@ void UDPFinalEmber::UseDopingItem(UPlayerInformData* PID)
 	if (Able && DopingItemNum > 0)
 	{
 		--DopingItemNum;
-		CurrentCoolTime = DopingCoolTime; // 쿨타임 시작
 		Able = false;
 
 
 		UE_LOG(LogTemp, Warning, TEXT("FinalEmber Use"));
 		//효과
-
-
-
+		BuffOn(PID);
 		//
+		StartCooldown();
 	}
 }
