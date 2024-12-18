@@ -12,11 +12,21 @@ class NECROSYNTEX_API ANecroSyntexPlayerState : public APlayerState
 {
 	GENERATED_BODY()
 public:
-	//Score Update - Client
+	virtual void GetLifetimeReplicatedProps(TArray< FLifetimeProperty >& OutLifetimeProps) const override;
+	/**
+	* Replication notifies
+	*/
 	virtual void OnRep_Score() override;
+	UFUNCTION()
+	virtual void OnRep_Defeats();
 	void AddToScore(float ScoreAmount);
+	void AddToDefeats(int32 DefeatsAmount);
+
 private:
 	//플레이어 접근 방법: 각각 Character, Controller Cast를 통한 접근 필요
 	class APlayerCharacter* Character;
 	class ANecroSyntexPlayerController* Controller;
+
+	UPROPERTY(ReplicatedUsing = OnRep_Defeats)
+	int32 Defeats;
 };

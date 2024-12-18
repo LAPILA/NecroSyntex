@@ -40,4 +40,7 @@ public:
 	// Score UI
 	UPROPERTY(meta = (BindWidget))
 	UTextBlock* ScoreAmount;
+
+	UPROPERTY(meta = (BindWidget))
+	UTextBlock* DieAmount;
 };

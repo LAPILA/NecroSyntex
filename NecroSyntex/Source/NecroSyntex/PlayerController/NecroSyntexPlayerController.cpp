@@ -80,8 +80,21 @@ void ANecroSyntexPlayerController::SetHudScore(float Score)
 		NecroSyntexHUD->CharacterOverlay->ScoreAmount;
 	if (bHUDValid)
 	{
-		FString AmmoText = FString::Printf(TEXT("Score : %d"), FMath::FloorToInt(Score));
+		FString AmmoText = FString::Printf(TEXT("Army Score : %d"), FMath::FloorToInt(Score));
 		NecroSyntexHUD->CharacterOverlay->ScoreAmount->SetText(FText::FromString(AmmoText));
+	}
+}
+
+void ANecroSyntexPlayerController::SetHUDDefeats(int32 Defeats)
+{
+	NecroSyntexHUD = NecroSyntexHUD == nullptr ? Cast<ANecroSyntexHud>(GetHUD()) : NecroSyntexHUD;
+	bool bHUDValid = NecroSyntexHUD &&
+		NecroSyntexHUD->CharacterOverlay &&
+		NecroSyntexHUD->CharacterOverlay->DieAmount;
+	if (bHUDValid)
+	{
+		FString DefeatsText = FString::Printf(TEXT("Die Count : %d"), Defeats);
+		NecroSyntexHUD->CharacterOverlay->DieAmount->SetText(FText::FromString(DefeatsText));
 	}
 }
 

@@ -18,7 +18,11 @@ void ANecroSyntexGameMode::PlayerEliminated(APlayerCharacter* ElimmedCharacter, 
 	// 점수 추가
 	if (AttackerPlayerState && AttackerPlayerState != VictimPlayerState)
 	{
-		AttackerPlayerState->AddToScore(-10.f);
+		AttackerPlayerState->AddToScore(-100.f);
+	}
+	if (VictimPlayerState)
+	{
+		VictimPlayerState->AddToDefeats(1);
 	}
 
 	if (ElimmedCharacter)

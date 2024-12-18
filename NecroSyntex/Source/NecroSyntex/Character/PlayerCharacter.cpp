@@ -54,7 +54,6 @@ APlayerCharacter::APlayerCharacter()
 	GetCharacterMovement()->RotationRate = FRotator(0.f, 0.f, 850.f);
 
 	TurningInPlace = ETurningInPlace::ETIP_NotTurning;
-	//�� ���� �����
 	NetUpdateFrequency = 66.0f;
 	MinNetUpdateFrequency = 33.0f;
 
@@ -200,7 +199,6 @@ void APlayerCharacter::PostInitializeComponents()
 void APlayerCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-	//Net ���������� ��ũ�� ���, ������ ����
 	DOREPLIFETIME_CONDITION(APlayerCharacter, OverlappingWeapon,COND_OwnerOnly);
 	DOREPLIFETIME(APlayerCharacter, Health);
 	DOREPLIFETIME(APlayerCharacter, Shield);
@@ -265,6 +263,11 @@ void APlayerCharacter::PlayReloadMontage()
 }
 void APlayerCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, AController* InstigatorController, AActor* DamageCauser)
 {
+	if (bElimed)
+	{
+		return;
+	}
+
 	PlayerHitReactMontage();
 	if (Shield > 0)
 	{
@@ -599,6 +602,7 @@ void APlayerCharacter::PollInit()
 		if (NecroSyntexPlayerState)
 		{
 			NecroSyntexPlayerState->AddToScore(0.f);
+			NecroSyntexPlayerState->AddToDefeats(0);
 		}
 	}
 
