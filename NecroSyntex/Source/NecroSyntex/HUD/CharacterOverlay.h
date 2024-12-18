@@ -17,20 +17,27 @@ class NECROSYNTEX_API UCharacterOverlay : public UUserWidget
 	GENERATED_BODY()
 
 public:
+	// Health & Shield ImageBar
 	UPROPERTY(meta = (BindWidget))
 	class UImage* HealthBar;
 	UPROPERTY(meta = (BindWidget))
 	class UImage* ShieldBar;
 
+	// UI Effect Animation
 	UPROPERTY(meta = (BindWidget))
 	UImage* UIHitEffect;
 
 	UPROPERTY(meta = (BindWidget))
 	UImage* UISkillPosEffect;
 
+	// Weapon Ammo UI
 	UPROPERTY(meta = (BindWidget))
 	UTextBlock* WeaponAmmoAmount;
 
 	UPROPERTY(meta = (BindWidget))
 	UTextBlock* CarriedAmmoAmount;
+
+	// Score UI
+	UPROPERTY(meta = (BindWidget))
+	UTextBlock* ScoreAmount;
 };

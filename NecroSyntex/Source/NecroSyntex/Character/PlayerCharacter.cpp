@@ -20,6 +20,7 @@
 #include "TimerManager.h"
 #include "NiagaraSystem.h"
 #include "NecroSyntex/Weapon/WeaponTypes.h"
+#include "NecroSyntex\PlayerState\NecroSyntexPlayerState.h"
 
 APlayerCharacter::APlayerCharacter()
 {
@@ -161,6 +162,7 @@ void APlayerCharacter::Tick(float DeltaTime)
 		}
 		CalculateAO_Pitch();
 	}
+	PollInit();
 }
 
 void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -587,6 +589,19 @@ void APlayerCharacter::UpdateHUDShield()
 	{
 		NecroSyntexPlayerController->SetHUDShield(Shield, MaxShield);
 	}
+}
+
+void APlayerCharacter::PollInit()
+{
+	if (NecroSyntexPlayerState == nullptr)
+	{
+		NecroSyntexPlayerState = GetPlayerState<ANecroSyntexPlayerState>();
+		if (NecroSyntexPlayerState)
+		{
+			NecroSyntexPlayerState->AddToScore(0.f);
+		}
+	}
+
 }
 
 void APlayerCharacter::ActivateDissolveEffect()

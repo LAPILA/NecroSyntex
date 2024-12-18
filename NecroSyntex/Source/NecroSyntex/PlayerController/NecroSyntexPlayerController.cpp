@@ -72,6 +72,19 @@ void ANecroSyntexPlayerController::SetHUDCarriedAmmo(int32 Ammo)
 	}
 }
 
+void ANecroSyntexPlayerController::SetHudScore(float Score)
+{
+	NecroSyntexHUD = NecroSyntexHUD == nullptr ? Cast<ANecroSyntexHud>(GetHUD()) : NecroSyntexHUD;
+	bool bHUDValid = NecroSyntexHUD &&
+		NecroSyntexHUD->CharacterOverlay &&
+		NecroSyntexHUD->CharacterOverlay->ScoreAmount;
+	if (bHUDValid)
+	{
+		FString AmmoText = FString::Printf(TEXT("Score : %d"), FMath::FloorToInt(Score));
+		NecroSyntexHUD->CharacterOverlay->ScoreAmount->SetText(FText::FromString(AmmoText));
+	}
+}
+
 void ANecroSyntexPlayerController::OnPossess(APawn* InPawn)
 {
 	Super::OnPossess(InPawn);

@@ -100,6 +100,7 @@ protected:
 	void ReceiveDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, class AController* InstigatorController, AActor* DamageCauser);
 	void UpdateHUDHealth();
 	void UpdateHUDShield();
+	void PollInit();
 
 	UFUNCTION(Server, Reliable, WithValidation)
 	void ServerSprintStart();
@@ -201,6 +202,7 @@ private:
 	UFUNCTION()
 	void ActivateDissolveEffect();
 
+	class ANecroSyntexPlayerState* NecroSyntexPlayerState;
 
 public:
 	void SetOverlappingWeapon(AWeapon* Weapon);
