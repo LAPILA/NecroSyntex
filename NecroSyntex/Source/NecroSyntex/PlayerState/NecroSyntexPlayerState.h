@@ -24,7 +24,9 @@ public:
 
 private:
 	//플레이어 접근 방법: 각각 Character, Controller Cast를 통한 접근 필요
+	UPROPERTY()
 	class APlayerCharacter* Character;
+	UPROPERTY()
 	class ANecroSyntexPlayerController* Controller;
 
 	UPROPERTY(ReplicatedUsing = OnRep_Defeats)

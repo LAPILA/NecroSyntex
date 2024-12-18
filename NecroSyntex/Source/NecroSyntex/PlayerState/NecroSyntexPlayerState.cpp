@@ -15,7 +15,7 @@ void ANecroSyntexPlayerState::GetLifetimeReplicatedProps(TArray< FLifetimeProper
 
 void ANecroSyntexPlayerState::AddToScore(float ScoreAmount)
 {
-	Score += ScoreAmount;
+	SetScore(GetScore() + ScoreAmount);
 
 	//Check Player Controller
 	Character = Character == nullptr ? Cast<APlayerCharacter>(GetPawn()) : Character;
@@ -24,7 +24,7 @@ void ANecroSyntexPlayerState::AddToScore(float ScoreAmount)
 		Controller = Controller == nullptr ? Cast<ANecroSyntexPlayerController>(Character->Controller) : Controller;
 		if (Controller)
 		{
-			Controller->SetHudScore(Score);
+			Controller->SetHUDScore(Score);
 		}
 	}
 }
@@ -40,7 +40,7 @@ void ANecroSyntexPlayerState::OnRep_Score()
 		Controller = Controller == nullptr ? Cast<ANecroSyntexPlayerController>(Character->Controller) : Controller;
 		if (Controller)
 		{
-			Controller->SetHudScore(Score);
+			Controller->SetHUDScore(Score);
 		}
 	}
 }
@@ -49,7 +49,7 @@ void ANecroSyntexPlayerState::AddToDefeats(int32 DefeatsAmount)
 {
 	Defeats += DefeatsAmount;
 	Character = Character == nullptr ? Cast<APlayerCharacter>(GetPawn()) : Character;
-	if (Character && Character->Controller)
+	if (Character)
 	{
 		Controller = Controller == nullptr ? Cast<ANecroSyntexPlayerController>(Character->Controller) : Controller;
 		if (Controller)
@@ -61,7 +61,7 @@ void ANecroSyntexPlayerState::AddToDefeats(int32 DefeatsAmount)
 void ANecroSyntexPlayerState::OnRep_Defeats()
 {
 	Character = Character == nullptr ? Cast<APlayerCharacter>(GetPawn()) : Character;
-	if (Character && Character->Controller)
+	if (Character)
 	{
 		Controller = Controller == nullptr ? Cast<ANecroSyntexPlayerController>(Character->Controller) : Controller;
 		if (Controller)

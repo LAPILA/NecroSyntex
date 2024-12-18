@@ -72,7 +72,7 @@ void ANecroSyntexPlayerController::SetHUDCarriedAmmo(int32 Ammo)
 	}
 }
 
-void ANecroSyntexPlayerController::SetHudScore(float Score)
+void ANecroSyntexPlayerController::SetHUDScore(float Score)
 {
 	NecroSyntexHUD = NecroSyntexHUD == nullptr ? Cast<ANecroSyntexHud>(GetHUD()) : NecroSyntexHUD;
 	bool bHUDValid = NecroSyntexHUD &&
