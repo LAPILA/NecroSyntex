@@ -13,6 +13,15 @@ void ANecroSyntexPlayerController::BeginPlay()
 	Super::BeginPlay();
 	NecroSyntexHUD = Cast<ANecroSyntexHud>(GetHUD());
 }
+
+void ANecroSyntexPlayerController::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+
+	SetHUDTime();
+}
+
+//Player State HUD
 void ANecroSyntexPlayerController::SetHUDHealth(float Health, float MaxHealth)
 {
 	NecroSyntexHUD = NecroSyntexHUD == nullptr ? Cast<ANecroSyntexHud>(GetHUD()) : NecroSyntexHUD;
@@ -46,6 +55,18 @@ void ANecroSyntexPlayerController::SetHUDShield(float Shield, float MaxShield)
 	}
 }
 
+void ANecroSyntexPlayerController::OnPossess(APawn* InPawn)
+{
+	Super::OnPossess(InPawn);
+	APlayerCharacter* PlayerCharacter = Cast<APlayerCharacter>(InPawn);
+	if (PlayerCharacter)
+	{
+		SetHUDHealth(PlayerCharacter->GetHealth(), PlayerCharacter->GetMaxHealth());
+		SetHUDShield(PlayerCharacter->GetShield(), PlayerCharacter->GetMaxShield());
+	}
+}
+
+//Weapon State HUD
 void ANecroSyntexPlayerController::SetHUDWeaponAmmo(int32 Ammo)
 {
 	NecroSyntexHUD = NecroSyntexHUD == nullptr ? Cast<ANecroSyntexHud>(GetHUD()) : NecroSyntexHUD;
@@ -72,6 +93,8 @@ void ANecroSyntexPlayerController::SetHUDCarriedAmmo(int32 Ammo)
 	}
 }
 
+
+//Player Score HUD
 void ANecroSyntexPlayerController::SetHUDScore(float Score)
 {
 	NecroSyntexHUD = NecroSyntexHUD == nullptr ? Cast<ANecroSyntexHud>(GetHUD()) : NecroSyntexHUD;
@@ -98,13 +121,37 @@ void ANecroSyntexPlayerController::SetHUDDefeats(int32 Defeats)
 	}
 }
 
-void ANecroSyntexPlayerController::OnPossess(APawn* InPawn)
+//Game State HUD
+void ANecroSyntexPlayerController::SetHUDMatchCountdown(float CountdownTime)
 {
-	Super::OnPossess(InPawn);
-	APlayerCharacter* PlayerCharacter = Cast<APlayerCharacter>(InPawn);
-	if (PlayerCharacter)
+	NecroSyntexHUD = NecroSyntexHUD == nullptr ? Cast<ANecroSyntexHud>(GetHUD()) : NecroSyntexHUD;
+	bool bHUDValid = NecroSyntexHUD &&
+		NecroSyntexHUD->CharacterOverlay &&
+		NecroSyntexHUD->CharacterOverlay->MatchCountdownText;
+	if (bHUDValid)
 	{
-		SetHUDHealth(PlayerCharacter->GetHealth(), PlayerCharacter->GetMaxHealth());
-		SetHUDShield(PlayerCharacter->GetShield(), PlayerCharacter->GetMaxShield());
+		int32 Hours = FMath::FloorToInt(CountdownTime / 3600.0f);
+		int32 Minutes = FMath::FloorToInt((CountdownTime - Hours * 3600.0f) / 60.0f);
+		int32 Seconds = FMath::FloorToInt(CountdownTime - (Hours * 3600.0f + Minutes * 60.0f));
+		int32 Milliseconds = FMath::RoundToInt((CountdownTime - FMath::FloorToFloat(CountdownTime)) * 1000.0f);
+
+		FString CountdownText = FString::Printf(TEXT("%02d:%02d:%02d:%03d"), Hours, Minutes, Seconds, Milliseconds);
+
+		NecroSyntexHUD->CharacterOverlay->MatchCountdownText->SetText(FText::FromString(CountdownText));
 	}
+}
+
+void ANecroSyntexPlayerController::SetHUDTime()
+{
+	float CurrentTime = MatchTime - GetWorld()->GetTimeSeconds();
+	uint32 SecondsLeft = FMath::CeilToInt(CurrentTime);
+	float Milliseconds = FMath::Frac(CurrentTime) * 1000.0f;
+
+	if (CountdownInt != SecondsLeft || PreviousMilliseconds != (int)Milliseconds)
+	{
+		SetHUDMatchCountdown(CurrentTime);
+	}
+
+	CountdownInt = SecondsLeft;
+	PreviousMilliseconds = (int)Milliseconds;
 }

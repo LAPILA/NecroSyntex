@@ -17,20 +17,21 @@ class NECROSYNTEX_API UCharacterOverlay : public UUserWidget
 	GENERATED_BODY()
 
 public:
-	// Health & Shield ImageBar
+	// Player State UI
 	UPROPERTY(meta = (BindWidget))
 	class UImage* HealthBar;
 	UPROPERTY(meta = (BindWidget))
 	class UImage* ShieldBar;
 
 	// UI Effect Animation
+	// To Do : nedd to make working this
 	UPROPERTY(meta = (BindWidget))
 	UImage* UIHitEffect;
 
 	UPROPERTY(meta = (BindWidget))
 	UImage* UISkillPosEffect;
 
-	// Weapon Ammo UI
+	// Weapon UI
 	UPROPERTY(meta = (BindWidget))
 	UTextBlock* WeaponAmmoAmount;
 
@@ -43,4 +44,8 @@ public:
 
 	UPROPERTY(meta = (BindWidget))
 	UTextBlock* DieAmount;
+
+	// Game Info UI
+	UPROPERTY(meta = (BindWidget))
+	UTextBlock* MatchCountdownText;
 };

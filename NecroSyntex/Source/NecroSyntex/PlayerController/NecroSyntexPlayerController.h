@@ -13,6 +13,7 @@ UCLASS()
 class NECROSYNTEX_API ANecroSyntexPlayerController : public APlayerController
 {
 	GENERATED_BODY()
+
 public:
 	void SetHUDHealth(float Health, float MaxHealth);
 	void SetHUDShield(float Shield, float MaxShield);
@@ -20,10 +21,20 @@ public:
 	void SetHUDCarriedAmmo(int32 Ammo);
 	void SetHUDScore(float Score);
 	void SetHUDDefeats(int32 Defeats);
+	void SetHUDMatchCountdown(float CountdownTime);
 	virtual void OnPossess(APawn* InPawn) override;
+	virtual void Tick(float DeltaTime) override;
+
 protected:
 	virtual void BeginPlay() override;
+	void SetHUDTime();
 private:
 	UPROPERTY()
 	class ANecroSyntexHud* NecroSyntexHUD;
+
+	// To Do : Make Set Match Time func
+	// Test Match Time - 1h
+	float MatchTime = 3600.0f;
+	int32 PreviousMilliseconds;
+	uint32 CountdownInt = 0;
 };
