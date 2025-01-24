@@ -109,8 +109,8 @@ void UCombatComponent::OnRep_CarriedAmmo()
 
 void UCombatComponent::InitalizeCarriedAmmo()
 {
-	//�ʱ� źȯ
 	CarriedAmmoMap.Emplace(EWeaponType::EWT_AssaultRifle, StartingARAmmo);
+	CarriedAmmoMap.Emplace(EWeaponType::EWT_RocketLauncher, StartingRocketAmmo);
 }
 
 void UCombatComponent::StartFireTimer()
@@ -155,10 +155,8 @@ void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 	EquippedWeapon->SetOwner(Character);
 	EquippedWeapon->SetHUDAmmo();
 
-	//�������ִ� ������ ����Ÿ���� CarriedAmmoMap�� ���Ե��� Ȯ����
 	if (CarriedAmmoMap.Contains(EquippedWeapon->GetWeaponType()))
 	{
-		//���� ź�࿡ ���������� ����Ÿ���� ammomap�Ҵ�
 		CarriedAmmo = CarriedAmmoMap[EquippedWeapon->GetWeaponType()];
 	}
 
