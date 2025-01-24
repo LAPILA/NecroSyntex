@@ -6,6 +6,11 @@
 #include "GameFramework/GameMode.h"
 #include "NecroSyntexGameMode.generated.h"
 
+namespace MatchState
+{
+	extern NECROSYNTEX_API const FName Cooldown; // Match duration has been reached. Deiplay winner and begin cooldown timer
+}
+
 /**
  * 
  */
@@ -21,10 +26,13 @@ public:
 	virtual void RequestRespawn(ACharacter* ElimmedCharacter, AController* ElimmedController);
 
 	UPROPERTY(EditDefaultsOnly)
-	float WarmUpTime = 10.f;
+	float WarmupTime = 10.f;
 	
 	UPROPERTY(EditDefaultsOnly)
 	float MatchTime = 120.f;
+
+	UPROPERTY(EditDefaultsOnly)
+	float CooldownTime = 10.f;
 
 	float LevelStartingTime = 0.f;
 

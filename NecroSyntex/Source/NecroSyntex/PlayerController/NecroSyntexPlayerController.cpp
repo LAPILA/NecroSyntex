@@ -11,6 +11,8 @@
 #include "NecroSyntex/PlayerState/NecroSyntexPlayerState.h"
 #include "NecroSyntex/HUD/Announcement.h"
 #include "Kismet/GameplayStatics.h"
+#include "NecroSyntex\NecroSyntaxComponents\CombatComponent.h"
+#include "NecroSyntex\GameState\NecroSyntexGameState.h"
 
 void ANecroSyntexPlayerController::BeginPlay()
 {
@@ -50,17 +52,19 @@ void ANecroSyntexPlayerController::ServerCheckMatchState_Implementation()
 	ANecroSyntexGameMode* GameMode = Cast<ANecroSyntexGameMode>(UGameplayStatics::GetGameMode(this));
 	if (GameMode)
 	{
-		WarmupTime = GameMode->WarmUpTime;
+		WarmupTime = GameMode->WarmupTime;
 		MatchTime = GameMode->MatchTime;
+		CooldownTime = GameMode->CooldownTime;
 		LevelStartingTime = GameMode->LevelStartingTime;
 		MatchState = GameMode->GetMatchState();
-		ClientJoinMidgame(MatchState, WarmupTime, MatchTime, LevelStartingTime);
+		ClientJoinMidgame(MatchState, WarmupTime, MatchTime, CooldownTime, LevelStartingTime);
 	}
 }
-void ANecroSyntexPlayerController::ClientJoinMidgame_Implementation(FName StateOfMatch, float Warmup, float Match, float StartingTime)
+void ANecroSyntexPlayerController::ClientJoinMidgame_Implementation(FName StateOfMatch, float Warmup, float Match, float Cooldown, float StartingTime)
 {
 	WarmupTime = Warmup;
 	MatchTime = Match;
+	CooldownTime = Cooldown;
 	LevelStartingTime = StartingTime;
 	MatchState = StateOfMatch;
 	OnMatchStateSet(MatchState);
@@ -202,6 +206,12 @@ void ANecroSyntexPlayerController::SetHUDMatchCountdown(float CountdownTime)
 		NecroSyntexHUD->CharacterOverlay->MatchCountdownText;
 	if (bHUDValid)
 	{
+		if (CountdownTime < 0.f)
+		{
+			NecroSyntexHUD->CharacterOverlay->MatchCountdownText->SetText(FText());
+			return;
+		}
+
 		int32 Hours = FMath::FloorToInt(CountdownTime / 3600.0f);
 		int32 Minutes = FMath::FloorToInt((CountdownTime - Hours * 3600.0f) / 60.0f);
 		int32 Seconds = FMath::FloorToInt(CountdownTime - (Hours * 3600.0f + Minutes * 60.0f));
@@ -221,6 +231,12 @@ void ANecroSyntexPlayerController::SetHUDAnnouncementCountdown(float CountdownTi
 		NecroSyntexHUD->Announcement->WarmupTime;
 	if (bHUDValid)
 	{
+		if (CountdownTime < 0.f)
+		{
+			NecroSyntexHUD->Announcement->WarmupTime->SetText(FText());
+			return;
+		}
+
 		int32 Hours = FMath::FloorToInt(CountdownTime / 3600.0f);
 		int32 Minutes = FMath::FloorToInt((CountdownTime - Hours * 3600.0f) / 60.0f);
 		int32 Seconds = FMath::FloorToInt(CountdownTime - (Hours * 3600.0f + Minutes * 60.0f));
@@ -238,12 +254,13 @@ void ANecroSyntexPlayerController::SetHUDTime()
 	float TimeLeft = 0.f;
 	if (MatchState == MatchState::WaitingToStart) TimeLeft = WarmupTime - GetServerTime() + LevelStartingTime;
 	else if (MatchState == MatchState::InProgress) TimeLeft = WarmupTime + MatchTime - GetServerTime() + LevelStartingTime;
+	else if (MatchState == MatchState::Cooldown) TimeLeft = WarmupTime + MatchTime - GetServerTime() + LevelStartingTime;
 	uint32 SecondsLeft = FMath::CeilToInt(TimeLeft);
 	float Milliseconds = FMath::Frac(CurrentTime) * 1000.0f;
 
 	if (CountdownInt != SecondsLeft || PreviousMilliseconds != (int)Milliseconds)
 	{
-		if (MatchState == MatchState::WaitingToStart)
+		if (MatchState == MatchState::WaitingToStart || MatchState == MatchState::Cooldown)
 		{
 			SetHUDAnnouncementCountdown(TimeLeft);
 		}
@@ -307,12 +324,20 @@ void ANecroSyntexPlayerController::OnMatchStateSet(FName State)
 	{
 		HandleMatchHasStarted();
 	}
+	else if (MatchState == MatchState::Cooldown)
+	{
+		HandleCooldown();
+	}
 }
 void ANecroSyntexPlayerController::OnRep_MatchState()
 {
 	if (MatchState == MatchState::InProgress)
 	{
 		HandleMatchHasStarted();
+	}
+	else if (MatchState == MatchState::Cooldown)
+	{
+		HandleCooldown();
 	}
 }
 
@@ -321,10 +346,37 @@ void ANecroSyntexPlayerController::HandleMatchHasStarted()
 	NecroSyntexHUD = NecroSyntexHUD == nullptr ? Cast<ANecroSyntexHud>(GetHUD()) : NecroSyntexHUD;
 	if (NecroSyntexHUD)
 	{
-		NecroSyntexHUD->AddCharacterOverlay();
+		if (NecroSyntexHUD->CharacterOverlay == nullptr) NecroSyntexHUD->AddCharacterOverlay();
 		if (NecroSyntexHUD->Announcement)
 		{
 			NecroSyntexHUD->Announcement->SetVisibility(ESlateVisibility::Hidden);
 		}
+	}
+}
+
+void ANecroSyntexPlayerController::HandleCooldown()
+{
+	NecroSyntexHUD = NecroSyntexHUD == nullptr ? Cast<ANecroSyntexHud>(GetHUD()) : NecroSyntexHUD;
+	if (NecroSyntexHUD)
+	{
+		NecroSyntexHUD->CharacterOverlay->RemoveFromParent();
+		bool bHUDValid = NecroSyntexHUD->Announcement &&
+			NecroSyntexHUD->Announcement->AnnouncementText &&
+			NecroSyntexHUD->Announcement->InfoText;
+		if (bHUDValid)
+		{
+			NecroSyntexHUD->Announcement->SetVisibility(ESlateVisibility::Visible);
+			FString AnnouncementText("New Match Starts In:");
+			NecroSyntexHUD->Announcement->AnnouncementText->SetText(FText::FromString(AnnouncementText));
+			//Scoreboard, modify it to your liking...
+			NecroSyntexHUD->Announcement->InfoText->SetText(FText());
+			
+		}
+	}
+	APlayerCharacter* NecroSyntexCharacter = Cast<APlayerCharacter>(GetPawn());
+	if (NecroSyntexCharacter && NecroSyntexCharacter->GetCombat())
+	{
+		NecroSyntexCharacter->bDisableGameplay = true;
+		NecroSyntexCharacter->GetCombat()->FireButtonPressed(false);
 	}
 }

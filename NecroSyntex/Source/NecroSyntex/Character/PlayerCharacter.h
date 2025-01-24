@@ -75,6 +75,9 @@ public:
 	UFUNCTION(NetMulticast, Reliable)
 	void MulticastElim();
 	virtual void Destroyed() override;
+
+	UPROPERTY(Replicated)
+	bool bDisableGameplay = false; //just work when game is playing
 protected:
     virtual void BeginPlay() override;
 
@@ -101,6 +104,7 @@ protected:
 	void UpdateHUDHealth();
 	void UpdateHUDShield();
 	void PollInit();
+	void RotateInPlace(float DeltaTime);
 
 	UFUNCTION(Server, Reliable, WithValidation)
 	void ServerSprintStart();
@@ -221,4 +225,6 @@ public:
 	FORCEINLINE float GetShield() const { return Shield; }
 	FORCEINLINE float GetMaxShield() const { return MaxShield; }
 	ECombatState GetCombatState() const;
+	FORCEINLINE UCombatComponent* GetCombat() const { return Combat; }
+	FORCEINLINE bool GetDisableGameplay() const { return bDisableGameplay; }
 };
