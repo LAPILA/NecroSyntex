@@ -37,10 +37,8 @@ void UDPFinalEmber::BuffOn(UPlayerInformData* PID)
 
 		PID->CurrentDoped += 1;
 
-
+		CheckBuff = true;
 	}
-
-	CheckBuff = true;
 	StartBuff(PID);
 }
 

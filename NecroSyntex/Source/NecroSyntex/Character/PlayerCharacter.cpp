@@ -21,6 +21,7 @@
 #include "NiagaraSystem.h"
 #include "NecroSyntex/Weapon/WeaponTypes.h"
 #include "NecroSyntex\PlayerState\NecroSyntexPlayerState.h"
+#include "NecroSyntex\DopingSystem\DopingComponent.h"
 
 APlayerCharacter::APlayerCharacter()
 {
@@ -44,8 +45,8 @@ APlayerCharacter::APlayerCharacter()
 	Combat = CreateDefaultSubobject<UCombatComponent>(TEXT("CombatComponent"));
 	Combat->SetIsReplicated(true);
 
-	
 	UDC = CreateDefaultSubobject<UDopingComponent>(TEXT("DopingComponent"));
+	UDC->SetIsReplicated(true);
 
 	GetCharacterMovement()->NavAgentProps.bCanCrouch = true;
 	GetCapsuleComponent()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Ignore);
@@ -142,7 +143,7 @@ void APlayerCharacter::BeginPlay()
 	{
 		OnTakeAnyDamage.AddDynamic(this, &APlayerCharacter::ReceiveDamage);
 	}
-
+	UE_LOG(LogTemp, Warning, TEXT("222222222222222222222222222222222222222222222222222222"));
 	GetCharacterMovement()->MaxWalkSpeed = UDC->MoveSpeed;
 }
 

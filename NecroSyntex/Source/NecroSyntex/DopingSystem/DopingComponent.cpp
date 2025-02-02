@@ -3,6 +3,7 @@
 
 #include "DopingComponent.h"
 #include "NecroSyntex/Character/PlayerCharacter.h"
+#include "Camera/CameraComponent.h"
 
 // Sets default values for this component's properties
 UDopingComponent::UDopingComponent()
@@ -11,6 +12,7 @@ UDopingComponent::UDopingComponent()
 	// off to improve performance if you don't need them.
 	PrimaryComponentTick.bCanEverTick = true;
 	// ...
+	UE_LOG(LogTemp, Warning, TEXT("333333333333333333333333333333333333333333333333333333"));
 }
 
 
@@ -21,6 +23,19 @@ void UDopingComponent::BeginPlay()
 
 	PID = NewObject<UPlayerInformData>(this);
 	PIDCheck = PID;
+
+	//아군에게 도핑을 받기위한 도핑 오브젝트 생성
+	LegEnforce = NewObject<UDPLegEnforce>(this);
+	ReducePain = NewObject<UDPReducePain>(this);
+	SupremeStrength = NewObject<UDPSupremeStrength>(this);
+	ForcedHealing = NewObject<UDPForcedHealing>(this);
+	FinalEmber = NewObject<UDPFinalEmber>(this);
+	BurningFurnace = NewObject<UDPBurningFurnace>(this);
+	SolidFortress = NewObject<UDPSolidFortress>(this);
+	Painless = NewObject<UDPPainless>(this);
+
+	//도핑 모드(아군에게 도핑을 줄지 나에게 줄지 설정)
+	DopingMode = false;
 
 	OneKeyBool = false;
 	TwoKeyBool = false;
@@ -39,6 +54,16 @@ void UDopingComponent::BeginPlay()
 
 
 	// ...11
+
+	//임시로 도핑키 셋팅
+	OneKeyDoping = NewObject<UDPLegEnforce>(this);
+	FirstDopingCode = 1;
+	OneKeyBool = true;
+
+	TwoKeyDoping = NewObject<UDPReducePain>(this);
+	SecondDopingCode = 2;
+	TwoKeyBool = true;
+
 
 }
 
@@ -153,4 +178,109 @@ void UDopingComponent::Passive_Start()
 void UDopingComponent::Passive_End()
 {
 
+}
+
+//아군에게 도핑주는 시스템 관련 함수
+void UDopingComponent::DopingModeChange()
+{
+	if (DopingMode == false) {
+		DopingMode = true;
+	}
+	else {
+		DopingMode = false;
+	}
+}
+
+void UDopingComponent::FirstDopingForAlly()
+{
+	UE_LOG(LogTemp, Warning, TEXT("아군에게 도핑사용 1번 작동"));
+	
+	AActor* Owner = GetOwner();
+	if (!Owner) return;
+
+	UE_LOG(LogTemp, Warning, TEXT("1"));
+
+	APlayerCharacter* OwnerCharacter = Cast<APlayerCharacter>(Owner);
+	if (!OwnerCharacter) return;
+
+	UE_LOG(LogTemp, Warning, TEXT("2"));
+
+	UCameraComponent* CameraComponent = OwnerCharacter->FindComponentByClass<UCameraComponent>();
+	if (!CameraComponent) return;
+
+	UE_LOG(LogTemp, Warning, TEXT("3"));
+
+	FVector Start = CameraComponent->GetComponentLocation();
+	FVector ForwardVector = CameraComponent->GetForwardVector();
+	FVector End = Start + (ForwardVector * 10000.0f);
+
+	FHitResult HitResult;
+	FCollisionQueryParams Params;
+	Params.AddIgnoredActor(Owner);
+
+	UE_LOG(LogTemp, Warning, TEXT("4"));
+	if (GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_Visibility, Params))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("5"));
+		APlayerCharacter* HitCharacter = Cast<APlayerCharacter>(HitResult.GetActor());
+		if (HitCharacter) {
+			UE_LOG(LogTemp, Warning, TEXT("6"));
+			switch (FirstDopingCode)
+			{
+			case 1: HitCharacter->UDC->LegEnforce->BuffOn(HitCharacter->UDC->PID); UE_LOG(LogTemp, Warning, TEXT("7ㄴ")); break;
+			case 2: HitCharacter->UDC->ReducePain->BuffOn(HitCharacter->UDC->PID); break;
+			case 3: HitCharacter->UDC->SupremeStrength->BuffOn(HitCharacter->UDC->PID); break;
+			case 4: HitCharacter->UDC->ForcedHealing->BuffOn(HitCharacter->UDC->PID); break;
+			case 5: HitCharacter->UDC->FinalEmber->BuffOn(HitCharacter->UDC->PID); break;
+			case 6: HitCharacter->UDC->BurningFurnace->BuffOn(HitCharacter->UDC->PID); break;
+			case 7: HitCharacter->UDC->SolidFortress->BuffOn(HitCharacter->UDC->PID); break;
+			case 8: HitCharacter->UDC->Painless->BuffOn(HitCharacter->UDC->PID); break;
+			default: UE_LOG(LogTemp, Warning, TEXT("Invalid Doping Key Set!")); break;
+
+			}
+
+		}
+	}
+}
+
+void UDopingComponent::SecondDopingForAlly()
+{
+	UE_LOG(LogTemp, Warning, TEXT("아군에게 도핑사용 2번 작동 시작"));
+	AActor* Owner = GetOwner();
+	if (!Owner) return;
+
+	APlayerCharacter* OwnerCharacter = Cast<APlayerCharacter>(Owner);
+	if (!OwnerCharacter) return;
+
+	UCameraComponent* CameraComponent = OwnerCharacter->FindComponentByClass<UCameraComponent>();
+	if (!CameraComponent) return;
+
+	FVector Start = CameraComponent->GetComponentLocation();
+	FVector ForwardVector = CameraComponent->GetForwardVector();
+	FVector End = Start + (ForwardVector * 10000.0f);
+
+	FHitResult HitResult;
+	FCollisionQueryParams Params;
+	Params.AddIgnoredActor(Owner);
+
+	if (GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_Visibility, Params))
+	{
+		APlayerCharacter* HitCharacter = Cast<APlayerCharacter>(HitResult.GetActor());
+		if (HitCharacter) {
+			switch (SecondDopingCode)
+			{
+			case 1: HitCharacter->UDC->LegEnforce->BuffOn(HitCharacter->UDC->PID); UE_LOG(LogTemp, Warning, TEXT("7ㄴ")); break;
+			case 2: HitCharacter->UDC->ReducePain->BuffOn(HitCharacter->UDC->PID); break;
+			case 3: HitCharacter->UDC->SupremeStrength->BuffOn(HitCharacter->UDC->PID); break;
+			case 4: HitCharacter->UDC->ForcedHealing->BuffOn(HitCharacter->UDC->PID); break;
+			case 5: HitCharacter->UDC->FinalEmber->BuffOn(HitCharacter->UDC->PID); break;
+			case 6: HitCharacter->UDC->BurningFurnace->BuffOn(HitCharacter->UDC->PID); break;
+			case 7: HitCharacter->UDC->SolidFortress->BuffOn(HitCharacter->UDC->PID); break;
+			case 8: HitCharacter->UDC->Painless->BuffOn(HitCharacter->UDC->PID); break;
+			default: UE_LOG(LogTemp, Warning, TEXT("Invalid Doping Key Set!")); break;
+
+			}
+
+		}
+	}
 }

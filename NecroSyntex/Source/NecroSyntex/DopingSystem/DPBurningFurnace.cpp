@@ -20,9 +20,9 @@ void UDPBurningFurnace::BuffOn(UPlayerInformData* PID)
 
 		CheckBuff = true;
 
-		DeBuffOn(PID);
 	}
 
+	DeBuffOn(PID);
 	StartBuff(PID);
 }
 

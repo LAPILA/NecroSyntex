@@ -53,14 +53,14 @@ void ANecroSyntexGameMode::Tick(float DeltaTime)
 	}
 }
 
-//ÇÃ·¹ÀÌ¾î Á¦°Å °ü·Ã ÇÔ¼ö
+//ï¿½Ã·ï¿½ï¿½Ì¾ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ô¼ï¿½
 void ANecroSyntexGameMode::PlayerEliminated(APlayerCharacter* ElimmedCharacter, ANecroSyntexPlayerController* VictimController, ANecroSyntexPlayerController* AttackController)
 {
-	// °ø°ÝÀÚ, Èñ»ýÀÚ State Á¸Àç È®ÀÎ
+	// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½ State ï¿½ï¿½ï¿½ï¿½ È®ï¿½ï¿½
 	ANecroSyntexPlayerState* AttackerPlayerState = AttackController ? Cast<ANecroSyntexPlayerState>(AttackController->PlayerState) : nullptr;
 	ANecroSyntexPlayerState* VictimPlayerState = VictimController ? Cast<ANecroSyntexPlayerState>(VictimController->PlayerState) : nullptr;
 
-	// Á¡¼ö Ãß°¡
+	// ï¿½ï¿½ï¿½ï¿½ ï¿½ß°ï¿½
 	if (AttackerPlayerState && AttackerPlayerState != VictimPlayerState)
 	{
 		AttackerPlayerState->AddToScore(-100.f);

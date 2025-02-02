@@ -7,31 +7,42 @@ UDPReducePain::UDPReducePain()
 	:Super()
 {
 	BuffDuration = 2.0f;
+
+	CheckBuff = false;
+	CheckDeBuff = false;
 }
 
 void UDPReducePain::BuffOn(UPlayerInformData* PID)
 {
-	DefenseBuffNum = 50.0f - PID->Defense;
-	PID->Defense = PID->Defense + DefenseBuffNum;
+	if (CheckBuff == false) {
+		DefenseBuffNum = 50.0f - PID->Defense;
+		PID->Defense = PID->Defense + DefenseBuffNum;
 
-	PID->CurrentDoped += 1;
+		PID->CurrentDoped += 1;
+
+		CheckBuff = true;
+		UE_LOG(LogTemp, Warning, TEXT("ReducePain Use"));
+	}
 
 	DeBuffOn(PID);
-
-	CheckBuff = true;
 	StartBuff(PID);
 }
 
 void UDPReducePain::BuffOff(UPlayerInformData* PID)
 {
-	PID->Defense = PID->Defense - DefenseBuffNum;
-	CheckBuff = false;
+	if (CheckBuff == true) {
+		PID->Defense = PID->Defense - DefenseBuffNum;
+		CheckBuff = false;
+	}
+	
 }
 
 void UDPReducePain::DeBuffOn(UPlayerInformData* PID)
 {
-	PID->CurrentHealth = PID->CurrentHealth - (PID->CurrentHealth * 0.3);
-	PID->CurrentDoped -= 1;
+	if (CheckDeBuff == false) {
+		PID->CurrentHealth = PID->CurrentHealth - (PID->CurrentHealth * 0.3);
+		PID->CurrentDoped -= 1;
+	}
 }
 
 void UDPReducePain::DeBuffOff(UPlayerInformData* PID)

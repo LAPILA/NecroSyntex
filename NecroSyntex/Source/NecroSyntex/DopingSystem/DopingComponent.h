@@ -39,10 +39,12 @@ public:
 
 	UPROPERTY()
 	UDopingParent* OneKeyDoping; // 키보드 1번키 도핑
+	int FirstDopingCode;
 	bool OneKeyBool;
 
 	UPROPERTY()
 	UDopingParent* TwoKeyDoping; // 키보드 2번키 도핑
+	int SecondDopingCode;
 	bool TwoKeyBool;
 
 	UPROPERTY()
@@ -152,19 +154,45 @@ public:
 	// 1, 일단 캐릭터 마다 도핑 오브젝트를 가지고는 있다.
 
 	UPROPERTY()
-	UDPLegEnforce LegEnforce;
+	UDPLegEnforce* LegEnforce;
 
 	UPROPERTY()
-	UDPReducePain ReducePain;
+	UDPReducePain* ReducePain;
 
 	UPROPERTY()
-	UDPSupremeStrength SupremeStrength;
+	UDPSupremeStrength* SupremeStrength;
 
 	UPROPERTY()
-	UDPForcedHealing ForcedHealing;
+	UDPForcedHealing* ForcedHealing;
 
 	UPROPERTY()
+	UDPFinalEmber* FinalEmber;
 
+	UPROPERTY()
+	UDPBurningFurnace* BurningFurnace;
+
+	UPROPERTY()
+	UDPSolidFortress* SolidFortress;
+
+	UPROPERTY()
+	UDPPainless* Painless;
+
+	// 1-1. 아군에게 도핑주는 모드 전환
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	bool DopingMode;
+
+	UFUNCTION(BlueprintCallable)
+	void DopingModeChange();
+
+	// 2. 라인트레이스로 아군을 찾는 함수
+
+	// 3. 아군에게 도핑을 주는 함수
+	UFUNCTION(BlueprintCallable)
+	void FirstDopingForAlly();
+
+
+	UFUNCTION(BlueprintCallable)
+	void SecondDopingForAlly();
 
 
 
