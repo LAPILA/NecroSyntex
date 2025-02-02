@@ -127,9 +127,6 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	class UCombatComponent* Combat;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-	//Doping Component(by TeaHyuck)
-	class UDopingComponent* UDC;
 
 	UFUNCTION(Server, Reliable)
 	void ServerEquipButtonPressed();
@@ -205,6 +202,15 @@ private:
 	class ANecroSyntexPlayerState* NecroSyntexPlayerState;
 
 public:
+	//Pahu
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	//Doping Component(by TeaHyuck)
+	class UDopingComponent* UDC;
+
+	UPROPERTY(EditAnywhere)
+	float TotalDamage;
+	//Pahu end
+
 	void SetOverlappingWeapon(AWeapon* Weapon);
 	bool IsWeaponEquipped();
 	bool IsAiming();

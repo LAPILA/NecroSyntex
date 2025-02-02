@@ -2,6 +2,7 @@
 
 
 #include "DopingComponent.h"
+#include "NecroSyntex/Character/PlayerCharacter.h"
 
 // Sets default values for this component's properties
 UDopingComponent::UDopingComponent()
@@ -27,7 +28,6 @@ void UDopingComponent::BeginPlay()
 
 	MaxHealth = PID->MaxHealth;
 	CurrentHealth = PID->CurrentHealth;
-	AttackPointMag = PID->AttackPointMag;
 	MoveSpeed = PID->MoveSpeed;
 	RunningSpeed = PID->RunningSpeed;
 	//Reboud = PID->Reboud;
@@ -35,17 +35,20 @@ void UDopingComponent::BeginPlay()
 	Blurred = PID->Blurred;
 	ROF = PID->ROF;
 	//ItemUseRate = PID->ItemUSeRate
+	TotalDamage = GunDamage + PID->DopingDamageBuff;
 
-
-	//OneKeyDoping = LE; // 나중에는 도핑 선택창에서 플레이어가 도핑 고른 것으로 들어가게 할거임
-	//TwoKeyDoping = RP;
 
 	// ...11
 
 }
 
 void UDopingComponent::FirstDopingUse() {
-	
+
+	if (PID->CurrentDoped >= 2) {
+		UE_LOG(LogTemp, Warning, TEXT("This Character is doped two Doping"));
+		return;
+	}
+
 	if (OneKeyDoping->Able == true) {
 		OneKeyDoping->UseDopingItem(PID);
 	}
@@ -53,6 +56,12 @@ void UDopingComponent::FirstDopingUse() {
 }
 
 void UDopingComponent::SecondDopingUse() {
+
+	if (PID->CurrentDoped >= 2) {
+		UE_LOG(LogTemp, Warning, TEXT("This Character is doped two Doping"));
+		return;
+	}
+
 	if (TwoKeyDoping->Able == true) {
 		TwoKeyDoping->UseDopingItem(PID);
 	}
@@ -84,12 +93,13 @@ void UDopingComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 	// Player 정보 갱신
 	MaxHealth = PID->MaxHealth;
 	CurrentHealth = PID->CurrentHealth;
-	AttackPointMag = PID->AttackPointMag;
 	MoveSpeed = PID->MoveSpeed;
 	RunningSpeed = PID->RunningSpeed;
 	Defense = PID->Defense;
 	Blurred = PID->Blurred;
 	ROF = PID->ROF;
+
+	TotalDamage = GunDamage + PID->DopingDamageBuff;
 
 }
 
@@ -103,7 +113,7 @@ void UDopingComponent::SetDopingKey(UDopingParent*& DopingKey, int32 Num)
 
 	switch (Num)
 	{
-	case 1: DopingKey = NewObject<UDPLegEnforce>(this, UDPLegEnforce::StaticClass()); break;
+	case 1: DopingKey = NewObject<UDPLegEnforce>(this); break;
 	case 2: DopingKey = NewObject<UDPReducePain>(this); break;
 	case 3: DopingKey = NewObject<UDPSupremeStrength>(this); break;
 	case 4: DopingKey = NewObject<UDPForcedHealing>(this); break;
@@ -131,4 +141,16 @@ void UDopingComponent::SetSecondDopingKey(int32 Num)
 UDopingComponent* UDopingComponent::GetDopingComponent()
 {
 	return this;
+}
+
+//패시브
+
+void UDopingComponent::Passive_Start()
+{
+
+}
+
+void UDopingComponent::Passive_End()
+{
+
 }

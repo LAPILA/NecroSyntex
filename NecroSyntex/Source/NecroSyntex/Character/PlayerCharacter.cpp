@@ -44,6 +44,7 @@ APlayerCharacter::APlayerCharacter()
 	Combat = CreateDefaultSubobject<UCombatComponent>(TEXT("CombatComponent"));
 	Combat->SetIsReplicated(true);
 
+	
 	UDC = CreateDefaultSubobject<UDopingComponent>(TEXT("DopingComponent"));
 
 	GetCharacterMovement()->NavAgentProps.bCanCrouch = true;
@@ -162,6 +163,8 @@ void APlayerCharacter::Tick(float DeltaTime)
 		CalculateAO_Pitch();
 	}
 	PollInit();
+
+	TotalDamage = UDC->TotalDamage;
 }
 
 void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)

@@ -5,11 +5,19 @@
 
 UDPSupremeStrength::UDPSupremeStrength() :Super()
 {
+	BuffDuration = 6.0f;
+	DeBuffDuration = 6.0f;
 
 }
 
 void UDPSupremeStrength::BuffOn(UPlayerInformData* PID)
 {
+	MLAttackBuffNum = PID->MLAtaackPoint;
+
+	PID->MLAtaackPoint = PID->MLAtaackPoint + MLAttackBuffNum;
+
+	PID->CurrentDoped += 1;
+
 	CheckBuff = true;
 	StartBuff(PID);
 
@@ -18,11 +26,15 @@ void UDPSupremeStrength::BuffOn(UPlayerInformData* PID)
 
 void UDPSupremeStrength::BuffOff(UPlayerInformData* PID)
 {
+	PID->MLAtaackPoint = PID->MLAtaackPoint - MLAttackBuffNum;
 
+	CheckBuff = false;
 }
 
 void UDPSupremeStrength::DeBuffOn(UPlayerInformData* PID)
 {
+	BlurredDeBuffNum = 1;
+	PID->Blurred = PID->Blurred - BlurredDeBuffNum;
 
 	CheckDeBuff = true;
 	StartDeBuff(PID);
@@ -30,7 +42,11 @@ void UDPSupremeStrength::DeBuffOn(UPlayerInformData* PID)
 
 void UDPSupremeStrength::DeBuffOff(UPlayerInformData* PID)
 {
+	PID->Blurred = PID->Blurred + BlurredDeBuffNum;
 
+	PID->CurrentDoped -= 1;
+
+	CheckDeBuff = false;
 }
 
 void UDPSupremeStrength::UseDopingItem(UPlayerInformData* PID)

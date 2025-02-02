@@ -8,39 +8,47 @@ UDPBurningFurnace::UDPBurningFurnace()
 {
 	BuffDuration = 10.0f;
 	DeBuffDuration = 10.0f;
+	CheckBuff = false;
+	CheckDeBuff = false;
 }
 
 void UDPBurningFurnace::BuffOn(UPlayerInformData* PID)
 {
-	DefenseBuffNum = PID->Defense;
-	PID->Defense = PID->Defense + DefenseBuffNum;
+	if (CheckBuff == false) {
+		DefenseBuffNum = PID->Defense;
+		PID->Defense = PID->Defense + DefenseBuffNum;
 
-	CheckBuff = true;
+		CheckBuff = true;
+
+		DeBuffOn(PID);
+	}
 
 	StartBuff(PID);
-	DeBuffOn(PID);
 }
 
 void UDPBurningFurnace::BuffOff(UPlayerInformData* PID)
 {
-	PID->Defense = PID->Defense - DefenseBuffNum;
+	if (CheckBuff == true) {
+		PID->Defense = PID->Defense - DefenseBuffNum;
 
-	CheckBuff = false;
+		CheckBuff = false;
+	}
 }
 
 void UDPBurningFurnace::DeBuffOn(UPlayerInformData* PID)
 {
+	if (CheckDeBuff == false) {
+		CheckDeBuff = true;
 
-	CheckDeBuff = true;
-
-	StartDeBuff(PID);
+		StartDeBuff(PID);
+	}
 }
 
 void UDPBurningFurnace::DeBuffOff(UPlayerInformData* PID)
 {
-
-
-	CheckDeBuff = false;
+	if (CheckDeBuff == true) {
+		CheckDeBuff = false;
+	}
 }
 
 void UDPBurningFurnace::UseDopingItem(UPlayerInformData* PID)

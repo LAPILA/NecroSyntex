@@ -2,6 +2,7 @@
 
 
 #include "DPForcedHealing.h"
+#include "TimerManager.h"
 
 UDPForcedHealing::UDPForcedHealing() : Super()
 {
@@ -9,10 +10,31 @@ UDPForcedHealing::UDPForcedHealing() : Super()
 	DeBuffDuration = 6.0f;
 }
 
+void UDPForcedHealing::HealCharacter(UPlayerInformData* PID)
+{
+	if (PID->CurrentHealth < PID->MaxHealth) {
+		if (PID->CurrentHealth + BuffRecoverAPS > PID->MaxHealth) {
+			PID->CurrentHealth = PID->MaxHealth;
+		}
+		else {
+			PID->CurrentHealth += BuffRecoverAPS;
+		}
+	}
+}
+
 void UDPForcedHealing::BuffOn(UPlayerInformData* PID)
 {
 	targetRecover = (PID->MaxHealth * 0.3);
-	BuffRecoverAPS = targetRecover / BuffDuration;
+	BuffRecoverAPS = targetRecover / (BuffDuration * 0.2f);
+
+	GetWorld()->GetTimerManager().SetTimer(
+		HealingTimer,
+		[this, PID]() { HealCharacter(PID); },
+		0.2f,
+		true
+	);
+
+	PID->CurrentDoped += 1;
 
 	CheckBuff = true;
 	StartBuff(PID);
@@ -20,7 +42,7 @@ void UDPForcedHealing::BuffOn(UPlayerInformData* PID)
 
 void UDPForcedHealing::BuffOff(UPlayerInformData* PID)
 {
-
+	GetWorld()->GetTimerManager().ClearTimer(HealingTimer);
 	DeBuffOn(PID);
 }
 
@@ -36,6 +58,9 @@ void UDPForcedHealing::DeBuffOn(UPlayerInformData* PID)
 void UDPForcedHealing::DeBuffOff(UPlayerInformData* PID)
 {
 	PID->MaxHealth = PID->MaxHealth + DebuffMaxHP;
+	CheckDeBuff = false;
+
+	PID->CurrentDoped -= 1;
 }
 
 void UDPForcedHealing::UseDopingItem(UPlayerInformData* PID)

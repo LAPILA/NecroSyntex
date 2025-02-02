@@ -6,11 +6,23 @@
 UDPPainless::UDPPainless()
 	:Super()
 {
-
+	BuffDuration = 10.0f;
+	DeBuffDuration = 10.0f;
 }
 
 void UDPPainless::BuffOn(UPlayerInformData* PID)
 {
+	WalkingBuffNum = PID->MoveSpeed * 0.1f;
+	RunningBuffNum = PID->RunningSpeed * 0.1f;
+
+
+	PID->DopingDamageBuff += 10.0f;
+
+
+	PID->MoveSpeed = PID->MoveSpeed + WalkingBuffNum;
+	PID->RunningSpeed = PID->RunningSpeed + RunningBuffNum;
+
+	PID->CurrentDoped += 1;
 
 	CheckBuff = true;
 	StartBuff(PID);
@@ -21,11 +33,17 @@ void UDPPainless::BuffOn(UPlayerInformData* PID)
 void UDPPainless::BuffOff(UPlayerInformData* PID)
 {
 
+	PID->DopingDamageBuff -= 10.0f;
+
+
+	PID->MoveSpeed = PID->MoveSpeed - WalkingBuffNum;
+	PID->RunningSpeed = PID->RunningSpeed - RunningBuffNum;
+	CheckBuff = false;
 }
 
 void UDPPainless::DeBuffOn(UPlayerInformData* PID)
 {
-
+	//체력 회복량 50% 감소?
 
 	CheckDeBuff = true;
 	StartDeBuff(PID);
@@ -33,7 +51,8 @@ void UDPPainless::DeBuffOn(UPlayerInformData* PID)
 
 void UDPPainless::DeBuffOff(UPlayerInformData* PID)
 {
-
+	PID->CurrentDoped -= 1;
+	CheckDeBuff = false;
 }
 
 void UDPPainless::UseDopingItem(UPlayerInformData* PID)

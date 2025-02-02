@@ -36,6 +36,8 @@ void UDPLegEnforce::BuffOn(UPlayerInformData* PID)
 
 	CheckBuff = true;
 
+	PID->CurrentDoped += 1;
+
 	StartBuff(PID);
 
 	UE_LOG(LogTemp, Warning, TEXT("LegEnforce BuffOn: Speed increased."));
@@ -70,6 +72,8 @@ void UDPLegEnforce::DeBuffOff(UPlayerInformData* PID)
 {
 	PID->MoveSpeed += WalkingDeBuffNum;
 	PID->RunningSpeed += RunningDeBuffNum;
+
+	PID->CurrentDoped -= 1;
 
 	CheckDeBuff = false;
 

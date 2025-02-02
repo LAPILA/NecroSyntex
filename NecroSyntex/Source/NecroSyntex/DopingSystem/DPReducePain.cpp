@@ -13,6 +13,9 @@ void UDPReducePain::BuffOn(UPlayerInformData* PID)
 {
 	DefenseBuffNum = 50.0f - PID->Defense;
 	PID->Defense = PID->Defense + DefenseBuffNum;
+
+	PID->CurrentDoped += 1;
+
 	DeBuffOn(PID);
 
 	CheckBuff = true;
@@ -22,11 +25,13 @@ void UDPReducePain::BuffOn(UPlayerInformData* PID)
 void UDPReducePain::BuffOff(UPlayerInformData* PID)
 {
 	PID->Defense = PID->Defense - DefenseBuffNum;
+	CheckBuff = false;
 }
 
 void UDPReducePain::DeBuffOn(UPlayerInformData* PID)
 {
 	PID->CurrentHealth = PID->CurrentHealth - (PID->CurrentHealth * 0.3);
+	PID->CurrentDoped -= 1;
 }
 
 void UDPReducePain::DeBuffOff(UPlayerInformData* PID)

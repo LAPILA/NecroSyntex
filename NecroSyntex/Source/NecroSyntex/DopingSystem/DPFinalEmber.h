@@ -15,6 +15,16 @@ class NECROSYNTEX_API UDPFinalEmber : public UDopingParent
 	GENERATED_BODY()
 
 public:
+	UPROPERTY()
+	float HPBuffNum;
+	UPROPERTY()
+	float WalkingBuffNum;
+	UPROPERTY()
+	float RunningBuffNum;
+	UPROPERTY()
+	float MLAttackBuffNum;
+
+
 	UDPFinalEmber();
 
 	void UseDopingItem(UPlayerInformData* PID) override;

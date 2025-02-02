@@ -51,7 +51,6 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Doping")
 	virtual void DeBuffOff(UPlayerInformData* PID);
 
-protected:
 	// 내부 타이머 관리
 	FTimerHandle BuffTimerHandle;
 	FTimerHandle DeBuffTimerHandle;
@@ -62,7 +61,7 @@ protected:
 	void StartDeBuff(UPlayerInformData* PID);
 	void StartCooldown();
 
-	// 타이머 종료 콜백
+	// 타이머 종료 함수
 	void EndBuff(UPlayerInformData* PID);
 	void EndDeBuff(UPlayerInformData* PID);
 	void EndCooldown();

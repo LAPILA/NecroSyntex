@@ -12,7 +12,7 @@ AProjectile::AProjectile()
 {
 	PrimaryActorTick.bCanEverTick = true;
 	bReplicates = true;
-	// Ãæµ¹ ¹Ú½º ÃÊ±âÈ­
+	// ï¿½æµ¹ ï¿½Ú½ï¿½ ï¿½Ê±ï¿½È­
 	CollisionBox = CreateDefaultSubobject<UBoxComponent>(TEXT("CollisionBox"));
 	SetRootComponent(CollisionBox);
 	CollisionBox->SetCollisionObjectType(ECollisionChannel::ECC_WorldDynamic);
@@ -22,12 +22,12 @@ AProjectile::AProjectile()
 	CollisionBox->SetCollisionResponseToChannel(ECollisionChannel::ECC_WorldStatic, ECollisionResponse::ECR_Block);
 	CollisionBox->SetCollisionResponseToChannel(ECC_SkeletalMesh, ECollisionResponse::ECR_Block);
 
-	// Åõ»çÃ¼ ÀÌµ¿ ÄÄÆ÷³ÍÆ® ÃÊ±âÈ­
+	// ï¿½ï¿½ï¿½ï¿½Ã¼ ï¿½Ìµï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ® ï¿½Ê±ï¿½È­
 	ProjectileMovementComponent = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("ProjectileMovementComponent"));
-	ProjectileMovementComponent->bRotationFollowsVelocity = true; // Åõ»çÃ¼°¡ ÀÌµ¿ ¹æÇâÀ» µû¶ó È¸Àü
-	ProjectileMovementComponent->bShouldBounce = false;          // ¹Ý»ç ºñÈ°¼ºÈ­
-	ProjectileMovementComponent->InitialSpeed = InitialSpeed;    // ÃÊ±â ¼Óµµ
-	ProjectileMovementComponent->MaxSpeed = MaxSpeed;            // ÃÖ´ë ¼Óµµ
+	ProjectileMovementComponent->bRotationFollowsVelocity = true; // ï¿½ï¿½ï¿½ï¿½Ã¼ï¿½ï¿½ ï¿½Ìµï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ È¸ï¿½ï¿½
+	ProjectileMovementComponent->bShouldBounce = false;          // ï¿½Ý»ï¿½ ï¿½ï¿½È°ï¿½ï¿½È­
+	ProjectileMovementComponent->InitialSpeed = InitialSpeed;    // ï¿½Ê±ï¿½ ï¿½Óµï¿½
+	ProjectileMovementComponent->MaxSpeed = MaxSpeed;            // ï¿½Ö´ï¿½ ï¿½Óµï¿½
 
 }
 
@@ -51,6 +51,10 @@ void AProjectile::BeginPlay()
 	{
 		CollisionBox->OnComponentHit.AddDynamic(this, &AProjectile::OnHit);
 	}
+
+
+	//Pahu
+	Damage = Cast<APlayerCharacter>(GetOwner())->TotalDamage;
 }
 
 void AProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
