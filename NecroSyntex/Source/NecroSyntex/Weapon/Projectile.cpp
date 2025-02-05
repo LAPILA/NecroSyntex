@@ -1,6 +1,5 @@
 #include "Projectile.h"
 #include "Components/BoxComponent.h"
-#include "GameFramework/ProjectileMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Particles/ParticleSystemComponent.h"
 #include "Particles/ParticleSystem.h"
@@ -21,14 +20,6 @@ AProjectile::AProjectile()
 	CollisionBox->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Block);
 	CollisionBox->SetCollisionResponseToChannel(ECollisionChannel::ECC_WorldStatic, ECollisionResponse::ECR_Block);
 	CollisionBox->SetCollisionResponseToChannel(ECC_SkeletalMesh, ECollisionResponse::ECR_Block);
-
-	// 투사체 이동 컴포넌트 초기화
-	ProjectileMovementComponent = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("ProjectileMovementComponent"));
-	ProjectileMovementComponent->bRotationFollowsVelocity = true; // 투사체가 이동 방향을 따라 회전
-	ProjectileMovementComponent->bShouldBounce = false;          // 반사 비활성화
-	ProjectileMovementComponent->InitialSpeed = InitialSpeed;    // 초기 속도
-	ProjectileMovementComponent->MaxSpeed = MaxSpeed;            // 최대 속도
-
 }
 
 void AProjectile::BeginPlay()

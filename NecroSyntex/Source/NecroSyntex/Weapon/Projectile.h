@@ -32,11 +32,10 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Projectile|Collision")
 	class UBoxComponent* CollisionBox;
 
-private:
-
 	// 투사체 이동 컴포넌트
 	UPROPERTY(VisibleAnywhere, Category = "Projectile|Movement")
 	class UProjectileMovementComponent* ProjectileMovementComponent;
+private:
 
 	// 초기 발사 방향
 	UPROPERTY(EditAnywhere, Category = "Projectile|Settings")
