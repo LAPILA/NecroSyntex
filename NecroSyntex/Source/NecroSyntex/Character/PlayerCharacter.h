@@ -75,6 +75,12 @@ public:
 	UFUNCTION(NetMulticast, Reliable)
 	void MulticastElim();
 	virtual void Destroyed() override;
+
+	UPROPERTY(Replicated)
+	bool bDisalbeGameplay = false;
+
+	UFUNCTION(BluePrintImplementableEvent)
+	void ShowSniperScopeWidget(bool bShowScope);
 protected:
     virtual void BeginPlay() override;
 
