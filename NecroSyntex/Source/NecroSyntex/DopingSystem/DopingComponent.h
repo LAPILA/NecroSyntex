@@ -39,16 +39,30 @@ public:
 
 	UPROPERTY()
 	UDopingParent* OneKeyDoping; // 키보드 1번키 도핑
+	int FirstDopingCode;
 	bool OneKeyBool;
 
 	UPROPERTY()
 	UDopingParent* TwoKeyDoping; // 키보드 2번키 도핑
+	int SecondDopingCode;
 	bool TwoKeyBool;
 
 	UPROPERTY()
 	UPlayerInformData* PID;
 	UPlayerInformData* PIDCheck;
 
+	//패시브
+	UPROPERTY()
+	float Passive_Duration;
+
+	UFUNCTION()
+	virtual void Passive_Start();
+	UFUNCTION()
+	virtual void Passive_End();
+
+
+
+	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "FirstDopping")
 	int One_DopingItemNum; // 도핑 아이템 개숫
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "FirstDopping")
@@ -81,17 +95,17 @@ public:
 	bool Two_Able; // 사용 가능 & 불가능
 
 
+	// 캐릭터 스텟
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PlayerDopingInform")
 	float MaxHealth;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PlayerDopingInform")
 	float CurrentHealth;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PlayerDopingInform")
-	float AttackPointMag;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PlayerDopingInform")
 	float MoveSpeed;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PlayerDopingInform")
 	float RunningSpeed;
-	//float Redbound; // 반동
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PlayerDopingInform")
+	float Redbound; // 반동
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PlayerDopingInform")
 	float MLAtaackPoint;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PlayerDopingInform")
@@ -102,6 +116,17 @@ public:
 	float ROF;
 	//float ItemUseRate; // 아이템 사용비율
 
+	//데미지
+	//임시 총 데미지
+	UPROPERTY()
+	float GunDamage = 50.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Damage")
+	//([총 데미지] * [캐릭터 공격력 배율])*도핑강화배율(무통증(10%), 마지막 불꽃(20%), 합연산)
+	float TotalDamage;
+
+
+	// 도핑 설정 및 사용
 	UFUNCTION(BlueprintCallable)
 	void FirstDopingUse();
 
@@ -119,8 +144,55 @@ public:
 
 	UDopingComponent* GetDopingComponent();
 
+	FTimerHandle PassiveTimerHandle;
+
+
 	//TArray<UDopingParent*> ActiveDopingItems;
 
+
+	// 아군에게 도핑 주기
+	// 1, 일단 캐릭터 마다 도핑 오브젝트를 가지고는 있다.
+
+	UPROPERTY()
+	UDPLegEnforce* LegEnforce;
+
+	UPROPERTY()
+	UDPReducePain* ReducePain;
+
+	UPROPERTY()
+	UDPSupremeStrength* SupremeStrength;
+
+	UPROPERTY()
+	UDPForcedHealing* ForcedHealing;
+
+	UPROPERTY()
+	UDPFinalEmber* FinalEmber;
+
+	UPROPERTY()
+	UDPBurningFurnace* BurningFurnace;
+
+	UPROPERTY()
+	UDPSolidFortress* SolidFortress;
+
+	UPROPERTY()
+	UDPPainless* Painless;
+
+	// 1-1. 아군에게 도핑주는 모드 전환
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	bool DopingMode;
+
+	UFUNCTION(BlueprintCallable)
+	void DopingModeChange();
+
+	// 2. 라인트레이스로 아군을 찾는 함수
+
+	// 3. 아군에게 도핑을 주는 함수
+	UFUNCTION(BlueprintCallable)
+	void FirstDopingForAlly();
+
+
+	UFUNCTION(BlueprintCallable)
+	void SecondDopingForAlly();
 
 
 

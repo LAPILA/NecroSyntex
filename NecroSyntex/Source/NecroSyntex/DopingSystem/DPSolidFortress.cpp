@@ -6,13 +6,25 @@
 UDPSolidFortress::UDPSolidFortress()
 	:Super()
 {
+	BuffDuration = 10.0f;
+	DeBuffDuration = 10.0f;
 
+	CheckBuff = false;
+	CheckDeBuff = false;
 }
 
 void UDPSolidFortress::BuffOn(UPlayerInformData* PID)
 {
+	if (CheckBuff == false) {
+		HPBuffNum = PID->MaxHealth * 0.5f;
 
-	CheckBuff = true;
+		PID->MaxHealth = PID->MaxHealth + HPBuffNum;
+
+		PID->CurrentDoped += 1;
+
+
+		CheckBuff = true;
+	}
 	StartBuff(PID);
 
 	DeBuffOn(PID);
@@ -20,18 +32,37 @@ void UDPSolidFortress::BuffOn(UPlayerInformData* PID)
 
 void UDPSolidFortress::BuffOff(UPlayerInformData* PID)
 {
-
+	if (CheckBuff == true) {
+		PID->MaxHealth = PID->MaxHealth - HPBuffNum;
+		CheckBuff = false;
+	}
 }
 
 void UDPSolidFortress::DeBuffOn(UPlayerInformData* PID)
 {
+	if (CheckDeBuff == false) {
+		WalkingDeBuffNum = PID->MoveSpeed * 0.2f;
+		RunningDeBuffNum = PID->RunningSpeed * 0.2f;
 
-	CheckDeBuff = true;
+		PID->MoveSpeed = PID->MoveSpeed - WalkingDeBuffNum;
+		PID->RunningSpeed = PID->RunningSpeed - RunningDeBuffNum;
+		PID->DopingDamageBuff -= 20.0f;
+
+		CheckDeBuff = true;
+	}
 	StartDeBuff(PID);
 }
 
 void UDPSolidFortress::DeBuffOff(UPlayerInformData* PID)
 {
+	if (CheckDeBuff == true) {
+		PID->MoveSpeed = PID->MoveSpeed + WalkingDeBuffNum;
+		PID->RunningSpeed = PID->RunningSpeed + RunningDeBuffNum;
+		PID->DopingDamageBuff += 20.0f;
+
+		PID->CurrentDoped -= 1;
+		CheckDeBuff = false;
+	}
 
 }
 
