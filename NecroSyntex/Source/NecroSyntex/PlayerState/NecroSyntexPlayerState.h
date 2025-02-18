@@ -5,7 +5,7 @@
 #include "NecroSyntexPlayerState.generated.h"
 
 /*
-* °¢ ÇÃ·¹ÀÌ¾î´ç Á¡¼ö ½Ã½ºÅÛ
+* ï¿½ï¿½ ï¿½Ã·ï¿½ï¿½Ì¾ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ã½ï¿½ï¿½ï¿½
 */
 UCLASS()
 class NECROSYNTEX_API ANecroSyntexPlayerState : public APlayerState
@@ -23,7 +23,7 @@ public:
 	void AddToDefeats(int32 DefeatsAmount);
 
 private:
-	//ÇÃ·¹ÀÌ¾î Á¢±Ù ¹æ¹ı: °¢°¢ Character, Controller Cast¸¦ ÅëÇÑ Á¢±Ù ÇÊ¿ä
+	//ï¿½Ã·ï¿½ï¿½Ì¾ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½: ï¿½ï¿½ï¿½ï¿½ Character, Controller Castï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ê¿ï¿½
 	UPROPERTY()
 	class APlayerCharacter* Character;
 	UPROPERTY()
@@ -31,4 +31,19 @@ private:
 
 	UPROPERTY(ReplicatedUsing = OnRep_Defeats)
 	int32 Defeats;
+
+	//ì•„ë˜ë¶€í„°ëŠ” ë°•íƒœí˜ í¸ì§‘
+public:
+	UPROPERTY(EditDefaultsOnly, Replicated)
+	TSubclassOf<APlayerCharacter> SelectedCharacterClass;
+
+	UPROPERTY(Replicated)
+	int32 FirstDopingCode;
+
+	UPROPERTY(Replicated)
+	int32 SecondDopingCode;
+
+	UPROPERTY(Replicated)
+	bool bHasCompletedSelection = false;
+
 };

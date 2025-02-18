@@ -79,4 +79,14 @@ private:
 	float HUDMaxShield;
 	float HUDScore;
 	int32 HUDDefeats;
+
+
+	//박태혁 편집
+public:
+	UFUNCTION(Server, Reliable, BlueprintCallable)
+	void Server_SetCharacter(TSubclassOf<APlayerCharacter> SelectCharacter);
+
+	UFUNCTION(Server, Reliable, BlueprintCallable)
+	void Server_SetDoping(int32 SelectFirstDoping, int32 SelectSecondDoping);
+
 };

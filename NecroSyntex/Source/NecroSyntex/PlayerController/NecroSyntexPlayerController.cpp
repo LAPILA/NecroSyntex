@@ -328,3 +328,34 @@ void ANecroSyntexPlayerController::HandleMatchHasStarted()
 		}
 	}
 }
+
+//아래 부터 박태혁 편집
+void ANecroSyntexPlayerController::Server_SetCharacter_Implementation(TSubclassOf<APlayerCharacter> SelectCharacter)
+{
+
+	if (!IsValid(SelectCharacter))
+	{
+		return; // 유효하지 않으면 실행 중지
+	}
+
+
+	ANecroSyntexPlayerState* PS = GetPlayerState<ANecroSyntexPlayerState>();
+	if (PS)
+	{
+		PS->SelectedCharacterClass = SelectCharacter;
+	}
+
+}
+
+void ANecroSyntexPlayerController::Server_SetDoping_Implementation(int32 SelectFirstDoping, int32 SelectSecondDoping)
+{
+	ANecroSyntexPlayerState* PS = GetPlayerState<ANecroSyntexPlayerState>();
+	if (PS)
+	{
+		PS->FirstDopingCode = SelectFirstDoping;
+		PS->SecondDopingCode = SelectSecondDoping;
+		PS->bHasCompletedSelection = true;
+
+
+	}
+}
