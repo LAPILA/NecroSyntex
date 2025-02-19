@@ -85,6 +85,7 @@ void ANecroSyntexGameMode::RequestRespawn(ACharacter* ElimmedCharacter, AControl
 	}
 	if (ElimmedController)
 	{
+		UE_LOG(LogTemp, Warning, TEXT("ElimmedController valid"))
 		TArray<AActor*> PlayerStarts;
 		UGameplayStatics::GetAllActorsOfClass(this, APlayerStart::StaticClass(), PlayerStarts);
 		int32 Selection = FMath::RandRange(0, PlayerStarts.Num() - 1);

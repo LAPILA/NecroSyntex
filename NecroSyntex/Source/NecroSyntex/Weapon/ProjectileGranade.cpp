@@ -22,6 +22,11 @@ void AProjectileGranade::BeginPlay()
 {
 	AActor::BeginPlay();
 
+	if (GetOwner())
+	{
+		ProjectileMesh->IgnoreActorWhenMoving(GetOwner(), true);
+	}
+
 	SpawnTrailSystem();
 	StartDestroyTimer();
 
