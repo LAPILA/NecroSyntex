@@ -10,6 +10,7 @@
 #include "NecroSyntex/GameMode/NecroSyntexGameMode.h"
 #include "NecroSyntex/PlayerState/NecroSyntexPlayerState.h"
 #include "NecroSyntex/HUD/Announcement.h"
+#include "NecroSyntex\NecroSyntaxComponents\CombatComponent.h"
 #include "Kismet/GameplayStatics.h"
 
 void ANecroSyntexPlayerController::BeginPlay()
@@ -232,6 +233,23 @@ void ANecroSyntexPlayerController::SetHUDAnnouncementCountdown(float CountdownTi
 	}
 }
 
+void ANecroSyntexPlayerController::SetHUDGrenades(int32 Grenades)
+{
+	NecroSyntexHUD = NecroSyntexHUD == nullptr ? Cast<ANecroSyntexHud>(GetHUD()) : NecroSyntexHUD;
+	bool bHUDValid = NecroSyntexHUD &&
+		NecroSyntexHUD->CharacterOverlay &&
+		NecroSyntexHUD->CharacterOverlay->GrenadesText;
+	if (bHUDValid)
+	{
+		FString GrenadesText = FString::Printf(TEXT("%d"), Grenades);
+		NecroSyntexHUD->CharacterOverlay->GrenadesText->SetText(FText::FromString(GrenadesText));
+	}
+	else
+	{
+		HUDGrenades = Grenades;
+	}
+}
+
 void ANecroSyntexPlayerController::SetHUDTime()
 {
 	float CurrentTime = MatchTime - GetServerTime();
@@ -270,6 +288,12 @@ void ANecroSyntexPlayerController::PollInit()
 				SetHUDShield(HUDShield, HUDMaxShield);
 				SetHUDScore(HUDScore);
 				SetHUDDefeats(HUDDefeats);
+
+				APlayerCharacter* PlayerCharacter = Cast<APlayerCharacter>(GetPawn());
+				if (PlayerCharacter && PlayerCharacter->GetCombat())
+				{
+					SetHUDGrenades(PlayerCharacter->GetCombat()->GetGrenades());
+				}
 			}
 		}
 	}

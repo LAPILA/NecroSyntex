@@ -38,6 +38,9 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void LaunchGrenade();
+
+	UFUNCTION(Server, Reliable)
+	void ServerLaunchGrenade(const FVector_NetQuantize& Target);
 protected:
 	virtual void BeginPlay() override;
 	void SetAiming(bool bIsAiming);
@@ -176,4 +179,14 @@ private:
 	void UpdateAmmoValues();
 
 	void UpdateShotgunAmmoValues();
+
+	UPROPERTY(ReplicatedUsing = OnRep_Grenades)
+	int32 Grenades = 5;
+	UFUNCTION()
+	void OnRep_Grenades();
+	UPROPERTY(EditAnywhere)
+	int32 MaxGrenades = 5;
+	void UpdateHUDGrenades();
+public:
+	FORCEINLINE int32 GetGrenades() const { return Grenades; }
 };
