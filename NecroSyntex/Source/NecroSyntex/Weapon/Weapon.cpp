@@ -11,6 +11,7 @@
 #include "Casing.h"
 #include "Engine/SkeletalMeshSocket.h"
 #include "NecroSyntex\PlayerController\NecroSyntexPlayerController.h"
+#include "NecroSyntex\NecroSyntaxComponents\CombatComponent.h"
 
 // Sets default values
 AWeapon::AWeapon()
@@ -103,6 +104,10 @@ void AWeapon::SpendRound()
 void AWeapon::OnRep_Ammo()
 {
 	PlayerOwnerCharacter = PlayerOwnerCharacter == nullptr ? Cast<APlayerCharacter>(GetOwner()) : PlayerOwnerCharacter;
+	if (PlayerOwnerCharacter && PlayerOwnerCharacter->GetCombat() && IsFull())
+	{
+		PlayerOwnerCharacter->GetCombat()->JumpToShotgunEnd();
+	}
 	SetHUDAmmo();
 }
 void AWeapon::OnRep_Owner()
@@ -178,6 +183,11 @@ void AWeapon::AddAmmo(int32 AmmoToAdd)
 bool AWeapon::IsEmpty()
 {
 	return Ammo <= 0;
+}
+
+bool AWeapon::IsFull()
+{
+	return Ammo == MagCapacity;
 }
 
 void AWeapon::OnRep_WeaponState()
