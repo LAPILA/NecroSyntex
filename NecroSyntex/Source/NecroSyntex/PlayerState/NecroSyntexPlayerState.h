@@ -34,16 +34,25 @@ private:
 
 	//아래부터는 박태혁 편집
 public:
-	UPROPERTY(EditDefaultsOnly, Replicated)
+	ANecroSyntexPlayerState();
+
+	UPROPERTY(EditAnywhere, Replicated)
 	TSubclassOf<APlayerCharacter> SelectedCharacterClass;
 
-	UPROPERTY(Replicated)
+	UPROPERTY(EditAnywhere, Replicated)
 	int32 FirstDopingCode;
 
-	UPROPERTY(Replicated)
+	UPROPERTY(EditAnywhere, Replicated)
 	int32 SecondDopingCode;
 
 	UPROPERTY(Replicated)
 	bool bHasCompletedSelection = false;
+
+	UPROPERTY(Replicated)
+	bool CopyComplete = false;
+
+
+protected:
+	virtual void CopyProperties(APlayerState* PlayerState) override;
 
 };

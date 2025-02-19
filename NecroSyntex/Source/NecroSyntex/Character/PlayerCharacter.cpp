@@ -21,7 +21,6 @@
 #include "NiagaraSystem.h"
 #include "NecroSyntex/Weapon/WeaponTypes.h"
 #include "NecroSyntex\PlayerState\NecroSyntexPlayerState.h"
-#include "NecroSyntex\DopingSystem\DopingComponent.h"
 
 APlayerCharacter::APlayerCharacter()
 {

@@ -34,4 +34,19 @@ protected:
 
 private:
 	float CountdownTime = 0.f;
+
+
+public:
+
+	//박태혁 편집 구간
+	FTimerHandle CheckPlayerStateTimer;
+
+	void SetupPlayers();
+
+	UPROPERTY()
+	FVector SpawnLocation;
+	FVector SpawnRotation;
+
+protected:
+	virtual void PostLogin(APlayerController* NewPlayer) override;
 };

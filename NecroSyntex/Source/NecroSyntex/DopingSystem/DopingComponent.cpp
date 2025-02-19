@@ -138,14 +138,14 @@ void UDopingComponent::SetDopingKey(UDopingParent*& DopingKey, int32 Num)
 
 	switch (Num)
 	{
-	case 1: DopingKey = NewObject<UDPLegEnforce>(this); break;
-	case 2: DopingKey = NewObject<UDPReducePain>(this); break;
-	case 3: DopingKey = NewObject<UDPSupremeStrength>(this); break;
-	case 4: DopingKey = NewObject<UDPForcedHealing>(this); break;
-	case 5: DopingKey = NewObject<UDPFinalEmber>(this); break;
-	case 6: DopingKey = NewObject<UDPBurningFurnace>(this); break;
-	case 7: DopingKey = NewObject<UDPSolidFortress>(this); break;
-	case 8: DopingKey = NewObject<UDPPainless>(this); break;
+	case 1: DopingKey = SupremeStrength; break;
+	case 2: DopingKey = BurningFurnace; break;
+	case 3: DopingKey = Painless; break;
+	case 4: DopingKey = FinalEmber; break;
+	case 5: DopingKey = ReducePain; break;
+	case 6: DopingKey = SolidFortress; break;
+	case 7: DopingKey = LegEnforce; break;
+	case 8: DopingKey = ForcedHealing; break;
 	default: UE_LOG(LogTemp, Warning, TEXT("Invalid Doping Key Set!")); break;
 	}
 }

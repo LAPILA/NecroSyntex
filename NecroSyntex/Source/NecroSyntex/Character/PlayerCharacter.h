@@ -10,6 +10,7 @@
 #include "NiagaraComponent.h"
 #include "NecroSyntex/Interfaces/InteractWithCrossHairsInterface.h"
 #include "NecroSyntex/NecroSyntexType/CombatState.h"
+#include "NecroSyntex\DopingSystem\DopingComponent.h"
 #include "PlayerCharacter.generated.h"
 
 class UInputMappingContext;
@@ -210,7 +211,7 @@ public:
 	//Pahu
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	//Doping Component(by TeaHyuck)
-	class UDopingComponent* UDC;
+	UDopingComponent* UDC;
 
 	UPROPERTY(EditAnywhere)
 	float TotalDamage;

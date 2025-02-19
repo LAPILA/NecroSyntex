@@ -7,10 +7,23 @@
 #include "NecroSyntex\PlayerController\NecroSyntexPlayerController.h"
 #include "Net/UnrealNetwork.h"
 
+ANecroSyntexPlayerState::ANecroSyntexPlayerState()
+{
+	bAlwaysRelevant = true;
+	bReplicates = true;
+}
+
 void ANecroSyntexPlayerState::GetLifetimeReplicatedProps(TArray< FLifetimeProperty >& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 	DOREPLIFETIME(ANecroSyntexPlayerState, Defeats);
+
+
+	DOREPLIFETIME(ANecroSyntexPlayerState, SelectedCharacterClass);
+	DOREPLIFETIME(ANecroSyntexPlayerState, FirstDopingCode);
+	DOREPLIFETIME(ANecroSyntexPlayerState, SecondDopingCode);
+	DOREPLIFETIME(ANecroSyntexPlayerState, bHasCompletedSelection);
+	DOREPLIFETIME(ANecroSyntexPlayerState, CopyComplete);
 }
 
 void ANecroSyntexPlayerState::AddToScore(float ScoreAmount)
@@ -68,5 +81,21 @@ void ANecroSyntexPlayerState::OnRep_Defeats()
 		{
 			Controller->SetHUDDefeats(Defeats);
 		}
+	}
+}
+
+void ANecroSyntexPlayerState::CopyProperties(APlayerState* PlayerState)
+{
+	Super::CopyProperties(PlayerState);
+
+
+	UE_LOG(LogTemp, Warning, TEXT("CopyProperty 작동"));
+	ANecroSyntexPlayerState* NewPS = Cast<ANecroSyntexPlayerState>(PlayerState);
+	if (NewPS) {
+		NewPS->SelectedCharacterClass = SelectedCharacterClass;
+		NewPS->FirstDopingCode = FirstDopingCode;
+		NewPS->SecondDopingCode = SecondDopingCode;
+		NewPS->CopyComplete = true;
+		CopyComplete = true;
 	}
 }

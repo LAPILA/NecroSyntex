@@ -83,10 +83,26 @@ private:
 
 	//박태혁 편집
 public:
+
 	UFUNCTION(Server, Reliable, BlueprintCallable)
 	void Server_SetCharacter(TSubclassOf<APlayerCharacter> SelectCharacter);
 
 	UFUNCTION(Server, Reliable, BlueprintCallable)
 	void Server_SetDoping(int32 SelectFirstDoping, int32 SelectSecondDoping);
+
+	UFUNCTION(Client, Reliable)
+	void ShowCharacterSelectUI();
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UI")
+	TSubclassOf<UUserWidget> SelectionWidgetClass;
+
+	UPROPERTY()
+	UUserWidget* SelectionWidget;
+
+	FTimerHandle CheckPlayerStateTimer;
+
+	void CheckPlayerState();
+
+	void CheckPSSetTimer();
 
 };
