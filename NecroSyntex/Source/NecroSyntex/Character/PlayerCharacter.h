@@ -219,6 +219,12 @@ private:
 
 	class ANecroSyntexPlayerState* NecroSyntexPlayerState;
 
+	/**
+	* Grenade
+	*/
+	UPROPERTY(VisibleAnywhere)
+	UStaticMeshComponent* AttachedGrenade;
+
 public:
 	void SetOverlappingWeapon(AWeapon* Weapon);
 	bool IsWeaponEquipped();
@@ -237,5 +243,6 @@ public:
 	FORCEINLINE float GetMaxShield() const { return MaxShield; }
 	ECombatState GetCombatState() const;
 	FORCEINLINE UAnimMontage* GetReloadMontage() const { return ReloadMontage; }
+	FORCEINLINE UStaticMeshComponent* GetAttachedGrenade() const { return AttachedGrenade; }
 	FORCEINLINE UCombatComponent* GetCombat() const { return Combat; }
 };

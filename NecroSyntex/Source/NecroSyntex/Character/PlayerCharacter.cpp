@@ -59,6 +59,10 @@ APlayerCharacter::APlayerCharacter()
 
 	DissolveEffectComponent = CreateDefaultSubobject<UNiagaraComponent>(TEXT("DissolveEffectComponent"));
 	DissolveEffectComponent->SetupAttachment(GetMesh());
+
+	AttachedGrenade = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Attached Grenade"));
+	AttachedGrenade->SetupAttachment(GetMesh(), FName("GrenadeSocket"));
+	AttachedGrenade->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 }
 
 void APlayerCharacter::OnRep_ReplicatedMovement()
@@ -152,7 +156,10 @@ void APlayerCharacter::BeginPlay()
 	{
 		OnTakeAnyDamage.AddDynamic(this, &APlayerCharacter::ReceiveDamage);
 	}
-
+	if (AttachedGrenade)
+	{
+		AttachedGrenade->SetVisibility(false);
+	}
 	GetCharacterMovement()->MaxWalkSpeed = UDC->MoveSpeed;
 }
 
