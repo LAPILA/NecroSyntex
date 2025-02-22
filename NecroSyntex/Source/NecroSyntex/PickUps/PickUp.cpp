@@ -5,6 +5,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "Sound\SoundCue.h"
 #include "Components\SphereComponent.h"
+#include "NecroSyntex\Weapon\WeaponTypes.h"
 
 // Sets default values
 APickUp::APickUp()
@@ -24,7 +25,8 @@ APickUp::APickUp()
 	PickupMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("PickupMesh"));
 	PickupMesh->SetupAttachment(OverlapSphere);
 	PickupMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-
+	PickupMesh->SetRenderCustomDepth(true);
+	PickupMesh->SetCustomDepthStencilValue(CUSTOM_DEPTH_TAN);
 
 }
 
@@ -47,6 +49,11 @@ void APickUp::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	if (PickupMesh)
+	{
+		//회전 효과 싫으면 제거
+		PickupMesh->AddLocalRotation(FRotator(0.0f, BaseTurnRate * DeltaTime, 0.f));
+	}
 }
 
 void APickUp::Destroyed()
