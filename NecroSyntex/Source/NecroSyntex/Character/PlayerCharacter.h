@@ -86,6 +86,8 @@ public:
 
 	UFUNCTION(BluePrintImplementableEvent)
 	void ShowSniperScopeWidget(bool bShowScope);
+
+	void SpawnDefaultWeapon();
 protected:
     virtual void BeginPlay() override;
 
@@ -112,6 +114,7 @@ protected:
 	void ReceiveDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, class AController* InstigatorController, AActor* DamageCauser);
 	void UpdateHUDHealth();
 	void UpdateHUDShield();
+	void UpdateHUDAmmo();
 	void PollInit();
 
 	UFUNCTION(Server, Reliable, WithValidation)
@@ -195,7 +198,7 @@ private:
 	UPROPERTY(ReplicatedUsing = OnRep_Shield, VisibleAnywhere, Category = "Player Stats")
 	float Shield = 200.f;
 	UFUNCTION()
-	void OnRep_Shield();
+	void OnRep_Shield(float LastShield);
 
 	bool bElimed = false;
 
@@ -224,6 +227,15 @@ private:
 	*/
 	UPROPERTY(VisibleAnywhere)
 	UStaticMeshComponent* AttachedGrenade;
+
+	/**
+	* Default weapon
+	*/
+
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<AWeapon> DefaultWeaponClass;
+
+
 
 public:
 	void SetOverlappingWeapon(AWeapon* Weapon);

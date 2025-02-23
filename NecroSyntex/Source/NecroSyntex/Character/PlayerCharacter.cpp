@@ -1,26 +1,34 @@
+// Unreal Engine 기본 헤더
 #include "PlayerCharacter.h"
-#include "Engine/LocalPlayer.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
-#include "GameFramework/CharacterMovementComponent.h"
-#include "GameFramework/SpringArmComponent.h"
-#include "GameFramework/Controller.h"
 #include "Components/WidgetComponent.h"
-#include "Net\UnrealNetwork.h"
-#include "EnhancedInputSubsystems.h"
-#include "EnhancedInputComponent.h"
-#include "NecroSyntex\Weapon\Weapon.h"
-#include "NecroSyntex\NecroSyntaxComponents\CombatComponent.h"
-#include "Components/CapsuleComponent.h"
+#include "Engine/LocalPlayer.h"
+#include "GameFramework/CharacterMovementComponent.h"
+#include "GameFramework/Controller.h"
+#include "GameFramework/SpringArmComponent.h"
 #include "Kismet/KismetMathLibrary.h"
-#include "PlayerAnimInstance.h"
-#include "NecroSyntex\NecroSyntex.h"
-#include "NecroSyntex\PlayerController\NecroSyntexPlayerController.h"
-#include "NecroSyntex\GameMode\NecroSyntexGameMode.h"
-#include "TimerManager.h"
+#include "Kismet/GameplayStatics.h"
+#include "Net/UnrealNetwork.h"
 #include "NiagaraSystem.h"
+#include "TimerManager.h"
+
+// Enhanced Input 관련 헤더
+#include "EnhancedInputComponent.h"
+#include "EnhancedInputSubsystems.h"
+
+// 프로젝트 관련 헤더 (NecroSyntex)
+#include "NecroSyntex/NecroSyntex.h"
+#include "NecroSyntex/Weapon/Weapon.h"
 #include "NecroSyntex/Weapon/WeaponTypes.h"
-#include "NecroSyntex\PlayerState\NecroSyntexPlayerState.h"
+#include "NecroSyntex/NecroSyntaxComponents/CombatComponent.h"
+#include "NecroSyntex/GameMode/NecroSyntexGameMode.h"
+#include "NecroSyntex/PlayerController/NecroSyntexPlayerController.h"
+#include "NecroSyntex/PlayerState/NecroSyntexPlayerState.h"
+
+// 애니메이션 관련 헤더
+#include "PlayerAnimInstance.h"
+
 
 APlayerCharacter::APlayerCharacter()
 {
@@ -76,7 +84,14 @@ void APlayerCharacter::Elim()
 {
 	if (Combat && Combat->EquippedWeapon)
 	{
-		Combat->EquippedWeapon->Dropped();
+		if (Combat->EquippedWeapon->bDestroyWeapon)
+		{
+			Combat->EquippedWeapon->Destroy();
+		}
+		else
+		{
+			Combat->EquippedWeapon->Dropped();
+		}
 	}
 	MulticastElim();
 	GetWorldTimerManager().SetTimer(
@@ -140,16 +155,34 @@ void APlayerCharacter::Destroyed()
 	Super::Destroyed();
 }
 
+void APlayerCharacter::SpawnDefaultWeapon()
+{
+	ANecroSyntexGameMode* NecroSyntexGameMode = Cast<ANecroSyntexGameMode>(UGameplayStatics::GetGameMode(this));
+	UWorld* World = GetWorld();
+	if (NecroSyntexGameMode && !bElimed && DefaultWeaponClass)
+	{
+		AWeapon* StartingWeapon = World->SpawnActor<AWeapon>(DefaultWeaponClass);
+		StartingWeapon->bDestroyWeapon = true;
+		if (Combat)
+		{
+			Combat->EquipWeapon(StartingWeapon);
+		}
+	}
+}
+
 void APlayerCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
+	//Key Mapping
 	if (APlayerController* PlayerController = Cast<APlayerController>(GetController()))
 	{
 		if (UEnhancedInputLocalPlayerSubsystem* SubSystem =
 			ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
 			SubSystem->AddMappingContext(DefaultMappingContext, 0);
 	}
+	SpawnDefaultWeapon();
+	UpdateHUDAmmo();
 	UpdateHUDShield();
 	UpdateHUDHealth();
 	if (HasAuthority())
@@ -636,10 +669,13 @@ void APlayerCharacter::UpdateHUDHealth()
 	}
 }
 
-void APlayerCharacter::OnRep_Shield()
+void APlayerCharacter::OnRep_Shield(float LastShield)
 {
 	UpdateHUDShield();
-	PlayerHitReactMontage();
+	if (Shield < LastShield)
+	{
+		PlayerHitReactMontage();
+	}
 }
 
 void APlayerCharacter::UpdateHUDShield()
@@ -648,6 +684,16 @@ void APlayerCharacter::UpdateHUDShield()
 	if (NecroSyntexPlayerController)
 	{
 		NecroSyntexPlayerController->SetHUDShield(Shield, MaxShield);
+	}
+}
+
+void APlayerCharacter::UpdateHUDAmmo()
+{
+	NecroSyntexPlayerController = NecroSyntexPlayerController == nullptr ? Cast<ANecroSyntexPlayerController>(Controller) : NecroSyntexPlayerController;
+	if (NecroSyntexPlayerController && Combat && Combat->EquippedWeapon)
+	{
+		NecroSyntexPlayerController->SetHUDCarriedAmmo(Combat->CarriedAmmo);
+		NecroSyntexPlayerController->SetHUDCarriedAmmo(Combat->EquippedWeapon->GetAmmo());
 	}
 }
 
