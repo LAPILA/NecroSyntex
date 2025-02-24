@@ -82,17 +82,7 @@ void APlayerCharacter::OnRep_ReplicatedMovement()
 
 void APlayerCharacter::Elim()
 {
-	if (Combat && Combat->EquippedWeapon)
-	{
-		if (Combat->EquippedWeapon->bDestroyWeapon)
-		{
-			Combat->EquippedWeapon->Destroy();
-		}
-		else
-		{
-			Combat->EquippedWeapon->Dropped();
-		}
-	}
+	DropOrDestroyWeapons();
 	MulticastElim();
 	GetWorldTimerManager().SetTimer(
 		ElimTimer,
@@ -157,17 +147,37 @@ void APlayerCharacter::Destroyed()
 
 void APlayerCharacter::SpawnDefaultWeapon()
 {
+	// GameMode나 World 유효성 검사
 	ANecroSyntexGameMode* NecroSyntexGameMode = Cast<ANecroSyntexGameMode>(UGameplayStatics::GetGameMode(this));
 	UWorld* World = GetWorld();
-	if (NecroSyntexGameMode && !bElimed && DefaultWeaponClass)
+	if (!NecroSyntexGameMode || !World || bElimed) return;
+
+	// 1) 주무기(Primary) 스폰
+	if (DefaultWeaponClass && Combat)
 	{
-		AWeapon* StartingWeapon = World->SpawnActor<AWeapon>(DefaultWeaponClass);
-		StartingWeapon->bDestroyWeapon = true;
-		if (Combat)
+		AWeapon* PrimaryWeapon = World->SpawnActor<AWeapon>(DefaultWeaponClass);
+		if (PrimaryWeapon)
 		{
-			Combat->EquipWeapon(StartingWeapon);
+			// bDestroyWeapon = true → 사망 시 파괴되는 설정
+			PrimaryWeapon->bDestroyWeapon = true;
+			Combat->EquipWeapon(PrimaryWeapon);
+			// -> Combat->EquipWeapon() 내부에서 
+			//    '만약 이미 무기가 있으면 SecondaryWeapon으로 배정' 로직 처리
 		}
 	}
+
+	// 2) 보조 무기(Secondary) 스폰
+	if (SubWeaponClass && Combat)
+	{
+		AWeapon* SecondaryWeapon = World->SpawnActor<AWeapon>(SubWeaponClass);
+		if (SecondaryWeapon)
+		{
+			SecondaryWeapon->bDestroyWeapon = true;
+			Combat->EquipWeapon(SecondaryWeapon);
+			// -> 첫 번째 무기가 주무기가 되었으므로, 두 번째는 보조 무기로 자동 Equip
+		}
+	}
+
 }
 
 void APlayerCharacter::BeginPlay()
@@ -565,6 +575,34 @@ void APlayerCharacter::SwapWeaponWheel()
 	else
 	{
 		ServerSwapWeaponWheel();
+	}
+}
+
+void APlayerCharacter::DropOrDestroyWeapon(AWeapon* Weapon)
+{
+	if (Weapon == nullptr) return;
+	if (Weapon->bDestroyWeapon)
+	{
+		Weapon->Destroy();
+	}
+	else
+	{
+		Weapon->Dropped();
+	}
+}
+
+void APlayerCharacter::DropOrDestroyWeapons()
+{
+	if (Combat)
+	{
+		if (Combat->EquippedWeapon)
+		{
+			DropOrDestroyWeapon(Combat->EquippedWeapon);
+		}
+		if (Combat->SecondaryWeapon)
+		{
+			DropOrDestroyWeapon(Combat->SecondaryWeapon);
+		}
 	}
 }
 

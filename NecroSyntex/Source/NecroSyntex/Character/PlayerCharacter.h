@@ -114,6 +114,9 @@ protected:
 	void GrenadeButtonPressed();
 	void SwapWeaponWheel();
 
+	void DropOrDestroyWeapon(AWeapon* Weapon);
+	void DropOrDestroyWeapons();
+
 	UFUNCTION()
 	void ReceiveDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, class AController* InstigatorController, AActor* DamageCauser);
 	void UpdateHUDHealth();
@@ -243,6 +246,8 @@ private:
 	TSubclassOf<AWeapon> DefaultWeaponClass;
 
 
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<AWeapon> SubWeaponClass;
 
 public:
 	void SetOverlappingWeapon(AWeapon* Weapon);
