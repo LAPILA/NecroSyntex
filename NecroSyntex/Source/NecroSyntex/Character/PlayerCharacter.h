@@ -63,6 +63,9 @@ class NECROSYNTEX_API APlayerCharacter : public ACharacter, public IInteractWith
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* ThrowGrenade;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UInputAction* SwapWeaponAction;
+
 public:
     APlayerCharacter();
 
@@ -109,6 +112,7 @@ protected:
 	void ReloadButtonPressed();
 	void PlayerHitReactMontage();
 	void GrenadeButtonPressed();
+	void SwapWeaponWheel();
 
 	UFUNCTION()
 	void ReceiveDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, class AController* InstigatorController, AActor* DamageCauser);
@@ -148,6 +152,9 @@ private:
 
 	UFUNCTION(Server, Reliable)
 	void ServerEquipButtonPressed();
+
+	UFUNCTION(Server, Reliable, WithValidation)
+	void ServerSwapWeaponWheel();
 
 	bool bIsSprinting;
 	float AO_Yaw;

@@ -235,6 +235,7 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 		EnhancedInputComponent->BindAction(FlashAction, ETriggerEvent::Triggered, this, &APlayerCharacter::FlashButtonPressed);
 		EnhancedInputComponent->BindAction(ReloadAction, ETriggerEvent::Triggered, this, &APlayerCharacter::ReloadButtonPressed);
 		EnhancedInputComponent->BindAction(ThrowGrenade, ETriggerEvent::Triggered, this, &APlayerCharacter::GrenadeButtonPressed);
+		EnhancedInputComponent->BindAction(SwapWeaponAction, ETriggerEvent::Triggered, this, &APlayerCharacter::SwapWeaponWheel);
 
 	}
 }
@@ -349,7 +350,6 @@ void APlayerCharacter::GrenadeButtonPressed()
 		Combat->ThrowGrenade();
 	}
 }
-
 
 void APlayerCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, AController* InstigatorController, AActor* DamageCauser)
 {
@@ -550,10 +550,34 @@ void APlayerCharacter::ServerEquipButtonPressed_Implementation()
 		{
 			Combat->EquipWeapon(OverlappingWeapon);
 		}
-		else if (Combat->ShouldSwapWeapons())
+	}
+}
+
+void APlayerCharacter::SwapWeaponWheel()
+{
+	if (HasAuthority())
+	{
+		if (Combat && Combat->ShouldSwapWeapons())
 		{
 			Combat->SwapWeapons();
 		}
+	}
+	else
+	{
+		ServerSwapWeaponWheel();
+	}
+}
+
+bool APlayerCharacter::ServerSwapWeaponWheel_Validate()
+{
+	return true;
+}
+
+void APlayerCharacter::ServerSwapWeaponWheel_Implementation()
+{
+	if (Combat && Combat->ShouldSwapWeapons())
+	{
+		Combat->SwapWeapons();
 	}
 }
 
