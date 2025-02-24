@@ -367,7 +367,7 @@ void ANecroSyntexPlayerController::Server_SetDoping_Implementation(int32 SelectF
 
 	}
 
-	ACharacterSelectGameMode * GM = GetWorld()->GetAuthGameMode<ACharacterSelectGameMode>();
+	ANecroSyntexGameMode* GM = GetWorld()->GetAuthGameMode<ANecroSyntexGameMode>();
 	if (GM)
 	{
 		GM->SelectAndReadyComplete();

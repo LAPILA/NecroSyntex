@@ -39,6 +39,24 @@ private:
 public:
 
 	//박태혁 편집 구간
+	 // 모든 플레이어에게 캐릭터 선택 UI를 표시
+	void ShowCharacterSelectionUI();
+
+	// 플레이어가 캐릭터를 선택하면 서버에 알리는 함수
+	UFUNCTION(Server, Reliable)
+	void SelectAndReadyComplete();
+
+	// 모든 플레이어가 선택을 완료했는지 확인
+	void CheckAllPlayersReady();
+
+
+public:
+	// 선택을 완료한 플레이어 수
+	int32 PlayersReadyCount = 0;
+
+	// 총 플레이어 수
+	int32 TotalPlayers = 1; // 로비에서 설정될 수 있음
+
 	FTimerHandle CheckPlayerStateTimer;
 
 	void SetupPlayers();
