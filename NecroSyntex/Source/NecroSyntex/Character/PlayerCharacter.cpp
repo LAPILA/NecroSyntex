@@ -22,6 +22,7 @@
 #include "NecroSyntex/Weapon/Weapon.h"
 #include "NecroSyntex/Weapon/WeaponTypes.h"
 #include "NecroSyntex/NecroSyntaxComponents/CombatComponent.h"
+#include "NecroSyntex/NecroSyntaxComponents/SubComponent.h"
 #include "NecroSyntex/GameMode/NecroSyntexGameMode.h"
 #include "NecroSyntex/PlayerController/NecroSyntexPlayerController.h"
 #include "NecroSyntex/PlayerState/NecroSyntexPlayerState.h"
@@ -53,6 +54,9 @@ APlayerCharacter::APlayerCharacter()
 	Combat->SetIsReplicated(true);
 
 	UDC = CreateDefaultSubobject<UDopingComponent>(TEXT("DopingComponent"));
+
+	SubComp = CreateDefaultSubobject<USubComponent>(TEXT("SubComponent"));
+	SubComp->SetIsReplicated(true);
 
 	GetCharacterMovement()->NavAgentProps.bCanCrouch = true;
 	GetCapsuleComponent()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Ignore);
@@ -715,10 +719,13 @@ void APlayerCharacter::SimProxiesTurn()
 	TurningInPlace = ETurningInPlace::ETIP_NotTurning;
 }
 
-void APlayerCharacter::OnRep_Health()
+void APlayerCharacter::OnRep_Health(float LastHealth)
 {
 	UpdateHUDHealth();
-	PlayerHitReactMontage();
+	if (Health < LastHealth)
+	{
+		PlayerHitReactMontage();
+	}
 }
 
 void APlayerCharacter::UpdateHUDHealth()
