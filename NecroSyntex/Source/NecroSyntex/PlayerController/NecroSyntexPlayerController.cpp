@@ -12,12 +12,18 @@
 #include "NecroSyntex/HUD/Announcement.h"
 #include "NecroSyntex\NecroSyntaxComponents\CombatComponent.h"
 #include "Kismet/GameplayStatics.h"
+#include "NecroSyntex/GameMode/CharacterSelectGameMode.h"
+
 
 void ANecroSyntexPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
 	NecroSyntexHUD = Cast<ANecroSyntexHud>(GetHUD());
 	ServerCheckMatchState();
+
+
+	//박태혁
+	//GetWorldTimerManager().SetTimer(CheckPlayerStateTimer, this, &ANecroSyntexPlayerController::CheckPlayerState, 0.5f, true);
 }
 
 void ANecroSyntexPlayerController::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -364,4 +370,82 @@ void ANecroSyntexPlayerController::HandleMatchHasStarted()
 			NecroSyntexHUD->Announcement->SetVisibility(ESlateVisibility::Hidden);
 		}
 	}
+}
+
+//아래 부터 박태혁 편집
+void ANecroSyntexPlayerController::Server_SetCharacter_Implementation(TSubclassOf<APlayerCharacter> SelectCharacter)
+{
+
+	if (!IsValid(SelectCharacter))
+	{
+		return; // 유효하지 않으면 실행 중지
+	}
+
+
+	ANecroSyntexPlayerState* PS = GetPlayerState<ANecroSyntexPlayerState>();
+	if (PS)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("aaaaaa"));
+		PS->SelectedCharacterClass = SelectCharacter;
+	}
+
+}
+
+void ANecroSyntexPlayerController::Server_SetDoping_Implementation(int32 SelectFirstDoping, int32 SelectSecondDoping)
+{
+	ANecroSyntexPlayerState* PS = GetPlayerState<ANecroSyntexPlayerState>();
+	if (PS)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("bbbbbb"));
+		PS->FirstDopingCode = SelectFirstDoping;
+		PS->SecondDopingCode = SelectSecondDoping;
+		PS->bHasCompletedSelection = true;
+
+
+	}
+
+	ANecroSyntexGameMode* GM = GetWorld()->GetAuthGameMode<ANecroSyntexGameMode>();
+	if (GM)
+	{
+		GM->SelectAndReadyComplete();
+	}
+}
+
+void ANecroSyntexPlayerController::ShowCharacterSelectUI_Implementation()
+{
+	if (SelectionWidgetClass) // 위젯 블루프린트 클래스가 설정되었는지 확인
+	{
+		SelectionWidget = CreateWidget<UUserWidget>(this, SelectionWidgetClass);
+		if (SelectionWidget)
+		{
+			SelectionWidget->AddToViewport();
+			SetInputMode(FInputModeUIOnly()); // UI 조작 모드로 변경
+			bShowMouseCursor = true; // 마우스 커서 활성화
+		}
+	}
+}
+
+
+void ANecroSyntexPlayerController::CheckPlayerState()
+{
+	ANecroSyntexPlayerState* PS = GetPlayerState<ANecroSyntexPlayerState>();
+
+	if (PS)
+	{
+		GetWorldTimerManager().ClearTimer(CheckPlayerStateTimer);  // 타이머 정지
+		UE_LOG(LogTemp, Warning, TEXT("PlayerState found for player: %s"), *PS->GetPlayerName());
+
+		// 이제 PlayerState를 사용할 수 있음!
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Waiting for PlayerState to be valid..."));
+	}
+}
+
+void ANecroSyntexPlayerController::CheckPSSetTimer()
+{
+
+	GetWorldTimerManager().SetTimer(CheckPlayerStateTimer, this, &ANecroSyntexPlayerController::CheckPlayerState, 0.5f, true);
+
 }
