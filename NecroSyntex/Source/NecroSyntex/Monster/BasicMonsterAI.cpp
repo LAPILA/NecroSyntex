@@ -2,6 +2,7 @@
 
 
 #include "BasicMonsterAI.h"
+#include "GameFramework/CharacterMovementComponent.h"
 
 // Sets default values
 ABasicMonsterAI::ABasicMonsterAI()
@@ -32,3 +33,9 @@ void ABasicMonsterAI::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
 
 }
 
+void ABasicMonsterAI::UpdateWalkSpeed(float NewWalkSpeed) {
+	if (GetCharacterMovement())
+	{
+		GetCharacterMovement()->MaxWalkSpeed = NewWalkSpeed;
+	}
+}
