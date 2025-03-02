@@ -22,6 +22,14 @@ public:
 	float MaxHealth; // 최대 체력
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float CurrentHealth; // 현재 체력
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float MaxShield; // 최대 쉴드 량
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float CurrentShield; // 현재 쉴드 량
+
+
 	UPROPERTY(EditAnywhere)
 	float MoveSpeed; // 이동속도
 	UPROPERTY(EditAnywhere)
@@ -46,6 +54,8 @@ public:
 
 	float BaseMaxHealth;
 	float BaseCurrentHealth;
+	float BaseMaxShield;
+	float BaseCurrentShield;
 	float BaseAttackPointMag;
 	float BaseMoveSpeed;
 	float BaseRunningSpeed;

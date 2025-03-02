@@ -109,5 +109,4 @@ void UDopingParent::EndDeBuff(UPlayerInformData* PID)
 void UDopingParent::EndCooldown()
 {
 	Able = true;
-	UE_LOG(LogTemp, Warning, TEXT("DopingParent: Cooldown End"));
 }

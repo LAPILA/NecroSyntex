@@ -48,4 +48,7 @@ public:
 	// Game Info UI
 	UPROPERTY(meta = (BindWidget))
 	UTextBlock* MatchCountdownText;
+
+	UPROPERTY(meta = (BindWidget))
+	UTextBlock* GrenadesText;
 };

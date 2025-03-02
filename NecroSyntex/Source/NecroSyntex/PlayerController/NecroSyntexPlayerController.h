@@ -23,6 +23,7 @@ public:
 	void SetHUDDefeats(int32 Defeats);
 	void SetHUDMatchCountdown(float CountdownTime);
 	void SetHUDAnnouncementCountdown(float CountdownTime);
+	void SetHUDGrenades(int32 Grenades);
 	virtual void OnPossess(APawn* InPawn) override;
 	virtual void Tick(float DeltaTime) override;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
@@ -72,11 +73,46 @@ private:
 	void OnRep_MatchState();
 	UPROPERTY()
 	class UCharacterOverlay* CharacterOverlay;
-	bool bInitializeCharacterOverlay = false;
+
 	float HUDHealth;
+	bool bInitializeHealth = false;
 	float HUDMaxHealth;
 	float HUDShield;
+	bool bInitializeShield = false;
 	float HUDMaxShield;
 	float HUDScore;
+	bool bInitializeScore = false;
 	int32 HUDDefeats;
+	bool bInitializeDefeats = false;
+	int32 HUDGrenades;
+	bool bInitializeGrenades = false;
+	float HUDCarriedAmmo;
+	bool bInitializeCarriedAmmo = false;
+	float HUDWeaponAmmo;
+	bool bInitializeWeaponAmmo = false;
+
+
+	//¹ÚÅÂÇõ ÆíÁý
+public:
+
+	UFUNCTION(Server, Reliable, BlueprintCallable)
+	void Server_SetCharacter(TSubclassOf<APlayerCharacter> SelectCharacter);
+
+	UFUNCTION(Server, Reliable, BlueprintCallable)
+	void Server_SetDoping(int32 SelectFirstDoping, int32 SelectSecondDoping);
+
+	UFUNCTION(Client, Reliable)
+	void ShowCharacterSelectUI();
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UI")
+	TSubclassOf<UUserWidget> SelectionWidgetClass;
+
+	UPROPERTY()
+	UUserWidget* SelectionWidget;
+
+	FTimerHandle CheckPlayerStateTimer;
+
+	void CheckPlayerState();
+
+	void CheckPSSetTimer();
 };

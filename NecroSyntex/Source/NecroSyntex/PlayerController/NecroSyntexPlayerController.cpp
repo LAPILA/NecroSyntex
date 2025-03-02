@@ -10,13 +10,20 @@
 #include "NecroSyntex/GameMode/NecroSyntexGameMode.h"
 #include "NecroSyntex/PlayerState/NecroSyntexPlayerState.h"
 #include "NecroSyntex/HUD/Announcement.h"
+#include "NecroSyntex\NecroSyntaxComponents\CombatComponent.h"
 #include "Kismet/GameplayStatics.h"
+#include "NecroSyntex/GameMode/CharacterSelectGameMode.h"
+
 
 void ANecroSyntexPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
 	NecroSyntexHUD = Cast<ANecroSyntexHud>(GetHUD());
 	ServerCheckMatchState();
+
+
+	//박태혁
+	//GetWorldTimerManager().SetTimer(CheckPlayerStateTimer, this, &ANecroSyntexPlayerController::CheckPlayerState, 0.5f, true);
 }
 
 void ANecroSyntexPlayerController::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -89,7 +96,7 @@ void ANecroSyntexPlayerController::SetHUDHealth(float Health, float MaxHealth)
 	}
 	else
 	{
-		bInitializeCharacterOverlay = true;
+		bInitializeHealth = true;
 		HUDHealth = Health;
 		HUDMaxHealth = MaxHealth;
 	}
@@ -111,7 +118,7 @@ void ANecroSyntexPlayerController::SetHUDShield(float Shield, float MaxShield)
 	}
 	else
 	{
-		bInitializeCharacterOverlay = true;
+		bInitializeShield = true;
 		HUDShield = Shield;
 		HUDMaxShield = MaxShield;
 	}
@@ -140,6 +147,11 @@ void ANecroSyntexPlayerController::SetHUDWeaponAmmo(int32 Ammo)
 		FString AmmoText = FString::Printf(TEXT("%d"), Ammo);
 		NecroSyntexHUD->CharacterOverlay->WeaponAmmoAmount->SetText(FText::FromString(AmmoText));
 	}
+	else
+	{
+		bInitializeWeaponAmmo = true;
+		HUDWeaponAmmo = Ammo;
+	}
 }
 
 void ANecroSyntexPlayerController::SetHUDCarriedAmmo(int32 Ammo)
@@ -152,6 +164,11 @@ void ANecroSyntexPlayerController::SetHUDCarriedAmmo(int32 Ammo)
 	{
 		FString AmmoText = FString::Printf(TEXT("/ %d"), Ammo);
 		NecroSyntexHUD->CharacterOverlay->CarriedAmmoAmount->SetText(FText::FromString(AmmoText));
+	}
+	else
+	{
+		bInitializeCarriedAmmo = true;
+		HUDCarriedAmmo = Ammo;
 	}
 }
 
@@ -170,7 +187,7 @@ void ANecroSyntexPlayerController::SetHUDScore(float Score)
 	}
 	else
 	{
-		bInitializeCharacterOverlay = true;
+		bInitializeScore = true;
 		HUDScore = Score;
 	}
 }
@@ -188,7 +205,7 @@ void ANecroSyntexPlayerController::SetHUDDefeats(int32 Defeats)
 	}
 	else
 	{
-		bInitializeCharacterOverlay = true;
+		bInitializeDefeats = true;
 		HUDDefeats = Defeats;
 	}
 }
@@ -232,6 +249,24 @@ void ANecroSyntexPlayerController::SetHUDAnnouncementCountdown(float CountdownTi
 	}
 }
 
+void ANecroSyntexPlayerController::SetHUDGrenades(int32 Grenades)
+{
+	NecroSyntexHUD = NecroSyntexHUD == nullptr ? Cast<ANecroSyntexHud>(GetHUD()) : NecroSyntexHUD;
+	bool bHUDValid = NecroSyntexHUD &&
+		NecroSyntexHUD->CharacterOverlay &&
+		NecroSyntexHUD->CharacterOverlay->GrenadesText;
+	if (bHUDValid)
+	{
+		FString GrenadesText = FString::Printf(TEXT("%d"), Grenades);
+		NecroSyntexHUD->CharacterOverlay->GrenadesText->SetText(FText::FromString(GrenadesText));
+	}
+	else
+	{
+		bInitializeGrenades = true;
+		HUDGrenades = Grenades;
+	}
+}
+
 void ANecroSyntexPlayerController::SetHUDTime()
 {
 	float CurrentTime = MatchTime - GetServerTime();
@@ -266,10 +301,18 @@ void ANecroSyntexPlayerController::PollInit()
 			CharacterOverlay = NecroSyntexHUD->CharacterOverlay;
 			if (CharacterOverlay)
 			{
-				SetHUDHealth(HUDHealth, HUDMaxHealth);
-				SetHUDShield(HUDShield, HUDMaxShield);
-				SetHUDScore(HUDScore);
-				SetHUDDefeats(HUDDefeats);
+				if (bInitializeHealth) SetHUDHealth(HUDHealth, HUDMaxHealth);
+				if (bInitializeShield) SetHUDShield(HUDShield, HUDMaxShield);
+				if (bInitializeScore) SetHUDScore(HUDScore);
+				if (bInitializeDefeats) SetHUDDefeats(HUDDefeats);
+				if (bInitializeCarriedAmmo) SetHUDCarriedAmmo(HUDCarriedAmmo);
+				if (bInitializeWeaponAmmo) SetHUDWeaponAmmo(HUDWeaponAmmo);
+
+				APlayerCharacter* PlayerCharacter = Cast<APlayerCharacter>(GetPawn());
+				if (PlayerCharacter && PlayerCharacter->GetCombat())
+				{
+					if (bInitializeGrenades) SetHUDGrenades(PlayerCharacter->GetCombat()->GetGrenades());
+				}
 			}
 		}
 	}
@@ -327,4 +370,82 @@ void ANecroSyntexPlayerController::HandleMatchHasStarted()
 			NecroSyntexHUD->Announcement->SetVisibility(ESlateVisibility::Hidden);
 		}
 	}
+}
+
+//아래 부터 박태혁 편집
+void ANecroSyntexPlayerController::Server_SetCharacter_Implementation(TSubclassOf<APlayerCharacter> SelectCharacter)
+{
+
+	if (!IsValid(SelectCharacter))
+	{
+		return; // 유효하지 않으면 실행 중지
+	}
+
+
+	ANecroSyntexPlayerState* PS = GetPlayerState<ANecroSyntexPlayerState>();
+	if (PS)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("aaaaaa"));
+		PS->SelectedCharacterClass = SelectCharacter;
+	}
+
+}
+
+void ANecroSyntexPlayerController::Server_SetDoping_Implementation(int32 SelectFirstDoping, int32 SelectSecondDoping)
+{
+	ANecroSyntexPlayerState* PS = GetPlayerState<ANecroSyntexPlayerState>();
+	if (PS)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("bbbbbb"));
+		PS->FirstDopingCode = SelectFirstDoping;
+		PS->SecondDopingCode = SelectSecondDoping;
+		PS->bHasCompletedSelection = true;
+
+
+	}
+
+	ANecroSyntexGameMode* GM = GetWorld()->GetAuthGameMode<ANecroSyntexGameMode>();
+	if (GM)
+	{
+		GM->SelectAndReadyComplete();
+	}
+}
+
+void ANecroSyntexPlayerController::ShowCharacterSelectUI_Implementation()
+{
+	if (SelectionWidgetClass) // 위젯 블루프린트 클래스가 설정되었는지 확인
+	{
+		SelectionWidget = CreateWidget<UUserWidget>(this, SelectionWidgetClass);
+		if (SelectionWidget)
+		{
+			SelectionWidget->AddToViewport();
+			SetInputMode(FInputModeUIOnly()); // UI 조작 모드로 변경
+			bShowMouseCursor = true; // 마우스 커서 활성화
+		}
+	}
+}
+
+
+void ANecroSyntexPlayerController::CheckPlayerState()
+{
+	ANecroSyntexPlayerState* PS = GetPlayerState<ANecroSyntexPlayerState>();
+
+	if (PS)
+	{
+		GetWorldTimerManager().ClearTimer(CheckPlayerStateTimer);  // 타이머 정지
+		UE_LOG(LogTemp, Warning, TEXT("PlayerState found for player: %s"), *PS->GetPlayerName());
+
+		// 이제 PlayerState를 사용할 수 있음!
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Waiting for PlayerState to be valid..."));
+	}
+}
+
+void ANecroSyntexPlayerController::CheckPSSetTimer()
+{
+
+	GetWorldTimerManager().SetTimer(CheckPlayerStateTimer, this, &ANecroSyntexPlayerController::CheckPlayerState, 0.5f, true);
+
 }

@@ -1,27 +1,36 @@
+// Unreal Engine 기본 헤더
 #include "PlayerCharacter.h"
-#include "Engine/LocalPlayer.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
-#include "GameFramework/CharacterMovementComponent.h"
-#include "GameFramework/SpringArmComponent.h"
-#include "GameFramework/Controller.h"
 #include "Components/WidgetComponent.h"
-#include "Net\UnrealNetwork.h"
-#include "EnhancedInputSubsystems.h"
-#include "EnhancedInputComponent.h"
-#include "NecroSyntex\Weapon\Weapon.h"
-#include "NecroSyntex\NecroSyntaxComponents\CombatComponent.h"
-#include "Components/CapsuleComponent.h"
+#include "Engine/LocalPlayer.h"
+#include "GameFramework/CharacterMovementComponent.h"
+#include "GameFramework/Controller.h"
+#include "GameFramework/SpringArmComponent.h"
 #include "Kismet/KismetMathLibrary.h"
-#include "PlayerAnimInstance.h"
-#include "NecroSyntex\NecroSyntex.h"
-#include "NecroSyntex\PlayerController\NecroSyntexPlayerController.h"
-#include "NecroSyntex\GameMode\NecroSyntexGameMode.h"
-#include "TimerManager.h"
+#include "Kismet/GameplayStatics.h"
+#include "Net/UnrealNetwork.h"
 #include "NiagaraSystem.h"
+#include "TimerManager.h"
+
+// Enhanced Input 관련 헤더
+#include "EnhancedInputComponent.h"
+#include "EnhancedInputSubsystems.h"
+
+// 프로젝트 관련 헤더 (NecroSyntex)
+#include "NecroSyntex/NecroSyntex.h"
+#include "NecroSyntex/Weapon/Weapon.h"
 #include "NecroSyntex/Weapon/WeaponTypes.h"
-#include "NecroSyntex\PlayerState\NecroSyntexPlayerState.h"
-#include "NecroSyntex\DopingSystem\DopingComponent.h"
+#include "NecroSyntex/NecroSyntaxComponents/CombatComponent.h"
+#include "NecroSyntex/NecroSyntaxComponents/SubComponent.h"
+#include "NecroSyntex/GameMode/NecroSyntexGameMode.h"
+#include "NecroSyntex/PlayerController/NecroSyntexPlayerController.h"
+#include "NecroSyntex/PlayerState/NecroSyntexPlayerState.h"
+#include "NecroSyntex/DopingSystem/DopingComponent.h"
+
+// 애니메이션 관련 헤더
+#include "PlayerAnimInstance.h"
+
 
 APlayerCharacter::APlayerCharacter()
 {
@@ -45,8 +54,10 @@ APlayerCharacter::APlayerCharacter()
 	Combat = CreateDefaultSubobject<UCombatComponent>(TEXT("CombatComponent"));
 	Combat->SetIsReplicated(true);
 
-	UDC = CreateDefaultSubobject<UDopingComponent>(TEXT("DopingComponent"));
-	UDC->SetIsReplicated(true);
+	//UDC = CreateDefaultSubobject<UDopingComponent>(TEXT("DopingComponent"));
+
+	SubComp = CreateDefaultSubobject<USubComponent>(TEXT("SubComponent"));
+	SubComp->SetIsReplicated(true);
 
 	GetCharacterMovement()->NavAgentProps.bCanCrouch = true;
 	GetCapsuleComponent()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Ignore);
@@ -61,6 +72,10 @@ APlayerCharacter::APlayerCharacter()
 
 	DissolveEffectComponent = CreateDefaultSubobject<UNiagaraComponent>(TEXT("DissolveEffectComponent"));
 	DissolveEffectComponent->SetupAttachment(GetMesh());
+
+	AttachedGrenade = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Attached Grenade"));
+	AttachedGrenade->SetupAttachment(GetMesh(), FName("GrenadeSocket"));
+	AttachedGrenade->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 }
 
 void APlayerCharacter::OnRep_ReplicatedMovement()
@@ -72,10 +87,7 @@ void APlayerCharacter::OnRep_ReplicatedMovement()
 
 void APlayerCharacter::Elim()
 {
-	if (Combat && Combat->EquippedWeapon)
-	{
-		Combat->EquippedWeapon->Dropped();
-	}
+	DropOrDestroyWeapons();
 	MulticastElim();
 	GetWorldTimerManager().SetTimer(
 		ElimTimer,
@@ -138,24 +150,70 @@ void APlayerCharacter::Destroyed()
 	Super::Destroyed();
 }
 
+void APlayerCharacter::SpawnDefaultWeapon()
+{
+	// GameMode나 World 유효성 검사
+	ANecroSyntexGameMode* NecroSyntexGameMode = Cast<ANecroSyntexGameMode>(UGameplayStatics::GetGameMode(this));
+	UWorld* World = GetWorld();
+	if (!NecroSyntexGameMode || !World || bElimed) return;
+
+	// 1) 주무기(Primary) 스폰
+	if (DefaultWeaponClass && Combat)
+	{
+		AWeapon* PrimaryWeapon = World->SpawnActor<AWeapon>(DefaultWeaponClass);
+		if (PrimaryWeapon)
+		{
+			// bDestroyWeapon = true → 사망 시 파괴되는 설정
+			PrimaryWeapon->bDestroyWeapon = true;
+			Combat->EquipWeapon(PrimaryWeapon);
+			// -> Combat->EquipWeapon() 내부에서 
+			//    '만약 이미 무기가 있으면 SecondaryWeapon으로 배정' 로직 처리
+		}
+	}
+
+	// 2) 보조 무기(Secondary) 스폰
+	if (SubWeaponClass && Combat)
+	{
+		AWeapon* SecondaryWeapon = World->SpawnActor<AWeapon>(SubWeaponClass);
+		if (SecondaryWeapon)
+		{
+			SecondaryWeapon->bDestroyWeapon = true;
+			Combat->EquipWeapon(SecondaryWeapon);
+			// -> 첫 번째 무기가 주무기가 되었으므로, 두 번째는 보조 무기로 자동 Equip
+		}
+	}
+
+}
+
 void APlayerCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
+	//Key Mapping
 	if (APlayerController* PlayerController = Cast<APlayerController>(GetController()))
 	{
 		if (UEnhancedInputLocalPlayerSubsystem* SubSystem =
 			ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
 			SubSystem->AddMappingContext(DefaultMappingContext, 0);
 	}
+	SpawnDefaultWeapon();
+	UpdateHUDAmmo();
 	UpdateHUDShield();
 	UpdateHUDHealth();
 	if (HasAuthority())
 	{
 		OnTakeAnyDamage.AddDynamic(this, &APlayerCharacter::ReceiveDamage);
 	}
-	UE_LOG(LogTemp, Warning, TEXT("222222222222222222222222222222222222222222222222222222"));
-	GetCharacterMovement()->MaxWalkSpeed = UDC->MoveSpeed;
+	if (AttachedGrenade)
+	{
+		AttachedGrenade->SetVisibility(false);
+	}
+	if (!UDC) {
+		GetCharacterMovement()->MaxWalkSpeed = 550.0f;
+	}
+	else {
+		GetCharacterMovement()->MaxWalkSpeed = UDC->PID->MoveSpeed;
+	}
 }
 
 void APlayerCharacter::Tick(float DeltaTime)
@@ -175,8 +233,6 @@ void APlayerCharacter::Tick(float DeltaTime)
 		CalculateAO_Pitch();
 	}
 	PollInit();
-
-	TotalDamage = UDC->TotalDamage;
 }
 
 void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -198,6 +254,9 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 		EnhancedInputComponent->BindAction(FireAction, ETriggerEvent::Completed, this, &APlayerCharacter::FireButtonReleased);
 		EnhancedInputComponent->BindAction(FlashAction, ETriggerEvent::Triggered, this, &APlayerCharacter::FlashButtonPressed);
 		EnhancedInputComponent->BindAction(ReloadAction, ETriggerEvent::Triggered, this, &APlayerCharacter::ReloadButtonPressed);
+		EnhancedInputComponent->BindAction(ThrowGrenade, ETriggerEvent::Triggered, this, &APlayerCharacter::GrenadeButtonPressed);
+		EnhancedInputComponent->BindAction(SwapWeaponAction, ETriggerEvent::Triggered, this, &APlayerCharacter::SwapWeaponWheel);
+
 	}
 }
 
@@ -246,6 +305,15 @@ void APlayerCharacter::PlayElimMontage()
 	}
 }
 
+void APlayerCharacter::PlayThrowGrenadeMontage()
+{
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	if (AnimInstance && ThrowGrenadeMontage)
+	{
+		AnimInstance->Montage_Play(ThrowGrenadeMontage);
+	}
+}
+
 void APlayerCharacter::PlayerHitReactMontage()
 {
 	if (Combat == nullptr || Combat->EquippedWeapon == nullptr) return;
@@ -276,24 +344,33 @@ void APlayerCharacter::PlayReloadMontage()
 			SectionName = FName("Rifle");
 			break;
 		case EWeaponType::EWT_Pistol:
-			SectionName = FName("Rifle");
+			SectionName = FName("Pistol");
 			break;
 		case EWeaponType::EWT_SubmachineGun:
-			SectionName = FName("Rifle");
+			SectionName = FName("Pistol");
 			break;
 		case EWeaponType::EWT_Shotgun:
-			SectionName = FName("Rifle");
+			SectionName = FName("Shotgun");
 			break;
 		case EWeaponType::EWT_SniperRifle:
 			SectionName = FName("Rifle");
 			break;
 		case EWeaponType::EWT_GrenadeLauncher:
-			SectionName = FName("Rifle");
+			SectionName = FName("Shotgun");
 			break;
 		}
 		AnimInstance->Montage_JumpToSection(SectionName);
 	}
 }
+
+void APlayerCharacter::GrenadeButtonPressed()
+{
+	if (Combat)
+	{
+		Combat->ThrowGrenade();
+	}
+}
+
 void APlayerCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, AController* InstigatorController, AActor* DamageCauser)
 {
 	if (bElimed)
@@ -371,14 +448,7 @@ void APlayerCharacter::EquipButtonPressed()
 {
 	if (Combat)
 	{
-		if (HasAuthority())
-		{
-			Combat->EquipWeapon(OverlappingWeapon);
-		}
-		else
-		{
-			ServerEquipButtonPressed();
-		}
+		ServerEquipButtonPressed();
 	}
 }
 
@@ -425,7 +495,7 @@ void APlayerCharacter::SprintStart()
 
 		if (HasAuthority())
 		{
-			GetCharacterMovement()->MaxWalkSpeed = UDC->RunningSpeed;
+			GetCharacterMovement()->MaxWalkSpeed = UDC->PID->RunningSpeed;
 		}
 		else
 		{
@@ -442,7 +512,7 @@ void APlayerCharacter::SprintStop()
 
 		if (HasAuthority())
 		{
-			GetCharacterMovement()->MaxWalkSpeed = UDC->MoveSpeed;
+			GetCharacterMovement()->MaxWalkSpeed = UDC->PID->MoveSpeed;
 		}
 		else
 		{
@@ -453,12 +523,12 @@ void APlayerCharacter::SprintStop()
 
 void APlayerCharacter::ServerSprintStart_Implementation()
 {
-	GetCharacterMovement()->MaxWalkSpeed = UDC->RunningSpeed;
+	GetCharacterMovement()->MaxWalkSpeed = UDC->PID->RunningSpeed;
 }
 
 void APlayerCharacter::ServerSprintStop_Implementation()
 {
-	GetCharacterMovement()->MaxWalkSpeed = UDC->MoveSpeed;
+	GetCharacterMovement()->MaxWalkSpeed = UDC->PID->MoveSpeed;
 }
 
 bool APlayerCharacter::ServerSprintStart_Validate()
@@ -490,14 +560,72 @@ void APlayerCharacter::FireButtonReleased(const FInputActionValue& Value)
 
 void APlayerCharacter::FlashButtonPressed()
 {
-
 }
 
 void APlayerCharacter::ServerEquipButtonPressed_Implementation()
 {
 	if (Combat)
 	{
-		Combat->EquipWeapon(OverlappingWeapon);
+		if (OverlappingWeapon)
+		{
+			Combat->EquipWeapon(OverlappingWeapon);
+		}
+	}
+}
+
+void APlayerCharacter::SwapWeaponWheel()
+{
+	if (HasAuthority())
+	{
+		if (Combat && Combat->ShouldSwapWeapons())
+		{
+			Combat->SwapWeapons();
+		}
+	}
+	else
+	{
+		ServerSwapWeaponWheel();
+	}
+}
+
+void APlayerCharacter::DropOrDestroyWeapon(AWeapon* Weapon)
+{
+	if (Weapon == nullptr) return;
+	if (Weapon->bDestroyWeapon)
+	{
+		Weapon->Destroy();
+	}
+	else
+	{
+		Weapon->Dropped();
+	}
+}
+
+void APlayerCharacter::DropOrDestroyWeapons()
+{
+	if (Combat)
+	{
+		if (Combat->EquippedWeapon)
+		{
+			DropOrDestroyWeapon(Combat->EquippedWeapon);
+		}
+		if (Combat->SecondaryWeapon)
+		{
+			DropOrDestroyWeapon(Combat->SecondaryWeapon);
+		}
+	}
+}
+
+bool APlayerCharacter::ServerSwapWeaponWheel_Validate()
+{
+	return true;
+}
+
+void APlayerCharacter::ServerSwapWeaponWheel_Implementation()
+{
+	if (Combat && Combat->ShouldSwapWeapons())
+	{
+		Combat->SwapWeapons();
 	}
 }
 
@@ -597,10 +725,13 @@ void APlayerCharacter::SimProxiesTurn()
 	TurningInPlace = ETurningInPlace::ETIP_NotTurning;
 }
 
-void APlayerCharacter::OnRep_Health()
+void APlayerCharacter::OnRep_Health(float LastHealth)
 {
 	UpdateHUDHealth();
-	PlayerHitReactMontage();
+	if (Health < LastHealth)
+	{
+		PlayerHitReactMontage();
+	}
 }
 
 void APlayerCharacter::UpdateHUDHealth()
@@ -612,10 +743,13 @@ void APlayerCharacter::UpdateHUDHealth()
 	}
 }
 
-void APlayerCharacter::OnRep_Shield()
+void APlayerCharacter::OnRep_Shield(float LastShield)
 {
 	UpdateHUDShield();
-	PlayerHitReactMontage();
+	if (Shield < LastShield)
+	{
+		PlayerHitReactMontage();
+	}
 }
 
 void APlayerCharacter::UpdateHUDShield()
@@ -624,6 +758,16 @@ void APlayerCharacter::UpdateHUDShield()
 	if (NecroSyntexPlayerController)
 	{
 		NecroSyntexPlayerController->SetHUDShield(Shield, MaxShield);
+	}
+}
+
+void APlayerCharacter::UpdateHUDAmmo()
+{
+	NecroSyntexPlayerController = NecroSyntexPlayerController == nullptr ? Cast<ANecroSyntexPlayerController>(Controller) : NecroSyntexPlayerController;
+	if (NecroSyntexPlayerController && Combat && Combat->EquippedWeapon)
+	{
+		NecroSyntexPlayerController->SetHUDCarriedAmmo(Combat->CarriedAmmo);
+		NecroSyntexPlayerController->SetHUDCarriedAmmo(Combat->EquippedWeapon->GetAmmo());
 	}
 }
 

@@ -12,6 +12,7 @@ enum class EWeaponState : uint8
 {
 	EWS_Initial UMETA(DisplayName = "Initial State"),
 	EWS_Equipped UMETA(DisplayName = "Equipped"),
+	EWS_EquippedSecondary UMETA(DisplayName = "Equipped Secondary"),
 	EWS_Dropped UMETA(DisplayName = "Dropped"),
 
 	EWS_Max UMETA(DisplayName = "DefaultMAX")
@@ -67,10 +68,18 @@ public:
 	UPROPERTY(EditAnywhere, Category = Combat)
 	class USoundCue* EquipSound;
 
+	/*
+	* Enable or disable custom depth
+	*/
+	void EnableCustomDepth(bool bEnable);
 
+	bool bDestroyWeapon = false;
 protected:
 	virtual void BeginPlay() override;
-
+	virtual void OnWeaponStateSet();
+	virtual void OnEquipped();
+	virtual void OnDropped();
+	virtual void OnEquippedSecondary();
 
 	UFUNCTION()
 	virtual void OnSphereOverlap(
@@ -134,6 +143,7 @@ public:
 	FORCEINLINE float GetZoomedFOV() const { return ZoomFOV; }
 	FORCEINLINE float GetZoomedInterpedSpeed() const { return ZoomInterpSpeed; }
 	bool IsEmpty();
+	bool IsFull();
 	FORCEINLINE EWeaponType GetWeaponType() const { return WeaponType; }
 	FORCEINLINE int32 GetAmmo() const { return Ammo; }
 	FORCEINLINE int32 GetMagCapacity() const { return MagCapacity; }
