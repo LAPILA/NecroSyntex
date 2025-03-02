@@ -255,6 +255,9 @@ public:
 	//Doping Component(by TeaHyuck)
 	class UDopingComponent* UDC;
 
+	UPROPERTY(EditDefaultsOnly, Category = "Doping")
+	TSubclassOf<UDopingComponent> DopingComponentClass;
+
 	UPROPERTY(EditAnywhere)
 	float TotalDamage;
 	//Pahu end

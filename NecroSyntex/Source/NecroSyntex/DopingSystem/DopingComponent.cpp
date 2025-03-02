@@ -4,6 +4,7 @@
 #include "DopingComponent.h"
 #include "NecroSyntex/Character/PlayerCharacter.h"
 #include "Camera/CameraComponent.h"
+#include "Net/UnrealNetwork.h"
 
 // Sets default values for this component's properties
 UDopingComponent::UDopingComponent()
@@ -15,83 +16,120 @@ UDopingComponent::UDopingComponent()
 	UE_LOG(LogTemp, Warning, TEXT("333333333333333333333333333333333333333333333333333333"));
 }
 
+void UDopingComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(UDopingComponent, OneKeyDoping);
+	DOREPLIFETIME(UDopingComponent, FirstDopingCode);
+	DOREPLIFETIME(UDopingComponent, OneKeyBool);
+
+	DOREPLIFETIME(UDopingComponent, TwoKeyDoping);
+	DOREPLIFETIME(UDopingComponent, SecondDopingCode);
+	DOREPLIFETIME(UDopingComponent, TwoKeyBool);
+
+	DOREPLIFETIME(UDopingComponent, PID);
+	DOREPLIFETIME(UDopingComponent, PIDCheck);
+
+	DOREPLIFETIME(UDopingComponent, Passive_Duration);
+
+	DOREPLIFETIME(UDopingComponent, One_DopingItemNum);
+	DOREPLIFETIME(UDopingComponent, One_DopingCoolTime);
+	DOREPLIFETIME(UDopingComponent, One_BuffDuration);
+	DOREPLIFETIME(UDopingComponent, One_DeBuffDuration);
+	DOREPLIFETIME(UDopingComponent, One_CheckBuff);
+	DOREPLIFETIME(UDopingComponent, One_CheckDeBuff);
+	DOREPLIFETIME(UDopingComponent, One_Able);
+
+	DOREPLIFETIME(UDopingComponent, Two_DopingItemNum);
+	DOREPLIFETIME(UDopingComponent, Two_DopingCoolTime);
+	DOREPLIFETIME(UDopingComponent, Two_BuffDuration);
+	DOREPLIFETIME(UDopingComponent, Two_CheckBuff);
+	DOREPLIFETIME(UDopingComponent, Two_CheckDeBuff);
+	DOREPLIFETIME(UDopingComponent, Two_Able);
+
+	DOREPLIFETIME(UDopingComponent, MaxHealth);
+	DOREPLIFETIME(UDopingComponent, CurrentHealth);
+	DOREPLIFETIME(UDopingComponent, MaxShield);
+	DOREPLIFETIME(UDopingComponent, CurrentShield);
+	DOREPLIFETIME(UDopingComponent, MoveSpeed);
+	DOREPLIFETIME(UDopingComponent, RunningSpeed);
+	DOREPLIFETIME(UDopingComponent, Rebound);
+	DOREPLIFETIME(UDopingComponent, MLAtaackPoint);
+	DOREPLIFETIME(UDopingComponent, Defense);
+	DOREPLIFETIME(UDopingComponent, Blurred);
+	DOREPLIFETIME(UDopingComponent, ROF);
+
+	DOREPLIFETIME(UDopingComponent, GunDamage);
+	DOREPLIFETIME(UDopingComponent, TotalDamage);
+
+	DOREPLIFETIME(UDopingComponent, LegEnforce);
+	DOREPLIFETIME(UDopingComponent, ReducePain);
+	DOREPLIFETIME(UDopingComponent, SupremeStrength);
+	DOREPLIFETIME(UDopingComponent, ForcedHealing);
+	DOREPLIFETIME(UDopingComponent, FinalEmber);
+	DOREPLIFETIME(UDopingComponent, BurningFurnace);
+	DOREPLIFETIME(UDopingComponent, SolidFortress);
+	DOREPLIFETIME(UDopingComponent, Painless);
+
+	DOREPLIFETIME(UDopingComponent, DopingMode);
+
+
+}
 
 // Called when the game starts
 void UDopingComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
-	PID = NewObject<UPlayerInformData>(this);
-	PIDCheck = PID;
+	if (GetOwner()->HasAuthority())
+	{
 
-	//아군에게 도핑을 받기위한 도핑 오브젝트 생성
-	LegEnforce = NewObject<UDPLegEnforce>(this);
-	ReducePain = NewObject<UDPReducePain>(this);
-	SupremeStrength = NewObject<UDPSupremeStrength>(this);
-	ForcedHealing = NewObject<UDPForcedHealing>(this);
-	FinalEmber = NewObject<UDPFinalEmber>(this);
-	BurningFurnace = NewObject<UDPBurningFurnace>(this);
-	SolidFortress = NewObject<UDPSolidFortress>(this);
-	Painless = NewObject<UDPPainless>(this);
+		PID = NewObject<UPlayerInformData>(this);
+		PIDCheck = PID;
 
-	//도핑 모드(아군에게 도핑을 줄지 나에게 줄지 설정)
-	DopingMode = false;
+		//아군에게 도핑을 받기위한 도핑 오브젝트 생성
+		LegEnforce = NewObject<UDPLegEnforce>(this);
+		ReducePain = NewObject<UDPReducePain>(this);
+		SupremeStrength = NewObject<UDPSupremeStrength>(this);
+		ForcedHealing = NewObject<UDPForcedHealing>(this);
+		FinalEmber = NewObject<UDPFinalEmber>(this);
+		BurningFurnace = NewObject<UDPBurningFurnace>(this);
+		SolidFortress = NewObject<UDPSolidFortress>(this);
+		Painless = NewObject<UDPPainless>(this);
 
-	OneKeyBool = false;
-	TwoKeyBool = false;
+		//도핑 모드(아군에게 도핑을 줄지 나에게 줄지 설정)
+		DopingMode = false;
 
-
-	MaxHealth = PID->MaxHealth;
-	CurrentHealth = PID->CurrentHealth;
-	MoveSpeed = PID->MoveSpeed;
-	RunningSpeed = PID->RunningSpeed;
-	//Reboud = PID->Reboud;
-	Defense = PID->Defense;
-	Blurred = PID->Blurred;
-	ROF = PID->ROF;
-	//ItemUseRate = PID->ItemUSeRate
-	TotalDamage = GunDamage + PID->DopingDamageBuff;
+		OneKeyBool = false;
+		TwoKeyBool = false;
 
 
-	// ...11
+		MaxHealth = PID->MaxHealth;
+		CurrentHealth = PID->CurrentHealth;
+		MaxShield = PID->MaxShield;
+		CurrentShield = PID->CurrentShield;
+		MoveSpeed = PID->MoveSpeed;
+		RunningSpeed = PID->RunningSpeed;
+		//Reboud = PID->Reboud;
+		Defense = PID->Defense;
+		Blurred = PID->Blurred;
+		ROF = PID->ROF;
+		//ItemUseRate = PID->ItemUSeRate
+		TotalDamage = GunDamage + PID->DopingDamageBuff;
 
-	//임시로 도핑키 셋팅
-	OneKeyDoping = NewObject<UDPLegEnforce>(this);
-	FirstDopingCode = 1;
-	OneKeyBool = true;
+		//임시로 도핑키 셋팅
+		OneKeyDoping = NewObject<UDPLegEnforce>(this);
+		FirstDopingCode = 1;
+		OneKeyBool = true;
 
-	TwoKeyDoping = NewObject<UDPReducePain>(this);
-	SecondDopingCode = 2;
-	TwoKeyBool = true;
-
-
-}
-
-void UDopingComponent::FirstDopingUse() {
-
-	if (PID->CurrentDoped >= 2) {
-		UE_LOG(LogTemp, Warning, TEXT("This Character is doped two Doping"));
-		return;
-	}
-
-	if (OneKeyDoping->Able == true) {
-		OneKeyDoping->UseDopingItem(PID);
+		TwoKeyDoping = NewObject<UDPReducePain>(this);
+		SecondDopingCode = 2;
+		TwoKeyBool = true;
 	}
 
 }
 
-void UDopingComponent::SecondDopingUse() {
-
-	if (PID->CurrentDoped >= 2) {
-		UE_LOG(LogTemp, Warning, TEXT("This Character is doped two Doping"));
-		return;
-	}
-
-	if (TwoKeyDoping->Able == true) {
-		TwoKeyDoping->UseDopingItem(PID);
-	}
-
-}
 
 // Called every frame
 void UDopingComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
@@ -102,6 +140,9 @@ void UDopingComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 		One_DopingCoolTime = OneKeyDoping->DopingCoolTime;
 		One_DopingItemNum = OneKeyDoping->DopingItemNum;
 		One_BuffDuration = OneKeyDoping->BuffDuration;
+		One_DeBuffDuration = OneKeyDoping->DeBuffDuration;
+		One_CheckBuff = OneKeyDoping->CheckBuff;
+		One_CheckDeBuff = OneKeyDoping->CheckDeBuff;
 		One_Able = OneKeyDoping->Able;
 	}
 
@@ -109,6 +150,9 @@ void UDopingComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 		Two_DopingCoolTime = TwoKeyDoping->DopingCoolTime;
 		Two_DopingItemNum = TwoKeyDoping->DopingItemNum;
 		Two_BuffDuration = TwoKeyDoping->BuffDuration;
+		Two_DeBuffDuration = TwoKeyDoping->DeBuffDuration;
+		Two_CheckBuff = TwoKeyDoping->CheckBuff;
+		Two_CheckDeBuff = TwoKeyDoping->CheckDeBuff;
 		Two_Able = TwoKeyDoping->Able;
 	}
 
@@ -118,8 +162,12 @@ void UDopingComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 	// Player 정보 갱신
 	MaxHealth = PID->MaxHealth;
 	CurrentHealth = PID->CurrentHealth;
+	MaxShield = PID->MaxShield;
+	CurrentShield = PID->CurrentShield;
 	MoveSpeed = PID->MoveSpeed;
 	RunningSpeed = PID->RunningSpeed;
+	MLAtaackPoint = PID->MLAtaackPoint;
+	Rebound = PID->Rebound;
 	Defense = PID->Defense;
 	Blurred = PID->Blurred;
 	ROF = PID->ROF;
@@ -151,13 +199,13 @@ void UDopingComponent::SetDopingKey(UDopingParent*& DopingKey, int32 Num)
 }
 
 // SetFirstDopingKey와 SetSecondDopingKey를 간소화
-void UDopingComponent::SetFirstDopingKey(int32 Num)
+void UDopingComponent::SetFirstDopingKey_Implementation(int32 Num)
 {
 	SetDopingKey(OneKeyDoping, Num);
 	OneKeyBool = true;
 }
 
-void UDopingComponent::SetSecondDopingKey(int32 Num)
+void UDopingComponent::SetSecondDopingKey_Implementation(int32 Num)
 {
 	SetDopingKey(TwoKeyDoping, Num);
 	TwoKeyBool = true;
@@ -180,8 +228,33 @@ void UDopingComponent::Passive_End()
 
 }
 
+void UDopingComponent::FirstDopingUse_Implementation() {
+
+	if (PID->CurrentDoped >= 2) {
+		UE_LOG(LogTemp, Warning, TEXT("This Character is doped two Doping"));
+		return;
+	}
+
+	if (OneKeyDoping->Able == true) {
+		OneKeyDoping->UseDopingItem(PID);
+	}
+}
+
+void UDopingComponent::SecondDopingUse_Implementation() {
+
+	if (PID->CurrentDoped >= 2) {
+		UE_LOG(LogTemp, Warning, TEXT("This Character is doped two Doping"));
+		return;
+	}
+
+	if (TwoKeyDoping->Able == true) {
+		TwoKeyDoping->UseDopingItem(PID);
+	}
+
+}
+
 //아군에게 도핑주는 시스템 관련 함수
-void UDopingComponent::DopingModeChange()
+void UDopingComponent::DopingModeChange_Implementation()
 {
 	if (DopingMode == false) {
 		DopingMode = true;
@@ -191,24 +264,24 @@ void UDopingComponent::DopingModeChange()
 	}
 }
 
-void UDopingComponent::FirstDopingForAlly()
+void UDopingComponent::FirstDopingForAlly_Implementation()
 {
 	UE_LOG(LogTemp, Warning, TEXT("아군에게 도핑사용 1번 작동"));
 	
 	AActor* Owner = GetOwner();
 	if (!Owner) return;
 
-	UE_LOG(LogTemp, Warning, TEXT("1"));
+	//UE_LOG(LogTemp, Warning, TEXT("1"));
 
 	APlayerCharacter* OwnerCharacter = Cast<APlayerCharacter>(Owner);
 	if (!OwnerCharacter) return;
 
-	UE_LOG(LogTemp, Warning, TEXT("2"));
+	//UE_LOG(LogTemp, Warning, TEXT("2"));
 
 	UCameraComponent* CameraComponent = OwnerCharacter->FindComponentByClass<UCameraComponent>();
 	if (!CameraComponent) return;
 
-	UE_LOG(LogTemp, Warning, TEXT("3"));
+	//UE_LOG(LogTemp, Warning, TEXT("3"));
 
 	FVector Start = CameraComponent->GetComponentLocation();
 	FVector ForwardVector = CameraComponent->GetForwardVector();
@@ -218,13 +291,13 @@ void UDopingComponent::FirstDopingForAlly()
 	FCollisionQueryParams Params;
 	Params.AddIgnoredActor(Owner);
 
-	UE_LOG(LogTemp, Warning, TEXT("4"));
+	//UE_LOG(LogTemp, Warning, TEXT("4"));
 	if (GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_Visibility, Params))
 	{
-		UE_LOG(LogTemp, Warning, TEXT("5"));
+		//UE_LOG(LogTemp, Warning, TEXT("5"));
 		APlayerCharacter* HitCharacter = Cast<APlayerCharacter>(HitResult.GetActor());
 		if (HitCharacter) {
-			UE_LOG(LogTemp, Warning, TEXT("6"));
+			//UE_LOG(LogTemp, Warning, TEXT("6"));
 			switch (FirstDopingCode)
 			{
 			case 1: HitCharacter->UDC->LegEnforce->BuffOn(HitCharacter->UDC->PID); UE_LOG(LogTemp, Warning, TEXT("7ㄴ")); break;
@@ -243,7 +316,7 @@ void UDopingComponent::FirstDopingForAlly()
 	}
 }
 
-void UDopingComponent::SecondDopingForAlly()
+void UDopingComponent::SecondDopingForAlly_Implementation()
 {
 	UE_LOG(LogTemp, Warning, TEXT("아군에게 도핑사용 2번 작동 시작"));
 	AActor* Owner = GetOwner();

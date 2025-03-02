@@ -18,7 +18,10 @@ class NECROSYNTEX_API UDCAleks : public UDopingComponent
 
 	void Passive_Start() override;
 
-	void Passive_End() override;
+    void Passive_End() override;
 
+	void FirstDopingUse_Implementation() override;
+
+	void SecondDopingUse_Implementation() override;
 
 };

@@ -26,6 +26,7 @@
 #include "NecroSyntex/GameMode/NecroSyntexGameMode.h"
 #include "NecroSyntex/PlayerController/NecroSyntexPlayerController.h"
 #include "NecroSyntex/PlayerState/NecroSyntexPlayerState.h"
+#include "NecroSyntex/DopingSystem/DopingComponent.h"
 
 // 애니메이션 관련 헤더
 #include "PlayerAnimInstance.h"
@@ -53,7 +54,7 @@ APlayerCharacter::APlayerCharacter()
 	Combat = CreateDefaultSubobject<UCombatComponent>(TEXT("CombatComponent"));
 	Combat->SetIsReplicated(true);
 
-	UDC = CreateDefaultSubobject<UDopingComponent>(TEXT("DopingComponent"));
+	//UDC = CreateDefaultSubobject<UDopingComponent>(TEXT("DopingComponent"));
 
 	SubComp = CreateDefaultSubobject<USubComponent>(TEXT("SubComponent"));
 	SubComp->SetIsReplicated(true);
@@ -207,7 +208,12 @@ void APlayerCharacter::BeginPlay()
 	{
 		AttachedGrenade->SetVisibility(false);
 	}
-	GetCharacterMovement()->MaxWalkSpeed = UDC->MoveSpeed;
+	if (!UDC) {
+		GetCharacterMovement()->MaxWalkSpeed = 550.0f;
+	}
+	else {
+		GetCharacterMovement()->MaxWalkSpeed = UDC->PID->MoveSpeed;
+	}
 }
 
 void APlayerCharacter::Tick(float DeltaTime)
@@ -489,7 +495,7 @@ void APlayerCharacter::SprintStart()
 
 		if (HasAuthority())
 		{
-			GetCharacterMovement()->MaxWalkSpeed = UDC->RunningSpeed;
+			GetCharacterMovement()->MaxWalkSpeed = UDC->PID->RunningSpeed;
 		}
 		else
 		{
@@ -506,7 +512,7 @@ void APlayerCharacter::SprintStop()
 
 		if (HasAuthority())
 		{
-			GetCharacterMovement()->MaxWalkSpeed = UDC->MoveSpeed;
+			GetCharacterMovement()->MaxWalkSpeed = UDC->PID->MoveSpeed;
 		}
 		else
 		{
@@ -517,12 +523,12 @@ void APlayerCharacter::SprintStop()
 
 void APlayerCharacter::ServerSprintStart_Implementation()
 {
-	GetCharacterMovement()->MaxWalkSpeed = UDC->RunningSpeed;
+	GetCharacterMovement()->MaxWalkSpeed = UDC->PID->RunningSpeed;
 }
 
 void APlayerCharacter::ServerSprintStop_Implementation()
 {
-	GetCharacterMovement()->MaxWalkSpeed = UDC->MoveSpeed;
+	GetCharacterMovement()->MaxWalkSpeed = UDC->PID->MoveSpeed;
 }
 
 bool APlayerCharacter::ServerSprintStart_Validate()

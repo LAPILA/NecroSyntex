@@ -19,7 +19,7 @@ void UDCElis::BeginPlay()
 
 void UDCElis::Passive_Start()
 {
-	UE_LOG(LogTemp, Warning, TEXT("Velis Passive On"));
+	UE_LOG(LogTemp, Warning, TEXT("Elis Passive On"));
 	GetWorld()->GetTimerManager().SetTimer(
 		PassiveTimerHandle,
 		[this]() {Passive_End(); },
@@ -30,5 +30,5 @@ void UDCElis::Passive_Start()
 
 void UDCElis::Passive_End()
 {
-	UE_LOG(LogTemp, Warning, TEXT("Velis Passive OFF"));
+	UE_LOG(LogTemp, Warning, TEXT("Elis Passive OFF"));
 }
