@@ -15,6 +15,13 @@ public:
 	// Sets default values for this character's properties
 	ABasicMonsterAI();
 
+	UFUNCTION()
+	void UpdateWalkSpeed(float NewWalkSpeed);
+
+	/** 몬스터의 추격 속도 */
+	UPROPERTY(EditAnywhere, Category = "AI")
+	float ChaseSpeed = 600.0f;
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
