@@ -118,8 +118,11 @@ void ANecroSyntexGameMode::SetupPlayers()
 				{
 					UE_LOG(LogTemp, Warning, TEXT("66666"));
 					FActorSpawnParameters SpawnParams;
+					FVector SpawnVector;
+					SpawnVector = FVector(-500.0f, -200.0f, 140.0f);
+
 					APlayerCharacter* NewCharacter = GetWorld()->SpawnActor<APlayerCharacter>(
-						PS->SelectedCharacterClass, FVector::ZeroVector, FRotator::ZeroRotator);
+						PS->SelectedCharacterClass, SpawnVector, FRotator::ZeroRotator);
 					UE_LOG(LogTemp, Warning, TEXT("777777"));
 					if (NewCharacter)
 					{

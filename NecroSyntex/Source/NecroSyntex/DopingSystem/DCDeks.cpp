@@ -34,3 +34,19 @@ void UDCDeks::Passive_End()
 	PID->Defense = PID->Defense - 10.0f;
 	UE_LOG(LogTemp, Warning, TEXT("Decks Passive OFF"));
 }
+
+void UDCDeks::FirstDopingUse_Implementation()
+{
+
+	Super::FirstDopingUse_Implementation();
+
+	Passive_Start();
+}
+
+void UDCDeks::SecondDopingUse_Implementation() {
+
+	Super::SecondDopingUse_Implementation();
+
+	Passive_Start();
+
+}

@@ -34,3 +34,19 @@ void UDCVelis::Passive_End()
 	PID->RunningSpeed = PID->RunningSpeed - 100;
 	UE_LOG(LogTemp, Warning, TEXT("Velis Passive OFF"));
 }
+
+void UDCVelis::FirstDopingUse_Implementation()
+{
+
+	Super::FirstDopingUse_Implementation();
+
+	Passive_Start();
+}
+
+void UDCVelis::SecondDopingUse_Implementation() {
+
+	Super::SecondDopingUse_Implementation();
+
+	Passive_Start();
+
+}
