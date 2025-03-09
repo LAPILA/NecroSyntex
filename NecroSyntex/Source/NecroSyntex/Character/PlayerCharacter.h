@@ -22,11 +22,11 @@ class NECROSYNTEX_API APlayerCharacter : public ACharacter, public IInteractWith
 {
 	GENERATED_BODY()
 
-
+public:
 	/** MappingContext */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputMappingContext* DefaultMappingContext;
-
+private:
 	/** Key Settings */
 	/*
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))

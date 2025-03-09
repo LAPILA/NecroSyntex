@@ -50,31 +50,30 @@ void ANecroSyntexGameMode::Tick(float DeltaTime)
 
 	if (MatchState == MatchState::WaitingToStart)
 	{
-		CountdownTime = WarmUpTime - GetWorld()->GetTimeSeconds() + LevelStartingTime;
+		CountdownTime = WarmUpTime - (GetWorld()->GetTimeSeconds() - LevelStartingTime);
 		if (CountdownTime <= 0.0f)
 		{
 			StartMatch();
-			UE_LOG(LogTemp, Warning, TEXT("Match started! State: %s"), *MatchState.ToString());
 		}
-
-		else if (MatchState == MatchState::InProgress)
+	}
+	else if (MatchState == MatchState::InProgress)
+	{
+		CountdownTime = WarmUpTime + MatchTime - (GetWorld()->GetTimeSeconds() - LevelStartingTime);
+		if (CountdownTime <= 0.f)
 		{
-			CountdownTime = WarmUpTime + MatchTime - GetWorld()->GetTimeSeconds() + LevelStartingTime;
-			if (CountdownTime <= 0.f)
-			{
-				SetMatchState(MatchState::Cooldown);
-			}
+			SetMatchState(MatchState::Cooldown);
 		}
-		else if (MatchState == MatchState::Cooldown)
+	}
+	else if (MatchState == MatchState::Cooldown)
+	{
+		CountdownTime = CooldownTime + WarmUpTime + MatchTime - (GetWorld()->GetTimeSeconds() - LevelStartingTime);
+		if (CountdownTime <= 0.f)
 		{
-			CountdownTime = CooldownTime + WarmUpTime + MatchTime - GetWorld()->GetTimeSeconds() + LevelStartingTime;
-			if (CountdownTime <= 0.f)
-			{
-				RestartGame();
-			}
+			RestartGame();
 		}
 	}
 }
+
 
 //플레이어 제거 관련 함수
 void ANecroSyntexGameMode::PlayerEliminated(APlayerCharacter* ElimmedCharacter, ANecroSyntexPlayerController* VictimController, ANecroSyntexPlayerController* AttackController)

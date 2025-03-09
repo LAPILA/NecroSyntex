@@ -13,6 +13,8 @@
 #include "NecroSyntex\NecroSyntaxComponents\CombatComponent.h"
 #include "NecroSyntex\Weapon\Weapon.h"
 #include "NecroSyntex\NecroSyntexGameState.h"
+#include "EnhancedInputComponent.h"
+#include "EnhancedInputSubsystems.h"
 #include "Kismet/GameplayStatics.h"
 
 void ANecroSyntexPlayerController::BeginPlay()
@@ -128,7 +130,23 @@ void ANecroSyntexPlayerController::SetHUDShield(float Shield, float MaxShield)
 void ANecroSyntexPlayerController::OnPossess(APawn* InPawn)
 {
 	Super::OnPossess(InPawn);
+
 	APlayerCharacter* PlayerCharacter = Cast<APlayerCharacter>(InPawn);
+
+	if (IsLocalController())
+	{
+		if (UEnhancedInputLocalPlayerSubsystem* SubSystem =
+			ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(GetLocalPlayer()))
+		{
+			if (PlayerCharacter && PlayerCharacter->DefaultMappingContext)
+			{
+				SubSystem->ClearAllMappings();
+				SubSystem->AddMappingContext(PlayerCharacter->DefaultMappingContext, 0);
+			}
+		}
+	}
+
+	// 캐릭터 HUD 초기화
 	if (PlayerCharacter)
 	{
 		SetHUDHealth(PlayerCharacter->GetHealth(), PlayerCharacter->GetMaxHealth());
@@ -393,6 +411,14 @@ void ANecroSyntexPlayerController::HandleMatchHasStarted()
 		{
 			NecroSyntexHUD->Announcement->SetVisibility(ESlateVisibility::Hidden);
 		}
+
+		if (!HasAuthority()) return;
+	}
+
+	APlayerCharacter* MyCharacter = Cast<APlayerCharacter>(GetPawn());
+	if (MyCharacter)
+	{
+		MyCharacter->bDisableGameplay = false;
 	}
 }
 
