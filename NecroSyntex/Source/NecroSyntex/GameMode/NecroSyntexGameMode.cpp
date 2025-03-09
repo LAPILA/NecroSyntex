@@ -6,7 +6,13 @@
 #include "NecroSyntex\PlayerController\NecroSyntexPlayerController.h"
 #include "Kismet/GameplayStatics.h"
 #include "GameFramework/PlayerStart.h"
+#include "NecroSyntex\NecroSyntexGameState.h"
 #include "NecroSyntex\PlayerState\NecroSyntexPlayerState.h"
+
+namespace MatchState
+{
+	const FName Cooldown = FName("Cooldown");
+}
 
 ANecroSyntexGameMode::ANecroSyntexGameMode()
 {
@@ -27,12 +33,12 @@ void ANecroSyntexGameMode::BeginPlay()
 void ANecroSyntexGameMode::OnMatchStateSet()
 {
 	Super::OnMatchStateSet();
+
 	for (FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
 	{
 		ANecroSyntexPlayerController* NecroSyntexPlayer = Cast<ANecroSyntexPlayerController>(*It);
 		if (NecroSyntexPlayer)
 		{
-			UE_LOG(LogTemp, Warning, TEXT("Notifying PlayerController: %s"), *NecroSyntexPlayer->GetName());
 			NecroSyntexPlayer->OnMatchStateSet(MatchState);
 		}
 	}
@@ -50,6 +56,23 @@ void ANecroSyntexGameMode::Tick(float DeltaTime)
 			StartMatch();
 			UE_LOG(LogTemp, Warning, TEXT("Match started! State: %s"), *MatchState.ToString());
 		}
+
+		else if (MatchState == MatchState::InProgress)
+		{
+			CountdownTime = WarmUpTime + MatchTime - GetWorld()->GetTimeSeconds() + LevelStartingTime;
+			if (CountdownTime <= 0.f)
+			{
+				SetMatchState(MatchState::Cooldown);
+			}
+		}
+		else if (MatchState == MatchState::Cooldown)
+		{
+			CountdownTime = CooldownTime + WarmUpTime + MatchTime - GetWorld()->GetTimeSeconds() + LevelStartingTime;
+			if (CountdownTime <= 0.f)
+			{
+				RestartGame();
+			}
+		}
 	}
 }
 
@@ -61,9 +84,12 @@ void ANecroSyntexGameMode::PlayerEliminated(APlayerCharacter* ElimmedCharacter, 
 	ANecroSyntexPlayerState* VictimPlayerState = VictimController ? Cast<ANecroSyntexPlayerState>(VictimController->PlayerState) : nullptr;
 
 	// 점수 추가
-	if (AttackerPlayerState && AttackerPlayerState != VictimPlayerState)
+	ANecroSyntexGameState* NecroSyntexGameState = GetGameState<ANecroSyntexGameState>();
+
+	if (AttackerPlayerState && AttackerPlayerState != VictimPlayerState && NecroSyntexGameState)
 	{
-		AttackerPlayerState->AddToScore(-100.f);
+		AttackerPlayerState->AddToScore(1.f);
+		NecroSyntexGameState->UpdateTopScore(AttackerPlayerState);
 	}
 	if (VictimPlayerState)
 	{

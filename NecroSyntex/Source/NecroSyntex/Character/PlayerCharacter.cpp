@@ -111,11 +111,10 @@ void APlayerCharacter::MulticastElim_Implementation()
 	}
 
 	// Disable character movement
-	GetCharacterMovement()->DisableMovement();
-	GetCharacterMovement()->StopMovementImmediately();
-	if (NecroSyntexPlayerController)
+	bDisableGameplay = true;
+	if (Combat)
 	{
-		DisableInput(NecroSyntexPlayerController);
+		Combat->FireButtonPressed(false);
 	}
 	// Disable collision
 	// To Do: Nedd Check Rifle  
@@ -147,6 +146,13 @@ void APlayerCharacter::ElimTimerFinished()
 void APlayerCharacter::Destroyed()
 {
 	Super::Destroyed();
+
+	ANecroSyntexGameMode* NecroSyntexGameMode = Cast<ANecroSyntexGameMode>(UGameplayStatics::GetGameMode(this));
+	bool bMatchNotInProgress = NecroSyntexGameMode && NecroSyntexGameMode->GetMatchState() != MatchState::InProgress;
+	if (Combat && Combat->EquippedWeapon && bMatchNotInProgress)
+	{
+		Combat->EquippedWeapon->Destroy();
+	}
 }
 
 void APlayerCharacter::SpawnDefaultWeapon()
@@ -213,6 +219,8 @@ void APlayerCharacter::BeginPlay()
 void APlayerCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+
+	RotateInPlace(DeltaTime);
 	if (GetLocalRole() > ENetRole::ROLE_SimulatedProxy && IsLocallyControlled())
 	{
 		AimOffset(DeltaTime);
@@ -227,6 +235,30 @@ void APlayerCharacter::Tick(float DeltaTime)
 		CalculateAO_Pitch();
 	}
 	PollInit();
+}
+
+
+void APlayerCharacter::RotateInPlace(float DeltaTime)
+{
+	if (bDisableGameplay)
+	{
+		bUseControllerRotationYaw = false;
+		TurningInPlace = ETurningInPlace::ETIP_NotTurning;
+		return;
+	}
+	if (GetLocalRole() > ENetRole::ROLE_SimulatedProxy && IsLocallyControlled())
+	{
+		AimOffset(DeltaTime);
+	}
+	else
+	{
+		TimeSinceLastMovementReplication += DeltaTime;
+		if (TimeSinceLastMovementReplication > 0.25f)
+		{
+			OnRep_ReplicatedMovement();
+		}
+		CalculateAO_Pitch();
+	}
 }
 
 void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -268,6 +300,7 @@ void APlayerCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 	DOREPLIFETIME_CONDITION(APlayerCharacter, OverlappingWeapon,COND_OwnerOnly);
+	DOREPLIFETIME(APlayerCharacter, bDisableGameplay);
 	DOREPLIFETIME(APlayerCharacter, Health);
 	DOREPLIFETIME(APlayerCharacter, Shield);
 }
@@ -412,6 +445,7 @@ void APlayerCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, const U
 
 void APlayerCharacter::Move(const FInputActionValue& Value)
 {
+	if (bDisableGameplay) return;
 	FVector2D MovementVector = Value.Get<FVector2D>();
 
 	if (Controller != nullptr)
@@ -440,6 +474,7 @@ void APlayerCharacter::Look(const FInputActionValue& Value)
 
 void APlayerCharacter::EquipButtonPressed()
 {
+	if (bDisableGameplay) return;
 	if (Combat)
 	{
 		ServerEquipButtonPressed();
@@ -448,6 +483,7 @@ void APlayerCharacter::EquipButtonPressed()
 
 void APlayerCharacter::CrouchButtonPressed()
 {
+	if (bDisableGameplay) return;
 	if (bIsCrouched)
 	{
 		UnCrouch();
@@ -460,6 +496,7 @@ void APlayerCharacter::CrouchButtonPressed()
 
 void APlayerCharacter::ReloadButtonPressed()
 {
+	if (bDisableGameplay) return;
 	if (Combat)
 	{
 		Combat->Reload();
@@ -468,6 +505,7 @@ void APlayerCharacter::ReloadButtonPressed()
 
 void APlayerCharacter::AimButtonPressed()
 {
+	if (bDisableGameplay) return;
 	if (Combat)
 	{
 		Combat->SetAiming(true);
@@ -475,6 +513,7 @@ void APlayerCharacter::AimButtonPressed()
 }
 void APlayerCharacter::AimButtonReleased()
 {
+	if (bDisableGameplay) return;
 	if (Combat)
 	{
 		Combat->SetAiming(false);
@@ -483,6 +522,7 @@ void APlayerCharacter::AimButtonReleased()
 
 void APlayerCharacter::SprintStart()
 {
+	if (bDisableGameplay) return;
 	if (!bIsSprinting)
 	{
 		bIsSprinting = true;
@@ -500,6 +540,7 @@ void APlayerCharacter::SprintStart()
 
 void APlayerCharacter::SprintStop()
 {
+	if (bDisableGameplay) return;
 	if (bIsSprinting)
 	{
 		bIsSprinting = false;
