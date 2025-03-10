@@ -19,7 +19,9 @@ void ANecroSyntexPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
 	NecroSyntexHUD = Cast<ANecroSyntexHud>(GetHUD());
-	ServerCheckMatchState();
+	
+	//원래는 주석 처리 없었음. server test duream
+	//ServerCheckMatchState();
 
 
 	//박태혁
@@ -51,31 +53,32 @@ void ANecroSyntexPlayerController::CheckTimeSync(float DeltaTime)
 	}
 }
 
-
-void ANecroSyntexPlayerController::ServerCheckMatchState_Implementation()
-{
-	ANecroSyntexGameMode* GameMode = Cast<ANecroSyntexGameMode>(UGameplayStatics::GetGameMode(this));
-	if (GameMode)
-	{
-		WarmupTime = GameMode->WarmUpTime;
-		MatchTime = GameMode->MatchTime;
-		LevelStartingTime = GameMode->LevelStartingTime;
-		MatchState = GameMode->GetMatchState();
-		ClientJoinMidgame(MatchState, WarmupTime, MatchTime, LevelStartingTime);
-	}
-}
-void ANecroSyntexPlayerController::ClientJoinMidgame_Implementation(FName StateOfMatch, float Warmup, float Match, float StartingTime)
-{
-	WarmupTime = Warmup;
-	MatchTime = Match;
-	LevelStartingTime = StartingTime;
-	MatchState = StateOfMatch;
-	OnMatchStateSet(MatchState);
-	if (NecroSyntexHUD && MatchState == MatchState::WaitingToStart)
-	{
-		NecroSyntexHUD->AddAnnouncement();
-	}
-}
+//duream server test
+// 
+//void ANecroSyntexPlayerController::ServerCheckMatchState_Implementation()
+//{
+//	ANecroSyntexGameMode* GameMode = Cast<ANecroSyntexGameMode>(UGameplayStatics::GetGameMode(this));
+//	if (GameMode)
+//	{
+//		WarmupTime = GameMode->WarmUpTime;
+//		MatchTime = GameMode->MatchTime;
+//		LevelStartingTime = GameMode->LevelStartingTime;
+//		MatchState = GameMode->GetMatchState();
+//		ClientJoinMidgame(MatchState, WarmupTime, MatchTime, LevelStartingTime);
+//	}
+//}
+//void ANecroSyntexPlayerController::ClientJoinMidgame_Implementation(FName StateOfMatch, float Warmup, float Match, float StartingTime)
+//{
+//	WarmupTime = Warmup;
+//	MatchTime = Match;
+//	LevelStartingTime = StartingTime;
+//	MatchState = StateOfMatch;
+//	OnMatchStateSet(MatchState);
+//	if (NecroSyntexHUD && MatchState == MatchState::WaitingToStart)
+//	{
+//		NecroSyntexHUD->AddAnnouncement();
+//	}
+//}
 
 
 //Player State HUD
@@ -132,6 +135,13 @@ void ANecroSyntexPlayerController::OnPossess(APawn* InPawn)
 	{
 		SetHUDHealth(PlayerCharacter->GetHealth(), PlayerCharacter->GetMaxHealth());
 		SetHUDShield(PlayerCharacter->GetShield(), PlayerCharacter->GetMaxShield());
+	}
+	else
+	{
+		if (GEngine)
+		{
+			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("No~~~~~~"));
+		}
 	}
 }
 
@@ -318,6 +328,7 @@ void ANecroSyntexPlayerController::PollInit()
 	}
 }
 
+
 void ANecroSyntexPlayerController::ServerRequestServerTime_Implementation(float TimeOfClientRequest)
 {
 	float ServerTimeOfReceipt = GetWorld()->GetTimeSeconds();
@@ -334,6 +345,9 @@ float ANecroSyntexPlayerController::GetServerTime()
 	if (HasAuthority()) return GetWorld()->GetTimeSeconds();
 	else return GetWorld()->GetTimeSeconds() + ClientServerDelta;
 }
+
+
+ 
 void ANecroSyntexPlayerController::ReceivedPlayer()
 {
 	Super::ReceivedPlayer();

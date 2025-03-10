@@ -53,10 +53,10 @@ protected:
 	float TimeSyncRunningTime = 0.f;
 	void CheckTimeSync(float DeltaTime);
 
-	UFUNCTION(Server, Reliable)
+	/*UFUNCTION(Server, Reliable)
 	void ServerCheckMatchState();
 	UFUNCTION(Client, Reliable)
-	void ClientJoinMidgame(FName StateOfMatch, float Warmup, float Match, float StartingTime);
+	void ClientJoinMidgame(FName StateOfMatch, float Warmup, float Match, float StartingTime);*/
 private:
 	UPROPERTY()
 	class ANecroSyntexHud* NecroSyntexHUD;
