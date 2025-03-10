@@ -92,7 +92,7 @@ private:
 	bool bInitializeWeaponAmmo = false;
 
 
-	//¹ÚÅÂÇõ ÆíÁý
+	//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 public:
 
 	UFUNCTION(Server, Reliable, BlueprintCallable)

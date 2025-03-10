@@ -9,12 +9,16 @@ void UDCElis::BeginPlay()
 {
 	Super::BeginPlay();
 
-	PID->MaxHealth = 200;
-	PID->CurrentHealth = PID->MaxHealth;
-	PID->MoveSpeed = 550.0f;
-	PID->RunningSpeed = 1000.0f;
-	PID->MLAtaackPoint = 60.0f;
-	PID->Defense = 20;
+
+	if (GetOwner()->HasAuthority())
+	{
+		PID->MaxHealth = 200;
+		PID->CurrentHealth = PID->MaxHealth;
+		PID->MoveSpeed = 550.0f;
+		PID->RunningSpeed = 1000.0f;
+		PID->MLAtaackPoint = 60.0f;
+		PID->Defense = 20;
+	}
 
 
 }
@@ -44,7 +48,7 @@ void UDCElis::Elis_Passive_End(APlayerCharacter* HitCharacter)
 
 void UDCElis::FirstDopingForAlly_Implementation()
 {
-	UE_LOG(LogTemp, Warning, TEXT("아군에게 도핑사용 1번 작동"));
+	UE_LOG(LogTemp, Warning, TEXT("First Doping for Team"));
 
 	AActor* Owner = GetOwner();
 	if (!Owner) return;
@@ -78,7 +82,7 @@ void UDCElis::FirstDopingForAlly_Implementation()
 			//UE_LOG(LogTemp, Warning, TEXT("6"));
 			switch (FirstDopingCode)
 			{
-			case 1: HitCharacter->UDC->LegEnforce->BuffOn(HitCharacter->UDC->PID); UE_LOG(LogTemp, Warning, TEXT("7ㄴ")); break;
+			case 1: HitCharacter->UDC->LegEnforce->BuffOn(HitCharacter->UDC->PID); UE_LOG(LogTemp, Warning, TEXT("7占쏙옙")); break;
 			case 2: HitCharacter->UDC->ReducePain->BuffOn(HitCharacter->UDC->PID); break;
 			case 3: HitCharacter->UDC->SupremeStrength->BuffOn(HitCharacter->UDC->PID); break;
 			case 4: HitCharacter->UDC->ForcedHealing->BuffOn(HitCharacter->UDC->PID); break;
@@ -98,7 +102,7 @@ void UDCElis::FirstDopingForAlly_Implementation()
 void UDCElis::SecondDopingForAlly_Implementation()
 {
 
-	UE_LOG(LogTemp, Warning, TEXT("아군에게 도핑사용 2번 작동 시작"));
+	UE_LOG(LogTemp, Warning, TEXT("Second Doping for Team"));
 
 	AActor* Owner = GetOwner();
 	if (!Owner) return;

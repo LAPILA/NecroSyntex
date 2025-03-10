@@ -418,7 +418,7 @@ void ANecroSyntexPlayerController::ShowCharacterSelectUI_Implementation()
 		SelectionWidget = CreateWidget<UUserWidget>(this, SelectionWidgetClass);
 		if (SelectionWidget)
 		{
-			SelectionWidget->AddToViewport();
+			SelectionWidget->AddToViewport(5);
 			SetInputMode(FInputModeUIOnly()); // UI 조작 모드로 변경
 			bShowMouseCursor = true; // 마우스 커서 활성화
 		}

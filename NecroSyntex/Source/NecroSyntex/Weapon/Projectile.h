@@ -44,7 +44,7 @@ protected:
 	class UNiagaraComponent* TrailSystemComponent;
 
 
-	// Åõ»çÃ¼ ÀÌµ¿ ÄÄÆ÷³ÍÆ®
+	// ï¿½ï¿½ï¿½ï¿½Ã¼ ï¿½Ìµï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ®
 	UPROPERTY(VisibleAnywhere, Category = "Projectile|Movement")
 	class UProjectileMovementComponent* ProjectileMovementComponent;
 
@@ -59,15 +59,15 @@ protected:
 
 private:
 
-	// ÃÊ±â ¹ß»ç ¹æÇâ
+	// ï¿½Ê±ï¿½ ï¿½ß»ï¿½ ï¿½ï¿½ï¿½ï¿½
 	UPROPERTY(EditAnywhere, Category = "Projectile|Settings")
 	FVector InitialDirection = FVector::ForwardVector;
 
-	// ÃÊ±â ¼Óµµ
+	// ï¿½Ê±ï¿½ ï¿½Óµï¿½
 	UPROPERTY(EditAnywhere, Category = "Projectile|Settings")
 	float InitialSpeed = 3000.0f;
 
-	// ÃÖ´ë ¼Óµµ
+	// ï¿½Ö´ï¿½ ï¿½Óµï¿½
 	UPROPERTY(EditAnywhere, Category = "Projectile|Settings")
 	float MaxSpeed = 3000.0f;
 

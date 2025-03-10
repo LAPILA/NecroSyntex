@@ -7,12 +7,15 @@ void UDCDeks::BeginPlay()
 {
 	Super::BeginPlay();
 
-	PID->MaxHealth = 250;
-	PID->CurrentHealth = PID->MaxHealth;
-	PID->MoveSpeed = 450.0f;
-	PID->RunningSpeed = 800.0f;
-	PID->MLAtaackPoint = 100.0f;
-	PID->Defense = 60.0f;
+	if (GetOwner()->HasAuthority())
+	{
+		PID->MaxHealth = 250;
+		PID->CurrentHealth = PID->MaxHealth;
+		PID->MoveSpeed = 450.0f;
+		PID->RunningSpeed = 800.0f;
+		PID->MLAtaackPoint = 100.0f;
+		PID->Defense = 60.0f;
+	}
 
 
 }

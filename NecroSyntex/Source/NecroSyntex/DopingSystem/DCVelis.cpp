@@ -7,12 +7,16 @@ void UDCVelis::BeginPlay()
 {
 	Super::BeginPlay();
 
-	PID->MaxHealth = 150;
-	PID->CurrentHealth = PID->MaxHealth;
-	PID->MoveSpeed = 650.0f;
-	PID->RunningSpeed = 1200.0f;
-	PID->MLAtaackPoint = 50.0f;
-	PID->Defense = 0;
+
+	if (GetOwner()->HasAuthority())
+	{
+		PID->MaxHealth = 150;
+		PID->CurrentHealth = PID->MaxHealth;
+		PID->MoveSpeed = 650.0f;
+		PID->RunningSpeed = 1200.0f;
+		PID->MLAtaackPoint = 50.0f;
+		PID->Defense = 0;
+	}
 	
 
 }

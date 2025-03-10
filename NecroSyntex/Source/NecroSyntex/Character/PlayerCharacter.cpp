@@ -1,4 +1,4 @@
-// Unreal Engine ±âº» Çì´õ
+// Unreal Engine ï¿½âº» ï¿½ï¿½ï¿½
 #include "PlayerCharacter.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
@@ -13,11 +13,11 @@
 #include "NiagaraSystem.h"
 #include "TimerManager.h"
 
-// Enhanced Input °ü·Ã Çì´õ
+// Enhanced Input ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 
-// ÇÁ·ÎÁ§Æ® °ü·Ã Çì´õ (NecroSyntex)
+// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ® ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ (NecroSyntex)
 #include "NecroSyntex/NecroSyntex.h"
 #include "NecroSyntex/Weapon/Weapon.h"
 #include "NecroSyntex/Weapon/WeaponTypes.h"
@@ -28,7 +28,7 @@
 #include "NecroSyntex/PlayerState/NecroSyntexPlayerState.h"
 #include "NecroSyntex/DopingSystem/DopingComponent.h"
 
-// ¾Ö´Ï¸ÞÀÌ¼Ç °ü·Ã Çì´õ
+// ï¿½Ö´Ï¸ï¿½ï¿½Ì¼ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½
 #include "PlayerAnimInstance.h"
 
 
@@ -152,26 +152,26 @@ void APlayerCharacter::Destroyed()
 
 void APlayerCharacter::SpawnDefaultWeapon()
 {
-	// GameMode³ª World À¯È¿¼º °Ë»ç
+	// GameModeï¿½ï¿½ World ï¿½ï¿½È¿ï¿½ï¿½ ï¿½Ë»ï¿½
 	ANecroSyntexGameMode* NecroSyntexGameMode = Cast<ANecroSyntexGameMode>(UGameplayStatics::GetGameMode(this));
 	UWorld* World = GetWorld();
 	if (!NecroSyntexGameMode || !World || bElimed) return;
 
-	// 1) ÁÖ¹«±â(Primary) ½ºÆù
+	// 1) ï¿½Ö¹ï¿½ï¿½ï¿½(Primary) ï¿½ï¿½ï¿½ï¿½
 	if (DefaultWeaponClass && Combat)
 	{
 		AWeapon* PrimaryWeapon = World->SpawnActor<AWeapon>(DefaultWeaponClass);
 		if (PrimaryWeapon)
 		{
-			// bDestroyWeapon = true ¡æ »ç¸Á ½Ã ÆÄ±«µÇ´Â ¼³Á¤
+			// bDestroyWeapon = true ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½Ä±ï¿½ï¿½Ç´ï¿½ ï¿½ï¿½ï¿½ï¿½
 			PrimaryWeapon->bDestroyWeapon = true;
 			Combat->EquipWeapon(PrimaryWeapon);
-			// -> Combat->EquipWeapon() ³»ºÎ¿¡¼­ 
-			//    '¸¸¾à ÀÌ¹Ì ¹«±â°¡ ÀÖÀ¸¸é SecondaryWeaponÀ¸·Î ¹èÁ¤' ·ÎÁ÷ Ã³¸®
+			// -> Combat->EquipWeapon() ï¿½ï¿½ï¿½Î¿ï¿½ï¿½ï¿½ 
+			//    'ï¿½ï¿½ï¿½ï¿½ ï¿½Ì¹ï¿½ ï¿½ï¿½ï¿½â°¡ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ SecondaryWeaponï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½' ï¿½ï¿½ï¿½ï¿½ Ã³ï¿½ï¿½
 		}
 	}
 
-	// 2) º¸Á¶ ¹«±â(Secondary) ½ºÆù
+	// 2) ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½(Secondary) ï¿½ï¿½ï¿½ï¿½
 	if (SubWeaponClass && Combat)
 	{
 		AWeapon* SecondaryWeapon = World->SpawnActor<AWeapon>(SubWeaponClass);
@@ -179,7 +179,7 @@ void APlayerCharacter::SpawnDefaultWeapon()
 		{
 			SecondaryWeapon->bDestroyWeapon = true;
 			Combat->EquipWeapon(SecondaryWeapon);
-			// -> Ã¹ ¹øÂ° ¹«±â°¡ ÁÖ¹«±â°¡ µÇ¾úÀ¸¹Ç·Î, µÎ ¹øÂ°´Â º¸Á¶ ¹«±â·Î ÀÚµ¿ Equip
+			// -> Ã¹ ï¿½ï¿½Â° ï¿½ï¿½ï¿½â°¡ ï¿½Ö¹ï¿½ï¿½â°¡ ï¿½Ç¾ï¿½ï¿½ï¿½ï¿½Ç·ï¿½, ï¿½ï¿½ ï¿½ï¿½Â°ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Úµï¿½ Equip
 		}
 	}
 
@@ -212,7 +212,9 @@ void APlayerCharacter::BeginPlay()
 		GetCharacterMovement()->MaxWalkSpeed = 550.0f;
 	}
 	else {
-		GetCharacterMovement()->MaxWalkSpeed = UDC->PID->MoveSpeed;
+		if (HasAuthority()) {
+			GetCharacterMovement()->MaxWalkSpeed = UDC->PID->MoveSpeed;
+		}
 	}
 }
 
@@ -863,4 +865,14 @@ ECombatState APlayerCharacter::GetCombatState() const
 	{
 		return Combat->CombatState;
 	}
+}
+
+
+//Pahu
+float APlayerCharacter::GetTotalDamage()
+{
+	TotalDamage = UDC->TotalDamage;
+
+	return TotalDamage;
+
 }

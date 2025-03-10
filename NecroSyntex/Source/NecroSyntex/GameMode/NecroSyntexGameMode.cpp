@@ -4,6 +4,7 @@
 #include "NecroSyntexGameMode.h"
 #include "NecroSyntex\Character\PlayerCharacter.h"
 #include "NecroSyntex\PlayerController\NecroSyntexPlayerController.h"
+#include "NecroSyntex/DopingSystem/DopingComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "GameFramework/PlayerStart.h"
 #include "NecroSyntex\PlayerState\NecroSyntexPlayerState.h"
@@ -151,6 +152,7 @@ void ANecroSyntexGameMode::PostLogin(APlayerController* NewPlayer)
 	ANecroSyntexPlayerController* PC = Cast<ANecroSyntexPlayerController>(NewPlayer);
 	if (PC)
 	{
+		TotalPlayers++;
 		PC->ShowCharacterSelectUI(); // 클라이언트에서 UI 띄우기
 	}
 }

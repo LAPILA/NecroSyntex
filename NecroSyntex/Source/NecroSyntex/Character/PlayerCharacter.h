@@ -260,6 +260,9 @@ public:
 
 	UPROPERTY(EditAnywhere)
 	float TotalDamage;
+
+	UFUNCTION()
+	float GetTotalDamage();
 	//Pahu end
 
 	void SetOverlappingWeapon(AWeapon* Weapon);
