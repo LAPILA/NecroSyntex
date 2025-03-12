@@ -22,7 +22,14 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Doping")
 	UDopingComponent* GetDopingComponent();
 
+	UFUNCTION(BlueprintCallable, Category = "Doping")
+	APlayerCharacter* GetDopingPlayerCharacter();
+
+	UPROPERTY()
 	UDopingComponent* UDC;
+
+	UPROPERTY()
+	APlayerCharacter* Player;
 
 	UFUNCTION(BlueprintCallable)
 	void FirstKeyDopingChoice(int32 num);

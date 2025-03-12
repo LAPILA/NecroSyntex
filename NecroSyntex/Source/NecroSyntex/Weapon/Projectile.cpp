@@ -1,18 +1,19 @@
 #include "Projectile.h"
 #include "Components/BoxComponent.h"
-#include "GameFramework/ProjectileMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Particles/ParticleSystemComponent.h"
 #include "Particles/ParticleSystem.h"
 #include "Sound/SoundCue.h"
 #include "NecroSyntex\Character\PlayerCharacter.h"
 #include "NecroSyntex\NecroSyntex.h"
+#include "NiagaraFunctionLibrary.h"
+#include "NiagaraComponent.h"
 
 AProjectile::AProjectile()
 {
 	PrimaryActorTick.bCanEverTick = true;
 	bReplicates = true;
-	// 충돌 박스 초기화
+	// 占썸돌 占쌘쏙옙 占십깍옙화
 	CollisionBox = CreateDefaultSubobject<UBoxComponent>(TEXT("CollisionBox"));
 	SetRootComponent(CollisionBox);
 	CollisionBox->SetCollisionObjectType(ECollisionChannel::ECC_WorldDynamic);
@@ -21,31 +22,25 @@ AProjectile::AProjectile()
 	CollisionBox->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Block);
 	CollisionBox->SetCollisionResponseToChannel(ECollisionChannel::ECC_WorldStatic, ECollisionResponse::ECR_Block);
 	CollisionBox->SetCollisionResponseToChannel(ECC_SkeletalMesh, ECollisionResponse::ECR_Block);
-
-	// 투사체 이동 컴포넌트 초기화
-	ProjectileMovementComponent = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("ProjectileMovementComponent"));
-	ProjectileMovementComponent->bRotationFollowsVelocity = true; // 투사체가 이동 방향을 따라 회전
-	ProjectileMovementComponent->bShouldBounce = false;          // 반사 비활성화
-	ProjectileMovementComponent->InitialSpeed = InitialSpeed;    // 초기 속도
-	ProjectileMovementComponent->MaxSpeed = MaxSpeed;            // 최대 속도
-
 }
 
 void AProjectile::BeginPlay()
 {
 	Super::BeginPlay();
 
-	if (Tracer)
+	if (TrailSystem)
 	{
-		TracerComponent = UGameplayStatics::SpawnEmitterAttached(
-			Tracer,
+		TrailSystemComponent = UNiagaraFunctionLibrary::SpawnSystemAttached(
+			TrailSystem,
 			CollisionBox,
 			FName(),
 			GetActorLocation(),
 			GetActorRotation(),
-			EAttachLocation::KeepWorldPosition
+			EAttachLocation::KeepWorldPosition,
+			false
 		);
 	}
+
 
 	if (HasAuthority())
 	{
@@ -53,9 +48,61 @@ void AProjectile::BeginPlay()
 	}
 }
 
+void AProjectile::StartDestroyTimer()
+{
+	GetWorldTimerManager().SetTimer(
+		DestroyTimer,
+		this,
+		&AProjectile::DestroyTimerFinished,
+		DestroyTime
+	);
+}
+
 void AProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
 {
 	Destroy();
+}
+
+void AProjectile::SpawnTrailSystem()
+{
+
+	if (TrailSystem)
+	{
+		TrailSystemComponent = UNiagaraFunctionLibrary::SpawnSystemAttached(
+			TrailSystem,
+			GetRootComponent(),
+			FName(),
+			GetActorLocation(),
+			GetActorRotation(),
+			EAttachLocation::KeepWorldPosition,
+			false
+		);
+	}
+}
+
+void AProjectile::ExplodeDamage()
+{
+	APawn* FiringPawn = GetInstigator();
+	if (FiringPawn && HasAuthority())
+	{
+		AController* FiringController = FiringPawn->GetController();
+		if (FiringController)
+		{
+			UGameplayStatics::ApplyRadialDamageWithFalloff(
+				this, // World context object
+				Damage, // BaseDamage
+				10.f, // MinimumDamage
+				GetActorLocation(), // Origin
+				DamageInnerRadius, // DamageInnerRadius
+				DamageOuterRadius, // DamageOuterRadius
+				1.f, // DamageFalloff
+				UDamageType::StaticClass(), // DamageTypeClass
+				TArray<AActor*>(), // IgnoreActors
+				this, // DamageCauser
+				FiringController // InstigatorController
+			);
+		}
+	}
 }
 
 void AProjectile::Destroyed()
@@ -74,4 +121,9 @@ void AProjectile::Destroyed()
 void AProjectile::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+}
+
+void AProjectile::DestroyTimerFinished()
+{
+	Destroy();
 }

@@ -16,40 +16,63 @@ public:
 
 protected:
 	virtual void BeginPlay() override;
+	void StartDestroyTimer();
+	void DestroyTimerFinished();
+	void SpawnTrailSystem();
+	void ExplodeDamage();
 
 	UFUNCTION()
 	virtual void OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
 
 	UPROPERTY(EditAnywhere)
 	float Damage = 20.f;
-private:
-	// Ãæµ¹ ÄÄÆ÷³ÍÆ®
-	UPROPERTY(EditAnywhere, Category = "Projectile|Collision")
-	class UBoxComponent* CollisionBox;
-
-	// Åõ»çÃ¼ ÀÌµ¿ ÄÄÆ÷³ÍÆ®
-	UPROPERTY(VisibleAnywhere, Category = "Projectile|Movement")
-	class UProjectileMovementComponent* ProjectileMovementComponent;
-
-	// ÃÊ±â ¹ß»ç ¹æÇâ
-	UPROPERTY(EditAnywhere, Category = "Projectile|Settings")
-	FVector InitialDirection = FVector::ForwardVector;
-
-	// ÃÊ±â ¼Óµµ
-	UPROPERTY(EditAnywhere, Category = "Projectile|Settings")
-	float InitialSpeed = 3000.0f;
-
-	// ÃÖ´ë ¼Óµµ
-	UPROPERTY(EditAnywhere, Category = "Projectile|Settings")
-	float MaxSpeed = 3000.0f;
-
-	UPROPERTY(EditAnywhere)
-	class UParticleSystem* Tracer;
-	UPROPERTY()
-	class UParticleSystemComponent* TracerComponent;
 
 	UPROPERTY(EditAnywhere)
 	UParticleSystem* ImpactParticles;
+
 	UPROPERTY(EditAnywhere)
 	class USoundCue* ImpactSound;
+
+	UPROPERTY(EditAnywhere, Category = "Projectile|Collision")
+	class UBoxComponent* CollisionBox;
+
+
+	UPROPERTY(EditAnywhere)
+	class UNiagaraSystem* TrailSystem;
+
+	UPROPERTY()
+	class UNiagaraComponent* TrailSystemComponent;
+
+
+	// ï¿½ï¿½ï¿½ï¿½Ã¼ ï¿½Ìµï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ®
+	UPROPERTY(VisibleAnywhere, Category = "Projectile|Movement")
+	class UProjectileMovementComponent* ProjectileMovementComponent;
+
+	UPROPERTY(VisibleAnywhere)
+	UStaticMeshComponent* ProjectileMesh;
+
+	UPROPERTY(EditAnywhere)
+	float DamageInnerRadius = 200.f;
+
+	UPROPERTY(EditAnywhere)
+	float DamageOuterRadius = 500.f;
+
+private:
+
+	// ï¿½Ê±ï¿½ ï¿½ß»ï¿½ ï¿½ï¿½ï¿½ï¿½
+	UPROPERTY(EditAnywhere, Category = "Projectile|Settings")
+	FVector InitialDirection = FVector::ForwardVector;
+
+	// ï¿½Ê±ï¿½ ï¿½Óµï¿½
+	UPROPERTY(EditAnywhere, Category = "Projectile|Settings")
+	float InitialSpeed = 3000.0f;
+
+	// ï¿½Ö´ï¿½ ï¿½Óµï¿½
+	UPROPERTY(EditAnywhere, Category = "Projectile|Settings")
+	float MaxSpeed = 3000.0f;
+
+	FTimerHandle DestroyTimer;
+
+	UPROPERTY(EditAnywhere)
+	float DestroyTime = 3.f;
 };

@@ -9,9 +9,6 @@
 #include "NecroSyntex/NecroSyntexType/CombatState.h"
 #include "CombatComponent.generated.h"
 
-//길이 설정 맘대루
-#define TRACE_LENGTH 80000.f
-
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class NECROSYNTEX_API UCombatComponent : public UActorComponent
 {
@@ -25,10 +22,28 @@ public:
 
 
 	void EquipWeapon(class AWeapon* WeaponToEquip);
+	void SwapWeapons();
 	void Reload();
 	UFUNCTION(BlueprintCallable)
 	void FinishReloading();
 
+	void FireButtonPressed(bool bPressed);
+
+	UFUNCTION(BlueprintCallable)
+	void ShotgunShellReload();
+
+	void JumpToShotgunEnd();
+
+	UFUNCTION(BlueprintCallable)
+	void ThrowGrenadeFinished();
+
+	UFUNCTION(BlueprintCallable)
+	void LaunchGrenade();
+
+	UFUNCTION(Server, Reliable)
+	void ServerLaunchGrenade(const FVector_NetQuantize& Target);
+
+	void PickUpAmmo(EWeaponType WeaponType, int32 AmmoAmount);
 protected:
 	virtual void BeginPlay() override;
 	void SetAiming(bool bIsAiming);
@@ -39,7 +54,8 @@ protected:
 	UFUNCTION()
 	void OnRep_EquippedWeapon();
 
-	void FireButtonPressed(bool bPressed);
+	UFUNCTION()
+	void OnRep_SecondaryWeapon();
 
 	void Fire();
 
@@ -59,6 +75,24 @@ protected:
 
 	void HandleReload();
 	int32 AmountToReload();
+
+	void ThrowGrenade();
+	UFUNCTION(Server, Reliable)
+	void ServerThrowGrenade();
+
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<class AProjectile> GrenadeClass;
+
+	void DropEquippedWeapon();
+	void AttachActorToRightHand(AActor* ActorToAttach);
+	void AttachActorToLeftHand(AActor* ActorToAttach);
+	void AttachActorToBackPack(AActor* ActorToAttach);
+	void UpdateCarriedAmmo();
+	void PlayEquipWeaponSound(AWeapon* WeaponToEquip);
+	void ReloadEmptyWeapon();
+	void ShowAttachedGrenade(bool bShowGrenade);
+	void EquipPrimariyWeapon(AWeapon* WeaponToEquip);
+	void EquipSecondaryWeapon(AWeapon* WeaponToEquip);
 private:
 	UPROPERTY()
 	class APlayerCharacter* Character;
@@ -69,6 +103,9 @@ private:
 
 	UPROPERTY(ReplicatedUsing = OnRep_EquippedWeapon)
 	AWeapon* EquippedWeapon;
+
+	UPROPERTY(ReplicatedUsing = OnRep_SecondaryWeapon)
+	AWeapon* SecondaryWeapon;
 
 	UPROPERTY(Replicated)
 	bool bAiming;
@@ -122,7 +159,28 @@ private:
 	TMap<EWeaponType, int32> CarriedAmmoMap;
 
 	UPROPERTY(EditAnywhere)
+	int32 MaxCarriedAmmo = 512;
+
+	UPROPERTY(EditAnywhere)
 	int32 StartingARAmmo = 30;
+
+	UPROPERTY(EditAnywhere)
+	int32 StartingRocketAmmo = 5;
+
+	UPROPERTY(EditAnywhere)
+	int32 StartingPistolAmmo = 75;
+
+	UPROPERTY(EditAnywhere)
+	int32 StartingSMGAmmo = 720;
+
+	UPROPERTY(EditAnywhere)
+	int32 StartingShotgunAmmo = 16;
+
+	UPROPERTY(EditAnywhere)
+	int32 StartingSniperRifleAmmo = 30;
+
+	UPROPERTY(EditAnywhere)
+	int32 StartingGrenadeLauncherAmmo = 30;
 
 	void InitalizeCarriedAmmo();
 	void StartFireTimer();
@@ -134,4 +192,17 @@ private:
 	void OnRep_CombatState();
 
 	void UpdateAmmoValues();
+
+	void UpdateShotgunAmmoValues();
+
+	UPROPERTY(ReplicatedUsing = OnRep_Grenades)
+	int32 Grenades = 5;
+	UFUNCTION()
+	void OnRep_Grenades();
+	UPROPERTY(EditAnywhere)
+	int32 MaxGrenades = 5;
+	void UpdateHUDGrenades();
+public:
+	FORCEINLINE int32 GetGrenades() const { return Grenades; }
+	bool ShouldSwapWeapons();
 };

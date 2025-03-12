@@ -3,12 +3,14 @@
 
 #include "NecroSyntexHud.h"
 #include "GameFramework/PlayerController.h"
+#include "NecroSyntex/HUD/Announcement.h"
+#include "Kismet/GameplayStatics.h"
 #include "CharacterOverlay.h"
+#include "Announcement.h"
 
 void ANecroSyntexHud::BeginPlay()
 {
 	Super::BeginPlay();
-	AddCharacterOverlay();
 }
 
 void ANecroSyntexHud::AddCharacterOverlay()
@@ -17,7 +19,17 @@ void ANecroSyntexHud::AddCharacterOverlay()
 	if (PlayerController && CharacterOverlayClass)
 	{
 		CharacterOverlay = CreateWidget<UCharacterOverlay>(PlayerController, CharacterOverlayClass);
-		CharacterOverlay->AddToViewport();
+		CharacterOverlay->AddToViewport(-1);
+	}
+}
+
+void ANecroSyntexHud::AddAnnouncement()
+{
+	APlayerController* PlayerController = GetOwningPlayerController();
+	if (PlayerController && AnnouncementClass)
+	{
+		Announcement = CreateWidget<UAnnouncement>(PlayerController, AnnouncementClass);
+		Announcement->AddToViewport();
 	}
 }
 

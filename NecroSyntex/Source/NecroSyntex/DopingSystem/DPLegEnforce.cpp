@@ -1,6 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
-
 #include "DPLegEnforce.h"
 
 UDPLegEnforce::UDPLegEnforce()
@@ -9,43 +6,14 @@ UDPLegEnforce::UDPLegEnforce()
 	BuffDuration = 5.0f;
 	DeBuffDuration = 2.0f;
 
-	WalkingBuffNum = 1200.0f;
-	RunningBuffNum = 1600.0f;
-	WalkingDeBuffNum = 50.0f;
-	RunningDeBuffNum = 100.0f;
+	WalkingBuffNum = 350.0f;
+	RunningBuffNum = 1000.0f;
+	WalkingDeBuffNum = 150.0f;
+	RunningDeBuffNum = 300.0f;
 
-}
+	CheckBuff = false;
+	CheckDeBuff = false;
 
-void UDPLegEnforce::BuffOn(UPlayerInformData* PID)
-{
-	PID->MoveSpeed = PID->MoveSpeed + WalkingBuffNum;
-	PID->RunningSpeed = PID->RunningSpeed + RunningBuffNum;
-
-	BuffRemainDuration = BuffDuration;
-	CheckBuff = true;
-}
-
-void UDPLegEnforce::BuffOff(UPlayerInformData* PID)
-{
-	PID->MoveSpeed = PID->MoveSpeed - WalkingBuffNum;
-	PID->RunningSpeed = PID->RunningSpeed - RunningBuffNum;
-
-	DeBuffOn(PID);
-}
-
-void UDPLegEnforce::DeBuffOn(UPlayerInformData* PID)
-{
-	PID->MoveSpeed = PID->MoveSpeed - WalkingDeBuffNum;
-	PID->RunningSpeed = PID->RunningSpeed - RunningDeBuffNum;
-
-	DeBuffRemainDuration = DeBuffDuration;
-	CheckDeBuff = true;
-}
-
-void UDPLegEnforce::DeBuffOff(UPlayerInformData* PID)
-{
-	PID->MoveSpeed = PID->MoveSpeed + WalkingDeBuffNum;
-	PID->RunningSpeed = PID->RunningSpeed + RunningDeBuffNum;
 }
 
 void UDPLegEnforce::UseDopingItem(UPlayerInformData* PID)
@@ -53,15 +21,75 @@ void UDPLegEnforce::UseDopingItem(UPlayerInformData* PID)
 	if (Able && DopingItemNum > 0)
 	{
 		--DopingItemNum;
-		CurrentCoolTime = DopingCoolTime; // 쿨타임 시작
 		Able = false;
 
-
-		UE_LOG(LogTemp, Warning, TEXT("LegEnforce Use"));
-		//효과
+		// Buff 적용 및 타이머 시작
 		BuffOn(PID);
 
+		// 쿨타임 시작
+		StartCooldown();
 
-		//
+		UE_LOG(LogTemp, Warning, TEXT("LegEnforce Use"));
 	}
+}
+
+void UDPLegEnforce::BuffOn(UPlayerInformData* PID)
+{
+	if (CheckBuff == false) {
+		PID->MoveSpeed += WalkingBuffNum;
+		PID->RunningSpeed += RunningBuffNum;
+
+		CheckBuff = true;
+
+		PID->CurrentDoped += 1;
+
+	}
+
+	StartBuff(PID);
+
+	UE_LOG(LogTemp, Warning, TEXT("LegEnforce BuffOn: Speed increased."));
+}
+
+void UDPLegEnforce::BuffOff(UPlayerInformData* PID)
+{
+	if (CheckBuff == true) {
+		PID->MoveSpeed -= WalkingBuffNum;
+		PID->RunningSpeed -= RunningBuffNum;
+
+		CheckBuff = false;
+
+		// DeBuff 적용 및 타이머 시작
+		DeBuffOn(PID);
+	}
+
+	UE_LOG(LogTemp, Warning, TEXT("LegEnforce BuffOff: Speed normalized."));
+}
+
+void UDPLegEnforce::DeBuffOn(UPlayerInformData* PID)
+{
+
+	if (CheckDeBuff == false) {
+		PID->MoveSpeed -= WalkingDeBuffNum;
+		PID->RunningSpeed -= RunningDeBuffNum;
+
+		CheckDeBuff = true;
+	}
+
+	StartDeBuff(PID);
+
+	UE_LOG(LogTemp, Warning, TEXT("LegEnforce DeBuffOn: Speed reduced."));
+}
+
+void UDPLegEnforce::DeBuffOff(UPlayerInformData* PID)
+{
+	if (CheckDeBuff == true) {
+		PID->MoveSpeed += WalkingDeBuffNum;
+		PID->RunningSpeed += RunningDeBuffNum;
+
+		PID->CurrentDoped -= 1;
+
+		CheckDeBuff = false;
+	}
+
+	UE_LOG(LogTemp, Warning, TEXT("LegEnforce DeBuffOff: Speed restored."));
 }

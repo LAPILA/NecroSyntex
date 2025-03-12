@@ -21,11 +21,11 @@ class NECROSYNTEX_API APlayerCharacter : public ACharacter, public IInteractWith
 {
 	GENERATED_BODY()
 
-
+public:
 	/** MappingContext */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputMappingContext* DefaultMappingContext;
-
+private:
 	/** Key Settings */
 	/*
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
@@ -58,6 +58,13 @@ class NECROSYNTEX_API APlayerCharacter : public ACharacter, public IInteractWith
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* ReloadAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UInputAction* ThrowGrenade;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UInputAction* SwapWeaponAction;
+
 public:
     APlayerCharacter();
 
@@ -68,12 +75,23 @@ public:
 	void PlayFireMontage(bool bAiming);
 	void PlayReloadMontage();
 	void PlayElimMontage();
+	void PlayThrowGrenadeMontage();
 	virtual void OnRep_ReplicatedMovement() override;
 
 	void Elim();
 	UFUNCTION(NetMulticast, Reliable)
 	void MulticastElim();
 	virtual void Destroyed() override;
+
+	UPROPERTY(Replicated)
+	bool bDisableGameplay = false;
+
+	UFUNCTION(BluePrintImplementableEvent)
+	void ShowSniperScopeWidget(bool bShowScope);
+
+	void UpdateHUDHealth();
+
+	void SpawnDefaultWeapon();
 protected:
     virtual void BeginPlay() override;
 
@@ -94,11 +112,18 @@ protected:
 	void FlashButtonPressed();
 	void ReloadButtonPressed();
 	void PlayerHitReactMontage();
+	void GrenadeButtonPressed();
+	void SwapWeaponWheel();
+
+	void DropOrDestroyWeapon(AWeapon* Weapon);
+	void DropOrDestroyWeapons();
 
 	UFUNCTION()
 	void ReceiveDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, class AController* InstigatorController, AActor* DamageCauser);
-	void UpdateHUDHealth();
 	void UpdateHUDShield();
+	void UpdateHUDAmmo();
+	void PollInit();
+	void RotateInPlace(float DeltaTime);
 
 	UFUNCTION(Server, Reliable, WithValidation)
 	void ServerSprintStart();
@@ -122,11 +147,18 @@ private:
 	UFUNCTION()
 	void OnRep_OverlappingWeapon(AWeapon* LastWeapon);
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	class USubComponent* SubComp;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	class UCombatComponent* Combat;
+
 
 	UFUNCTION(Server, Reliable)
 	void ServerEquipButtonPressed();
+
+	UFUNCTION(Server, Reliable, WithValidation)
+	void ServerSwapWeaponWheel();
 
 	bool bIsSprinting;
 	float AO_Yaw;
@@ -147,6 +179,9 @@ private:
 	UAnimMontage* ElimMongatge;
 
 	UPROPERTY(EditAnywhere, Category = Combat)
+	UAnimMontage* ThrowGrenadeMontage;
+
+	UPROPERTY(EditAnywhere, Category = Combat)
 	UAnimMontage* ReloadMontage;
 
 	bool bRotateRootBone;
@@ -165,7 +200,7 @@ private:
 	UPROPERTY(ReplicatedUsing = OnRep_Health, VisibleAnywhere, Category = "Player Stats")
 	float Health = 100.f;
 	UFUNCTION()
-	void OnRep_Health();
+	void OnRep_Health(float LastHealth);
 	/**
 	* Player sheild
 	*/
@@ -174,7 +209,7 @@ private:
 	UPROPERTY(ReplicatedUsing = OnRep_Shield, VisibleAnywhere, Category = "Player Stats")
 	float Shield = 200.f;
 	UFUNCTION()
-	void OnRep_Shield();
+	void OnRep_Shield(float LastShield);
 
 	bool bElimed = false;
 
@@ -196,8 +231,41 @@ private:
 	UFUNCTION()
 	void ActivateDissolveEffect();
 
+	class ANecroSyntexPlayerState* NecroSyntexPlayerState;
+
+	/**
+	* Grenade
+	*/
+	UPROPERTY(VisibleAnywhere)
+	UStaticMeshComponent* AttachedGrenade;
+
+	/**
+	* Default weapon
+	*/
+
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<AWeapon> DefaultWeaponClass;
+
+
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<AWeapon> SubWeaponClass;
 
 public:
+	//Pahu
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	//Doping Component(by TeaHyuck)
+	class UDopingComponent* UDC;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Doping")
+	TSubclassOf<UDopingComponent> DopingComponentClass;
+
+	UPROPERTY(EditAnywhere)
+	float TotalDamage;
+
+	UFUNCTION()
+	float GetTotalDamage();
+	//Pahu end
+
 	void SetOverlappingWeapon(AWeapon* Weapon);
 	bool IsWeaponEquipped();
 	bool IsAiming();
@@ -210,8 +278,14 @@ public:
 	FORCEINLINE bool ShouldRotateRootBone() const { return bRotateRootBone; }
 	FORCEINLINE bool IsElimed() const { return bElimed; }
 	FORCEINLINE float GetHealth() const { return Health; }
+	FORCEINLINE void SetHealth(float Amount) { Health = Amount; }
 	FORCEINLINE float GetMaxHealth() const { return MaxHealth; }
 	FORCEINLINE float GetShield() const { return Shield; }
 	FORCEINLINE float GetMaxShield() const { return MaxShield; }
 	ECombatState GetCombatState() const;
+	FORCEINLINE UAnimMontage* GetReloadMontage() const { return ReloadMontage; }
+	FORCEINLINE UStaticMeshComponent* GetAttachedGrenade() const { return AttachedGrenade; }
+	FORCEINLINE UCombatComponent* GetCombat() const { return Combat; }
+	FORCEINLINE USubComponent* GetSubComp() const { return SubComp; }
+	FORCEINLINE bool GetDisableGameplay() const { return bDisableGameplay; }
 };
