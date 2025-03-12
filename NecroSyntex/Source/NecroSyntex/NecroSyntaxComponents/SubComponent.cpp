@@ -12,7 +12,7 @@ void USubComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
-	
+	Character = Cast<APlayerCharacter>(GetOwner());
 }
 
 void USubComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
