@@ -17,6 +17,7 @@ class NECROSYNTEX_API UCharacterOverlay : public UUserWidget
 	GENERATED_BODY()
 
 public:
+	
 	// Player State UI
 	UPROPERTY(meta = (BindWidget))
 	class UImage* HealthBar;

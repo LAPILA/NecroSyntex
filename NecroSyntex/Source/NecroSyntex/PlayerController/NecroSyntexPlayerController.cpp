@@ -11,19 +11,18 @@
 #include "NecroSyntex/PlayerState/NecroSyntexPlayerState.h"
 #include "NecroSyntex/HUD/Announcement.h"
 #include "NecroSyntex\NecroSyntaxComponents\CombatComponent.h"
+#include "NecroSyntex\Weapon\Weapon.h"
+#include "NecroSyntex\NecroSyntexGameState.h"
+#include "EnhancedInputComponent.h"
+#include "EnhancedInputSubsystems.h"
 #include "Kismet/GameplayStatics.h"
-#include "NecroSyntex/GameMode/CharacterSelectGameMode.h"
-
 
 void ANecroSyntexPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
+
 	NecroSyntexHUD = Cast<ANecroSyntexHud>(GetHUD());
 	ServerCheckMatchState();
-
-
-	//박태혁
-	//GetWorldTimerManager().SetTimer(CheckPlayerStateTimer, this, &ANecroSyntexPlayerController::CheckPlayerState, 0.5f, true);
 }
 
 void ANecroSyntexPlayerController::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -59,15 +58,19 @@ void ANecroSyntexPlayerController::ServerCheckMatchState_Implementation()
 	{
 		WarmupTime = GameMode->WarmUpTime;
 		MatchTime = GameMode->MatchTime;
+
+		CooldownTime = GameMode->CooldownTime;
 		LevelStartingTime = GameMode->LevelStartingTime;
 		MatchState = GameMode->GetMatchState();
-		ClientJoinMidgame(MatchState, WarmupTime, MatchTime, LevelStartingTime);
+		ClientJoinMidgame(MatchState, WarmupTime, MatchTime, CooldownTime, LevelStartingTime);
 	}
 }
-void ANecroSyntexPlayerController::ClientJoinMidgame_Implementation(FName StateOfMatch, float Warmup, float Match, float StartingTime)
+
+void ANecroSyntexPlayerController::ClientJoinMidgame_Implementation(FName StateOfMatch, float Warmup, float Match, float Cooldown, float StartingTime)
 {
 	WarmupTime = Warmup;
 	MatchTime = Match;
+	CooldownTime = Cooldown;
 	LevelStartingTime = StartingTime;
 	MatchState = StateOfMatch;
 	OnMatchStateSet(MatchState);
@@ -127,7 +130,23 @@ void ANecroSyntexPlayerController::SetHUDShield(float Shield, float MaxShield)
 void ANecroSyntexPlayerController::OnPossess(APawn* InPawn)
 {
 	Super::OnPossess(InPawn);
+
 	APlayerCharacter* PlayerCharacter = Cast<APlayerCharacter>(InPawn);
+
+	if (IsLocalController())
+	{
+		if (UEnhancedInputLocalPlayerSubsystem* SubSystem =
+			ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(GetLocalPlayer()))
+		{
+			if (PlayerCharacter && PlayerCharacter->DefaultMappingContext)
+			{
+				SubSystem->ClearAllMappings();
+				SubSystem->AddMappingContext(PlayerCharacter->DefaultMappingContext, 0);
+			}
+		}
+	}
+
+	// ĳ���� HUD �ʱ�ȭ
 	if (PlayerCharacter)
 	{
 		SetHUDHealth(PlayerCharacter->GetHealth(), PlayerCharacter->GetMaxHealth());
@@ -219,6 +238,12 @@ void ANecroSyntexPlayerController::SetHUDMatchCountdown(float CountdownTime)
 		NecroSyntexHUD->CharacterOverlay->MatchCountdownText;
 	if (bHUDValid)
 	{
+		if (CountdownTime < 0.f)
+		{
+			NecroSyntexHUD->CharacterOverlay->MatchCountdownText->SetText(FText());
+			return;
+		}
+
 		int32 Hours = FMath::FloorToInt(CountdownTime / 3600.0f);
 		int32 Minutes = FMath::FloorToInt((CountdownTime - Hours * 3600.0f) / 60.0f);
 		int32 Seconds = FMath::FloorToInt(CountdownTime - (Hours * 3600.0f + Minutes * 60.0f));
@@ -238,6 +263,12 @@ void ANecroSyntexPlayerController::SetHUDAnnouncementCountdown(float CountdownTi
 		NecroSyntexHUD->Announcement->WarmupTime;
 	if (bHUDValid)
 	{
+		if (CountdownTime < 0.f)
+		{
+			NecroSyntexHUD->Announcement->WarmupTime->SetText(FText());
+			return;
+		}
+
 		int32 Hours = FMath::FloorToInt(CountdownTime / 3600.0f);
 		int32 Minutes = FMath::FloorToInt((CountdownTime - Hours * 3600.0f) / 60.0f);
 		int32 Seconds = FMath::FloorToInt(CountdownTime - (Hours * 3600.0f + Minutes * 60.0f));
@@ -278,7 +309,7 @@ void ANecroSyntexPlayerController::SetHUDTime()
 
 	if (CountdownInt != SecondsLeft || PreviousMilliseconds != (int)Milliseconds)
 	{
-		if (MatchState == MatchState::WaitingToStart)
+		if (MatchState == MatchState::WaitingToStart || MatchState == MatchState::Cooldown)
 		{
 			SetHUDAnnouncementCountdown(TimeLeft);
 		}
@@ -323,17 +354,20 @@ void ANecroSyntexPlayerController::ServerRequestServerTime_Implementation(float 
 	float ServerTimeOfReceipt = GetWorld()->GetTimeSeconds();
 	ClientReportServerTime(TimeOfClientRequest, ServerTimeOfReceipt);
 }
+
 void ANecroSyntexPlayerController::ClientReportServerTime_Implementation(float TimeOfClientRequest, float TimeServerReceivedClientRequest)
 {
 	float RoundTripTime = GetWorld()->GetTimeSeconds() - TimeOfClientRequest;
 	float CurrentServerTime = TimeServerReceivedClientRequest + (0.5f * RoundTripTime);
 	ClientServerDelta = CurrentServerTime - GetWorld()->GetTimeSeconds();
 }
+
 float ANecroSyntexPlayerController::GetServerTime()
 {
 	if (HasAuthority()) return GetWorld()->GetTimeSeconds();
 	else return GetWorld()->GetTimeSeconds() + ClientServerDelta;
 }
+
 void ANecroSyntexPlayerController::ReceivedPlayer()
 {
 	Super::ReceivedPlayer();
@@ -350,12 +384,20 @@ void ANecroSyntexPlayerController::OnMatchStateSet(FName State)
 	{
 		HandleMatchHasStarted();
 	}
+	else if (MatchState == MatchState::Cooldown)
+	{
+		HandleCooldown();
+	}
 }
 void ANecroSyntexPlayerController::OnRep_MatchState()
 {
 	if (MatchState == MatchState::InProgress)
 	{
 		HandleMatchHasStarted();
+	}
+	else if (MatchState == MatchState::Cooldown)
+	{
+		HandleCooldown();
 	}
 }
 
@@ -369,83 +411,78 @@ void ANecroSyntexPlayerController::HandleMatchHasStarted()
 		{
 			NecroSyntexHUD->Announcement->SetVisibility(ESlateVisibility::Hidden);
 		}
+
+		if (!HasAuthority()) return;
+	}
+
+	APlayerCharacter* MyCharacter = Cast<APlayerCharacter>(GetPawn());
+	if (MyCharacter)
+	{
+		MyCharacter->bDisableGameplay = false;
 	}
 }
 
-//아래 부터 박태혁 편집
-void ANecroSyntexPlayerController::Server_SetCharacter_Implementation(TSubclassOf<APlayerCharacter> SelectCharacter)
+// NOTICE : when you want to handle about gamestate, fix it
+void ANecroSyntexPlayerController::HandleCooldown()
 {
-
-	if (!IsValid(SelectCharacter))
+	NecroSyntexHUD = NecroSyntexHUD == nullptr ? Cast<ANecroSyntexHud>(GetHUD()) : NecroSyntexHUD;
+	if (NecroSyntexHUD)
 	{
-		return; // 유효하지 않으면 실행 중지
-	}
-
-
-	ANecroSyntexPlayerState* PS = GetPlayerState<ANecroSyntexPlayerState>();
-	if (PS)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("aaaaaa"));
-		PS->SelectedCharacterClass = SelectCharacter;
-	}
-
-}
-
-void ANecroSyntexPlayerController::Server_SetDoping_Implementation(int32 SelectFirstDoping, int32 SelectSecondDoping)
-{
-	ANecroSyntexPlayerState* PS = GetPlayerState<ANecroSyntexPlayerState>();
-	if (PS)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("bbbbbb"));
-		PS->FirstDopingCode = SelectFirstDoping;
-		PS->SecondDopingCode = SelectSecondDoping;
-		PS->bHasCompletedSelection = true;
-
-
-	}
-
-	ANecroSyntexGameMode* GM = GetWorld()->GetAuthGameMode<ANecroSyntexGameMode>();
-	if (GM)
-	{
-		GM->SelectAndReadyComplete();
-	}
-}
-
-void ANecroSyntexPlayerController::ShowCharacterSelectUI_Implementation()
-{
-	if (SelectionWidgetClass) // 위젯 블루프린트 클래스가 설정되었는지 확인
-	{
-		SelectionWidget = CreateWidget<UUserWidget>(this, SelectionWidgetClass);
-		if (SelectionWidget)
+		if (NecroSyntexHUD->CharacterOverlay)
 		{
-			SelectionWidget->AddToViewport(5);
-			SetInputMode(FInputModeUIOnly()); // UI 조작 모드로 변경
-			bShowMouseCursor = true; // 마우스 커서 활성화
+			NecroSyntexHUD->CharacterOverlay->RemoveFromParent();
+		}
+
+		bool bHUDValid = false;
+		if (NecroSyntexHUD->Announcement)
+		{
+			bHUDValid =
+				NecroSyntexHUD->Announcement->AnnouncementText &&
+				NecroSyntexHUD->Announcement->InfoText;
+		}
+
+		if (bHUDValid)
+		{
+			NecroSyntexHUD->Announcement->SetVisibility(ESlateVisibility::Visible);
+			FString AnnouncementText("New Match Starts In:");
+			NecroSyntexHUD->Announcement->AnnouncementText->SetText(FText::FromString(AnnouncementText));
+			
+
+			ANecroSyntexGameState* NecroSyntexGameState = Cast<ANecroSyntexGameState>(UGameplayStatics::GetGameState(this));
+			ANecroSyntexPlayerState* NecroSyntexPlayerState = GetPlayerState<ANecroSyntexPlayerState>();
+			if (NecroSyntexGameState && NecroSyntexPlayerState)
+			{
+				TArray<ANecroSyntexPlayerState*> TopPlayers = NecroSyntexGameState->TopScoringPlayers;
+				FString InfoTextString;
+				if (TopPlayers.Num() == 0)
+				{
+					InfoTextString = FString("There is no winner.");
+				}
+				else if (TopPlayers.Num() == 1 && TopPlayers[0] == NecroSyntexPlayerState)
+				{
+					InfoTextString = FString("You are the winner!");
+				}
+				else if (TopPlayers.Num() == 1)
+				{
+					InfoTextString = FString::Printf(TEXT("Winner: \n%s"), *TopPlayers[0]->GetPlayerName());
+				}
+				else if (TopPlayers.Num() > 1)
+				{
+					InfoTextString = FString("Players tied for the win:\n");
+					for (auto TiedPlayer : TopPlayers)
+					{
+						InfoTextString.Append(FString::Printf(TEXT("%s\n"), *TiedPlayer->GetPlayerName()));
+					}
+				}
+
+				NecroSyntexHUD->Announcement->InfoText->SetText(FText::FromString(InfoTextString));
+			}
 		}
 	}
-}
-
-
-void ANecroSyntexPlayerController::CheckPlayerState()
-{
-	ANecroSyntexPlayerState* PS = GetPlayerState<ANecroSyntexPlayerState>();
-
-	if (PS)
+	APlayerCharacter* PlayerCharacter = Cast<APlayerCharacter>(GetPawn());
+	if (PlayerCharacter && PlayerCharacter->GetCombat())
 	{
-		GetWorldTimerManager().ClearTimer(CheckPlayerStateTimer);  // 타이머 정지
-		UE_LOG(LogTemp, Warning, TEXT("PlayerState found for player: %s"), *PS->GetPlayerName());
-
-		// 이제 PlayerState를 사용할 수 있음!
+		PlayerCharacter->bDisableGameplay = true;
+		PlayerCharacter->GetCombat()->FireButtonPressed(false);
 	}
-	else
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Waiting for PlayerState to be valid..."));
-	}
-}
-
-void ANecroSyntexPlayerController::CheckPSSetTimer()
-{
-
-	GetWorldTimerManager().SetTimer(CheckPlayerStateTimer, this, &ANecroSyntexPlayerController::CheckPlayerState, 0.5f, true);
-
 }

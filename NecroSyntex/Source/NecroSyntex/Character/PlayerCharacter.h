@@ -21,11 +21,11 @@ class NECROSYNTEX_API APlayerCharacter : public ACharacter, public IInteractWith
 {
 	GENERATED_BODY()
 
-
+public:
 	/** MappingContext */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputMappingContext* DefaultMappingContext;
-
+private:
 	/** Key Settings */
 	/*
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
@@ -84,7 +84,7 @@ public:
 	virtual void Destroyed() override;
 
 	UPROPERTY(Replicated)
-	bool bDisalbeGameplay = false;
+	bool bDisableGameplay = false;
 
 	UFUNCTION(BluePrintImplementableEvent)
 	void ShowSniperScopeWidget(bool bShowScope);
@@ -123,6 +123,7 @@ protected:
 	void UpdateHUDShield();
 	void UpdateHUDAmmo();
 	void PollInit();
+	void RotateInPlace(float DeltaTime);
 
 	UFUNCTION(Server, Reliable, WithValidation)
 	void ServerSprintStart();
@@ -286,4 +287,5 @@ public:
 	FORCEINLINE UStaticMeshComponent* GetAttachedGrenade() const { return AttachedGrenade; }
 	FORCEINLINE UCombatComponent* GetCombat() const { return Combat; }
 	FORCEINLINE USubComponent* GetSubComp() const { return SubComp; }
+	FORCEINLINE bool GetDisableGameplay() const { return bDisableGameplay; }
 };

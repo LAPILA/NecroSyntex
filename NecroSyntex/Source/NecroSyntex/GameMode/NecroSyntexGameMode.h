@@ -6,9 +6,11 @@
 #include "GameFramework/GameMode.h"
 #include "NecroSyntexGameMode.generated.h"
 
-/**
- * 
- */
+namespace MatchState
+{
+	extern NECROSYNTEX_API const FName Cooldown; // Match duration has been reached. Display winner and begin cooldown timer.
+}
+
 UCLASS()
 class NECROSYNTEX_API ANecroSyntexGameMode : public AGameMode
 {
@@ -25,6 +27,9 @@ public:
 	
 	UPROPERTY(EditDefaultsOnly)
 	float MatchTime = 120.f;
+
+	UPROPERTY(EditDefaultsOnly)
+	float CooldownTime = 10.f;
 
 	float LevelStartingTime = 0.f;
 
