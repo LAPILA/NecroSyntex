@@ -30,6 +30,7 @@ public:
 	virtual void DrawHUD() override;
 	UPROPERTY(EditAnywhere, Category = "Player Stats")
 	TSubclassOf<class UUserWidget> CharacterOverlayClass;
+	UPROPERTY(BlueprintReadOnly)
 	class UCharacterOverlay* CharacterOverlay;
 
 	UPROPERTY(EditAnywhere, Category = "Announcements")
