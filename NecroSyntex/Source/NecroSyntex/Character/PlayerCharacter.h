@@ -8,7 +8,6 @@
 #include "NecroSyntex/NecroSyntexType/TurningInPlace.h"
 #include "NiagaraFunctionLibrary.h"
 #include "NiagaraComponent.h"
-#include "NecroSyntex\DopingSystem\DopingComponent.h"
 #include "NecroSyntex/Interfaces/InteractWithCrossHairsInterface.h"
 #include "NecroSyntex/NecroSyntexType/CombatState.h"
 #include "PlayerCharacter.generated.h"
@@ -154,9 +153,6 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	class UCombatComponent* Combat;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-	//Doping Component(by TeaHyuck)
-	class UDopingComponent* UDC;
 
 	UFUNCTION(Server, Reliable)
 	void ServerEquipButtonPressed();
@@ -255,6 +251,21 @@ private:
 	TSubclassOf<AWeapon> SubWeaponClass;
 
 public:
+	//Pahu
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	//Doping Component(by TeaHyuck)
+	class UDopingComponent* UDC;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Doping")
+	TSubclassOf<UDopingComponent> DopingComponentClass;
+
+	UPROPERTY(EditAnywhere)
+	float TotalDamage;
+
+	UFUNCTION()
+	float GetTotalDamage();
+	//Pahu end
+
 	void SetOverlappingWeapon(AWeapon* Weapon);
 	bool IsWeaponEquipped();
 	bool IsAiming();
