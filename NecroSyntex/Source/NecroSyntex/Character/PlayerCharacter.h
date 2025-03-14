@@ -36,9 +36,6 @@ private:
 	UInputAction* MoveAction;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	UInputAction* LookAction;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* EquipAction;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
@@ -97,7 +94,6 @@ protected:
 
 	//Key Settings
 	void Move(const FInputActionValue& Value);
-	void Look(const FInputActionValue& Value);
 	void EquipButtonPressed();
 	void CrouchButtonPressed();
 	void AimButtonPressed();
