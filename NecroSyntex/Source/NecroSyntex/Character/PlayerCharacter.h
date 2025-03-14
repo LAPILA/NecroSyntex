@@ -88,6 +88,8 @@ public:
 
 	void UpdateHUDHealth();
 
+	void UpdateHUDShield();
+
 	void SpawnDefaultWeapon();
 protected:
     virtual void BeginPlay() override;
@@ -116,7 +118,6 @@ protected:
 
 	UFUNCTION()
 	void ReceiveDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, class AController* InstigatorController, AActor* DamageCauser);
-	void UpdateHUDShield();
 	void UpdateHUDAmmo();
 	void PollInit();
 	void RotateInPlace(float DeltaTime);
@@ -275,6 +276,7 @@ public:
 	FORCEINLINE bool IsElimed() const { return bElimed; }
 	FORCEINLINE float GetHealth() const { return Health; }
 	FORCEINLINE void SetHealth(float Amount) { Health = Amount; }
+	FORCEINLINE void SetShield(float Amount) { Shield = Amount; }
 	FORCEINLINE float GetMaxHealth() const { return MaxHealth; }
 	FORCEINLINE float GetShield() const { return Shield; }
 	FORCEINLINE float GetMaxShield() const { return MaxShield; }

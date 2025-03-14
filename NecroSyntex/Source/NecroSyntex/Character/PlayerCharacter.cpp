@@ -448,6 +448,10 @@ void APlayerCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, const U
 			}
 		}
 	}
+	if (SubComp)
+	{
+		SubComp->OnTakeDamage();
+	}
 }
 
 void APlayerCharacter::Move(const FInputActionValue& Value)
@@ -777,10 +781,6 @@ void APlayerCharacter::UpdateHUDHealth()
 void APlayerCharacter::OnRep_Shield(float LastShield)
 {
 	UpdateHUDShield();
-	if (Shield < LastShield)
-	{
-		PlayerHitReactMontage();
-	}
 }
 
 void APlayerCharacter::UpdateHUDShield()
