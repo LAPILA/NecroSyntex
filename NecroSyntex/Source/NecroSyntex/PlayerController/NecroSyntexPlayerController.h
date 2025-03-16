@@ -58,6 +58,10 @@ protected:
 	void ServerCheckMatchState();
 	UFUNCTION(Client, Reliable)
 	void ClientJoinMidgame(FName StateOfMatch, float Warmup, float Match, float Cooldown, float StartingTime);
+
+	void HighPingWarning();
+	void StopHighPingWarning();
+	void CheckPing(float DeltaTime);
 private:
 	UPROPERTY()
 	class ANecroSyntexHud* NecroSyntexHUD;
@@ -95,8 +99,18 @@ private:
 	float HUDWeaponAmmo;
 	bool bInitializeWeaponAmmo = false;
 
+	float HighPingRunningTime = 0.f;
 
-	//������ ����
+	UPROPERTY(EditAnywhere)
+	float HighPingDuration = 5.f;
+
+	float PingAnimationRunningTime = 0.f;
+
+	UPROPERTY(EditAnywhere)
+	float CheckPingFrequency = 20.f;
+
+	UPROPERTY(EditAnywhere)
+	float HighPingThreshold = 50.f;
 public:
 
 	UFUNCTION(Server, Reliable, BlueprintCallable)

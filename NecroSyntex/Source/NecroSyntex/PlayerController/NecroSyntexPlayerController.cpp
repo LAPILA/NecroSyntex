@@ -16,6 +16,7 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "Kismet/GameplayStatics.h"
+#include "Components/Image.h"
 
 void ANecroSyntexPlayerController::BeginPlay()
 {
@@ -38,6 +39,9 @@ void ANecroSyntexPlayerController::Tick(float DeltaTime)
 	SetHUDTime();
 	CheckTimeSync(DeltaTime);
 	PollInit();
+
+
+	CheckPing(DeltaTime);
 }
 
 void ANecroSyntexPlayerController::CheckTimeSync(float DeltaTime)
@@ -47,6 +51,78 @@ void ANecroSyntexPlayerController::CheckTimeSync(float DeltaTime)
 	{
 		ServerRequestServerTime(GetWorld()->GetTimeSeconds());
 		TimeSyncRunningTime = 0.f;
+	}
+}
+
+void ANecroSyntexPlayerController::HighPingWarning()
+{
+	NecroSyntexHUD = NecroSyntexHUD == nullptr ? Cast<ANecroSyntexHud>(GetHUD()) : NecroSyntexHUD;
+	bool bHUDValid = NecroSyntexHUD &&
+		NecroSyntexHUD->CharacterOverlay &&
+		NecroSyntexHUD->CharacterOverlay->HighPingImage &&
+		NecroSyntexHUD->CharacterOverlay->HighPingAnimation;
+	if (bHUDValid)
+	{
+		NecroSyntexHUD->CharacterOverlay->HighPingImage->SetOpacity(1.f);
+		NecroSyntexHUD->CharacterOverlay->PlayAnimation(NecroSyntexHUD->CharacterOverlay->HighPingAnimation,0.f,5);
+	}
+}
+
+void ANecroSyntexPlayerController::StopHighPingWarning()
+{
+	NecroSyntexHUD = NecroSyntexHUD == nullptr ? Cast<ANecroSyntexHud>(GetHUD()) : NecroSyntexHUD;
+	bool bHUDValid = NecroSyntexHUD &&
+		NecroSyntexHUD->CharacterOverlay &&
+		NecroSyntexHUD->CharacterOverlay->HighPingImage &&
+		NecroSyntexHUD->CharacterOverlay->HighPingAnimation;
+	if (bHUDValid)
+	{
+		NecroSyntexHUD->CharacterOverlay->HighPingImage->SetOpacity(0.f);
+		if (NecroSyntexHUD->CharacterOverlay->IsAnimationPlaying(NecroSyntexHUD->CharacterOverlay->HighPingAnimation))
+		{
+			NecroSyntexHUD->CharacterOverlay->StopAnimation(NecroSyntexHUD->CharacterOverlay->HighPingAnimation);
+		}
+	}
+}
+
+void ANecroSyntexPlayerController::CheckPing(float DeltaTime)
+{
+	HighPingRunningTime += DeltaTime;
+
+	if (HighPingRunningTime > CheckPingFrequency)
+	{
+		if (PlayerState == nullptr)
+		{
+			PlayerState = GetPlayerState<APlayerState>();
+		}
+
+		if (PlayerState)
+		{
+			const float CurrentPing = PlayerState->GetPingInMilliseconds();
+
+			if (CurrentPing > HighPingThreshold)
+			{
+				HighPingWarning();
+				PingAnimationRunningTime = 0.f;
+			}
+		}
+
+		HighPingRunningTime = 0.f;
+	}
+
+	bool bHighPingAnimationPlaying =
+		NecroSyntexHUD && NecroSyntexHUD->CharacterOverlay &&
+		NecroSyntexHUD->CharacterOverlay->HighPingAnimation &&
+		NecroSyntexHUD->CharacterOverlay->IsAnimationPlaying(NecroSyntexHUD->CharacterOverlay->HighPingAnimation);
+
+	if (bHighPingAnimationPlaying)
+	{
+		PingAnimationRunningTime += DeltaTime;
+
+		if (PingAnimationRunningTime > HighPingDuration)
+		{
+			StopHighPingWarning();
+		}
 	}
 }
 
