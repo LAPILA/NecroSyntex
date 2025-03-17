@@ -13,68 +13,72 @@
 
 void AHitScanWeapon::Fire(const FVector& HitTarget)
 {
-	Super::Fire(HitTarget);
+    Super::Fire(HitTarget);
 
-	APawn* OwnerPawn = Cast<APawn>(GetOwner());
-	if (OwnerPawn == nullptr) return;
-	AController* InstigatorController = OwnerPawn->GetController();
+    APawn* OwnerPawn = Cast<APawn>(GetOwner());
+    if (OwnerPawn == nullptr) return;
+    AController* InstigatorController = OwnerPawn->GetController();
 
-	const USkeletalMeshSocket* MuzzleFlashSocket = GetWeaponMesh()->GetSocketByName("MuzzleFlash");
-	if (MuzzleFlashSocket)
-	{
-		FTransform SocketTransform = MuzzleFlashSocket->GetSocketTransform(GetWeaponMesh());
-		FVector Start = SocketTransform.GetLocation();
+    const USkeletalMeshSocket* MuzzleFlashSocket = GetWeaponMesh()->GetSocketByName("MuzzleFlash");
+    if (MuzzleFlashSocket)
+    {
+        FTransform SocketTransform = MuzzleFlashSocket->GetSocketTransform(GetWeaponMesh());
+        FVector Start = SocketTransform.GetLocation();
 
-		FHitResult FireHit;
+        FHitResult FireHit;
+        WeaponTraceHit(Start, HitTarget, FireHit);
 
-		WeaponTraceHit(Start, HitTarget, FireHit);
+        ACharacter* HitCharacter = Cast<ACharacter>(FireHit.GetActor());
+        if (HitCharacter && HasAuthority() && InstigatorController)
+        {
+            UGameplayStatics::ApplyDamage(
+                HitCharacter,
+                Damage,
+                InstigatorController,
+                this,
+                UDamageType::StaticClass()
+            );
 
-		APlayerCharacter* PlayerCharacter = Cast<APlayerCharacter>(FireHit.GetActor());
-		if(PlayerCharacter && HasAuthority() && InstigatorController)
-		{
-			UGameplayStatics::ApplyDamage(
-				PlayerCharacter,
-				Damage,
-				InstigatorController,
-				this,
-				UDamageType::StaticClass()
-			);
-		}
-		if (ImpactParticles)
-		{
-			UGameplayStatics::SpawnEmitterAtLocation(
-				GetWorld(),
-				ImpactParticles,
-				FireHit.ImpactPoint,
-				FireHit.ImpactNormal.Rotation()
-			);
-		}
-		if (HitSound)
-		{
-			UGameplayStatics::PlaySoundAtLocation(
-				this,
-				HitSound,
-				FireHit.ImpactPoint
-			);
-		}
-		if (MuzzleFlash)
-		{
-			UGameplayStatics::SpawnEmitterAtLocation(
-				GetWorld(),
-				MuzzleFlash,
-				SocketTransform
-			);
-		}
-		if (FireSound)
-		{
-			UGameplayStatics::PlaySoundAtLocation(
-				this,
-				FireSound,
-				GetActorLocation()
-			);
-		}
-	}
+            UE_LOG(LogTemp, Warning, TEXT("HitScanWeapon hit: %s (Damage: %.2f)"),
+                *HitCharacter->GetName(), Damage);
+        }
+
+        if (ImpactParticles)
+        {
+            UGameplayStatics::SpawnEmitterAtLocation(
+                GetWorld(),
+                ImpactParticles,
+                FireHit.ImpactPoint,
+                FireHit.ImpactNormal.Rotation()
+            );
+        }
+        if (HitSound)
+        {
+            UGameplayStatics::PlaySoundAtLocation(
+                this,
+                HitSound,
+                FireHit.ImpactPoint
+            );
+        }
+        if (MuzzleFlash)
+        {
+            UGameplayStatics::SpawnEmitterAtLocation(
+                GetWorld(),
+                MuzzleFlash,
+                SocketTransform
+            );
+        }
+        if (FireSound)
+        {
+            UGameplayStatics::PlaySoundAtLocation(
+                this,
+                FireSound,
+                GetActorLocation()
+            );
+        }
+    }
 }
+
 
 FVector AHitScanWeapon::TraceEndWithScatter(const FVector& TraceStart, const FVector& HitTarget)
 {
@@ -108,7 +112,8 @@ void AHitScanWeapon::WeaponTraceHit(const FVector& TraceStart, const FVector& Hi
 			OutHit,
 			TraceStart,
 			End,
-			ECollisionChannel::ECC_Visibility
+            ECollisionChannel::ECC_Pawn
+			//ECollisionChannel::ECC_Visibility
 		);
 		FVector BeamEnd = End;
 		if (OutHit.bBlockingHit)

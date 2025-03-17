@@ -45,7 +45,16 @@ void ABasicMonsterAI::UpdateWalkSpeed(float NewWalkSpeed) {
 float ABasicMonsterAI::TakeDamage_Implementation(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
 {
 	if (MonsterHP <= 0.0f) {
+		if (GEngine)
+		{
+			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, (TEXT("0000000000")));
+		}
 		return 0.0f; // 이미 죽었으면 데미지 무효
+	}
+
+	if (GEngine)
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("Damage Received: %.2f"), DamageAmount));
 	}
 
 	MonsterHP -= DamageAmount; // 체력 감소
