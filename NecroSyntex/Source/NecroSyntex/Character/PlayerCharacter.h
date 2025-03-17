@@ -21,11 +21,11 @@ class NECROSYNTEX_API APlayerCharacter : public ACharacter, public IInteractWith
 {
 	GENERATED_BODY()
 
-public:
+
 	/** MappingContext */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputMappingContext* DefaultMappingContext;
-private:
+
 	/** Key Settings */
 	/*
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
@@ -34,6 +34,9 @@ private:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* MoveAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UInputAction* LookAction;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* EquipAction;
@@ -81,14 +84,12 @@ public:
 	virtual void Destroyed() override;
 
 	UPROPERTY(Replicated)
-	bool bDisableGameplay = false;
+	bool bDisalbeGameplay = false;
 
 	UFUNCTION(BluePrintImplementableEvent)
 	void ShowSniperScopeWidget(bool bShowScope);
 
 	void UpdateHUDHealth();
-
-	void UpdateHUDShield();
 
 	void SpawnDefaultWeapon();
 protected:
@@ -96,6 +97,7 @@ protected:
 
 	//Key Settings
 	void Move(const FInputActionValue& Value);
+	void Look(const FInputActionValue& Value);
 	void EquipButtonPressed();
 	void CrouchButtonPressed();
 	void AimButtonPressed();
@@ -118,9 +120,9 @@ protected:
 
 	UFUNCTION()
 	void ReceiveDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, class AController* InstigatorController, AActor* DamageCauser);
+	void UpdateHUDShield();
 	void UpdateHUDAmmo();
 	void PollInit();
-	void RotateInPlace(float DeltaTime);
 
 	UFUNCTION(Server, Reliable, WithValidation)
 	void ServerSprintStart();
@@ -258,9 +260,6 @@ public:
 
 	UPROPERTY(EditAnywhere)
 	float TotalDamage;
-
-	UFUNCTION()
-	float GetTotalDamage();
 	//Pahu end
 
 	void SetOverlappingWeapon(AWeapon* Weapon);
@@ -276,7 +275,6 @@ public:
 	FORCEINLINE bool IsElimed() const { return bElimed; }
 	FORCEINLINE float GetHealth() const { return Health; }
 	FORCEINLINE void SetHealth(float Amount) { Health = Amount; }
-	FORCEINLINE void SetShield(float Amount) { Shield = Amount; }
 	FORCEINLINE float GetMaxHealth() const { return MaxHealth; }
 	FORCEINLINE float GetShield() const { return Shield; }
 	FORCEINLINE float GetMaxShield() const { return MaxShield; }
@@ -285,5 +283,4 @@ public:
 	FORCEINLINE UStaticMeshComponent* GetAttachedGrenade() const { return AttachedGrenade; }
 	FORCEINLINE UCombatComponent* GetCombat() const { return Combat; }
 	FORCEINLINE USubComponent* GetSubComp() const { return SubComp; }
-	FORCEINLINE bool GetDisableGameplay() const { return bDisableGameplay; }
 };

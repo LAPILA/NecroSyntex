@@ -1,4 +1,4 @@
-// Unreal Engine ï¿½âº» ï¿½ï¿½ï¿½
+// Unreal Engine ±âº» Çì´õ
 #include "PlayerCharacter.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
@@ -13,11 +13,11 @@
 #include "NiagaraSystem.h"
 #include "TimerManager.h"
 
-// Enhanced Input ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½
+// Enhanced Input °ü·Ã Çì´õ
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 
-// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ® ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ (NecroSyntex)
+// ÇÁ·ÎÁ§Æ® °ü·Ã Çì´õ (NecroSyntex)
 #include "NecroSyntex/NecroSyntex.h"
 #include "NecroSyntex/Weapon/Weapon.h"
 #include "NecroSyntex/Weapon/WeaponTypes.h"
@@ -28,7 +28,7 @@
 #include "NecroSyntex/PlayerState/NecroSyntexPlayerState.h"
 #include "NecroSyntex/DopingSystem/DopingComponent.h"
 
-// ï¿½Ö´Ï¸ï¿½ï¿½Ì¼ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½
+// ¾Ö´Ï¸ÞÀÌ¼Ç °ü·Ã Çì´õ
 #include "PlayerAnimInstance.h"
 
 
@@ -112,10 +112,11 @@ void APlayerCharacter::MulticastElim_Implementation()
 	}
 
 	// Disable character movement
-	bDisableGameplay = true;
-	if (Combat)
+	GetCharacterMovement()->DisableMovement();
+	GetCharacterMovement()->StopMovementImmediately();
+	if (NecroSyntexPlayerController)
 	{
-		Combat->FireButtonPressed(false);
+		DisableInput(NecroSyntexPlayerController);
 	}
 	// Disable collision
 	// To Do: Nedd Check Rifle  
@@ -147,37 +148,30 @@ void APlayerCharacter::ElimTimerFinished()
 void APlayerCharacter::Destroyed()
 {
 	Super::Destroyed();
-
-	ANecroSyntexGameMode* NecroSyntexGameMode = Cast<ANecroSyntexGameMode>(UGameplayStatics::GetGameMode(this));
-	bool bMatchNotInProgress = NecroSyntexGameMode && NecroSyntexGameMode->GetMatchState() != MatchState::InProgress;
-	if (Combat && Combat->EquippedWeapon && bMatchNotInProgress)
-	{
-		Combat->EquippedWeapon->Destroy();
-	}
 }
 
 void APlayerCharacter::SpawnDefaultWeapon()
 {
-	// GameModeï¿½ï¿½ World ï¿½ï¿½È¿ï¿½ï¿½ ï¿½Ë»ï¿½
+	// GameMode³ª World À¯È¿¼º °Ë»ç
 	ANecroSyntexGameMode* NecroSyntexGameMode = Cast<ANecroSyntexGameMode>(UGameplayStatics::GetGameMode(this));
 	UWorld* World = GetWorld();
 	if (!NecroSyntexGameMode || !World || bElimed) return;
 
-	// 1) ï¿½Ö¹ï¿½ï¿½ï¿½(Primary) ï¿½ï¿½ï¿½ï¿½
+	// 1) ÁÖ¹«±â(Primary) ½ºÆù
 	if (DefaultWeaponClass && Combat)
 	{
 		AWeapon* PrimaryWeapon = World->SpawnActor<AWeapon>(DefaultWeaponClass);
 		if (PrimaryWeapon)
 		{
-			// bDestroyWeapon = true ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½Ä±ï¿½ï¿½Ç´ï¿½ ï¿½ï¿½ï¿½ï¿½
+			// bDestroyWeapon = true ¡æ »ç¸Á ½Ã ÆÄ±«µÇ´Â ¼³Á¤
 			PrimaryWeapon->bDestroyWeapon = true;
 			Combat->EquipWeapon(PrimaryWeapon);
-			// -> Combat->EquipWeapon() ï¿½ï¿½ï¿½Î¿ï¿½ï¿½ï¿½ 
-			//    'ï¿½ï¿½ï¿½ï¿½ ï¿½Ì¹ï¿½ ï¿½ï¿½ï¿½â°¡ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ SecondaryWeaponï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½' ï¿½ï¿½ï¿½ï¿½ Ã³ï¿½ï¿½
+			// -> Combat->EquipWeapon() ³»ºÎ¿¡¼­ 
+			//    '¸¸¾à ÀÌ¹Ì ¹«±â°¡ ÀÖÀ¸¸é SecondaryWeaponÀ¸·Î ¹èÁ¤' ·ÎÁ÷ Ã³¸®
 		}
 	}
 
-	// 2) ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½(Secondary) ï¿½ï¿½ï¿½ï¿½
+	// 2) º¸Á¶ ¹«±â(Secondary) ½ºÆù
 	if (SubWeaponClass && Combat)
 	{
 		AWeapon* SecondaryWeapon = World->SpawnActor<AWeapon>(SubWeaponClass);
@@ -185,7 +179,7 @@ void APlayerCharacter::SpawnDefaultWeapon()
 		{
 			SecondaryWeapon->bDestroyWeapon = true;
 			Combat->EquipWeapon(SecondaryWeapon);
-			// -> Ã¹ ï¿½ï¿½Â° ï¿½ï¿½ï¿½â°¡ ï¿½Ö¹ï¿½ï¿½â°¡ ï¿½Ç¾ï¿½ï¿½ï¿½ï¿½Ç·ï¿½, ï¿½ï¿½ ï¿½ï¿½Â°ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Úµï¿½ Equip
+			// -> Ã¹ ¹øÂ° ¹«±â°¡ ÁÖ¹«±â°¡ µÇ¾úÀ¸¹Ç·Î, µÎ ¹øÂ°´Â º¸Á¶ ¹«±â·Î ÀÚµ¿ Equip
 		}
 	}
 
@@ -218,17 +212,13 @@ void APlayerCharacter::BeginPlay()
 		GetCharacterMovement()->MaxWalkSpeed = 550.0f;
 	}
 	else {
-		if (HasAuthority()) {
-			GetCharacterMovement()->MaxWalkSpeed = UDC->PID->MoveSpeed;
-		}
+		GetCharacterMovement()->MaxWalkSpeed = UDC->PID->MoveSpeed;
 	}
 }
 
 void APlayerCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
-	RotateInPlace(DeltaTime);
 	if (GetLocalRole() > ENetRole::ROLE_SimulatedProxy && IsLocallyControlled())
 	{
 		AimOffset(DeltaTime);
@@ -245,30 +235,6 @@ void APlayerCharacter::Tick(float DeltaTime)
 	PollInit();
 }
 
-
-void APlayerCharacter::RotateInPlace(float DeltaTime)
-{
-	if (bDisableGameplay)
-	{
-		bUseControllerRotationYaw = false;
-		TurningInPlace = ETurningInPlace::ETIP_NotTurning;
-		return;
-	}
-	if (GetLocalRole() > ENetRole::ROLE_SimulatedProxy && IsLocallyControlled())
-	{
-		AimOffset(DeltaTime);
-	}
-	else
-	{
-		TimeSinceLastMovementReplication += DeltaTime;
-		if (TimeSinceLastMovementReplication > 0.25f)
-		{
-			OnRep_ReplicatedMovement();
-		}
-		CalculateAO_Pitch();
-	}
-}
-
 void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent)) {
@@ -277,6 +243,7 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 		//EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Completed, this, &ACharacter::StopJumping);
 
 		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &APlayerCharacter::Move);
+		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &APlayerCharacter::Look);
 		EnhancedInputComponent->BindAction(EquipAction, ETriggerEvent::Triggered, this, &APlayerCharacter::EquipButtonPressed);
 		EnhancedInputComponent->BindAction(CrouchAction, ETriggerEvent::Started, this, &APlayerCharacter::CrouchButtonPressed);
 		EnhancedInputComponent->BindAction(AimAction, ETriggerEvent::Started, this, &APlayerCharacter::AimButtonPressed);
@@ -307,7 +274,6 @@ void APlayerCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 	DOREPLIFETIME_CONDITION(APlayerCharacter, OverlappingWeapon,COND_OwnerOnly);
-	DOREPLIFETIME(APlayerCharacter, bDisableGameplay);
 	DOREPLIFETIME(APlayerCharacter, Health);
 	DOREPLIFETIME(APlayerCharacter, Shield);
 }
@@ -448,15 +414,10 @@ void APlayerCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, const U
 			}
 		}
 	}
-	if (SubComp)
-	{
-		SubComp->OnTakeDamage();
-	}
 }
 
 void APlayerCharacter::Move(const FInputActionValue& Value)
 {
-	if (bDisableGameplay) return;
 	FVector2D MovementVector = Value.Get<FVector2D>();
 
 	if (Controller != nullptr)
@@ -472,9 +433,19 @@ void APlayerCharacter::Move(const FInputActionValue& Value)
 	}
 }
 
+void APlayerCharacter::Look(const FInputActionValue& Value)
+{
+	FVector2D LookAxisVector = Value.Get<FVector2D>();
+
+	if (Controller != nullptr)
+	{
+		AddControllerYawInput(LookAxisVector.X);
+		AddControllerPitchInput(LookAxisVector.Y);
+	}
+}
+
 void APlayerCharacter::EquipButtonPressed()
 {
-	if (bDisableGameplay) return;
 	if (Combat)
 	{
 		ServerEquipButtonPressed();
@@ -483,7 +454,6 @@ void APlayerCharacter::EquipButtonPressed()
 
 void APlayerCharacter::CrouchButtonPressed()
 {
-	if (bDisableGameplay) return;
 	if (bIsCrouched)
 	{
 		UnCrouch();
@@ -496,7 +466,6 @@ void APlayerCharacter::CrouchButtonPressed()
 
 void APlayerCharacter::ReloadButtonPressed()
 {
-	if (bDisableGameplay) return;
 	if (Combat)
 	{
 		Combat->Reload();
@@ -505,7 +474,6 @@ void APlayerCharacter::ReloadButtonPressed()
 
 void APlayerCharacter::AimButtonPressed()
 {
-	if (bDisableGameplay) return;
 	if (Combat)
 	{
 		Combat->SetAiming(true);
@@ -513,7 +481,6 @@ void APlayerCharacter::AimButtonPressed()
 }
 void APlayerCharacter::AimButtonReleased()
 {
-	if (bDisableGameplay) return;
 	if (Combat)
 	{
 		Combat->SetAiming(false);
@@ -522,7 +489,6 @@ void APlayerCharacter::AimButtonReleased()
 
 void APlayerCharacter::SprintStart()
 {
-	if (bDisableGameplay) return;
 	if (!bIsSprinting)
 	{
 		bIsSprinting = true;
@@ -540,7 +506,6 @@ void APlayerCharacter::SprintStart()
 
 void APlayerCharacter::SprintStop()
 {
-	if (bDisableGameplay) return;
 	if (bIsSprinting)
 	{
 		bIsSprinting = false;
@@ -781,6 +746,10 @@ void APlayerCharacter::UpdateHUDHealth()
 void APlayerCharacter::OnRep_Shield(float LastShield)
 {
 	UpdateHUDShield();
+	if (Shield < LastShield)
+	{
+		PlayerHitReactMontage();
+	}
 }
 
 void APlayerCharacter::UpdateHUDShield()
@@ -894,14 +863,4 @@ ECombatState APlayerCharacter::GetCombatState() const
 	{
 		return Combat->CombatState;
 	}
-}
-
-
-//Pahu
-float APlayerCharacter::GetTotalDamage()
-{
-	TotalDamage = UDC->TotalDamage;
-
-	return TotalDamage;
-
 }

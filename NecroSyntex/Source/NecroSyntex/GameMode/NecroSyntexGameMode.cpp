@@ -6,13 +6,7 @@
 #include "NecroSyntex\PlayerController\NecroSyntexPlayerController.h"
 #include "Kismet/GameplayStatics.h"
 #include "GameFramework/PlayerStart.h"
-#include "NecroSyntex\NecroSyntexGameState.h"
 #include "NecroSyntex\PlayerState\NecroSyntexPlayerState.h"
-
-namespace MatchState
-{
-	const FName Cooldown = FName("Cooldown");
-}
 
 ANecroSyntexGameMode::ANecroSyntexGameMode()
 {
@@ -33,12 +27,12 @@ void ANecroSyntexGameMode::BeginPlay()
 void ANecroSyntexGameMode::OnMatchStateSet()
 {
 	Super::OnMatchStateSet();
-
 	for (FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
 	{
 		ANecroSyntexPlayerController* NecroSyntexPlayer = Cast<ANecroSyntexPlayerController>(*It);
 		if (NecroSyntexPlayer)
 		{
+			UE_LOG(LogTemp, Warning, TEXT("Notifying PlayerController: %s"), *NecroSyntexPlayer->GetName());
 			NecroSyntexPlayer->OnMatchStateSet(MatchState);
 		}
 	}
@@ -50,45 +44,26 @@ void ANecroSyntexGameMode::Tick(float DeltaTime)
 
 	if (MatchState == MatchState::WaitingToStart)
 	{
-		CountdownTime = WarmUpTime - (GetWorld()->GetTimeSeconds() - LevelStartingTime);
+		CountdownTime = WarmUpTime - GetWorld()->GetTimeSeconds() + LevelStartingTime;
 		if (CountdownTime <= 0.0f)
 		{
 			StartMatch();
-		}
-	}
-	else if (MatchState == MatchState::InProgress)
-	{
-		CountdownTime = WarmUpTime + MatchTime - (GetWorld()->GetTimeSeconds() - LevelStartingTime);
-		if (CountdownTime <= 0.f)
-		{
-			SetMatchState(MatchState::Cooldown);
-		}
-	}
-	else if (MatchState == MatchState::Cooldown)
-	{
-		CountdownTime = CooldownTime + WarmUpTime + MatchTime - (GetWorld()->GetTimeSeconds() - LevelStartingTime);
-		if (CountdownTime <= 0.f)
-		{
-			RestartGame();
+			UE_LOG(LogTemp, Warning, TEXT("Match started! State: %s"), *MatchState.ToString());
 		}
 	}
 }
 
-
-//«√∑π¿ÃæÓ ¡¶∞≈ ∞¸∑√ «‘ºˆ
+//ÔøΩ√∑ÔøΩÔøΩÃæÔøΩ ÔøΩÔøΩÔøΩÔøΩ ÔøΩÔøΩÔøΩÔøΩ ÔøΩ‘ºÔøΩ
 void ANecroSyntexGameMode::PlayerEliminated(APlayerCharacter* ElimmedCharacter, ANecroSyntexPlayerController* VictimController, ANecroSyntexPlayerController* AttackController)
 {
-	// ∞¯∞›¿⁄, »Òª˝¿⁄ State ¡∏¿Á »Æ¿Œ
+	// ÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩ, ÔøΩÔøΩÔøΩÔøΩÔøΩ State ÔøΩÔøΩÔøΩÔøΩ »ÆÔøΩÔøΩ
 	ANecroSyntexPlayerState* AttackerPlayerState = AttackController ? Cast<ANecroSyntexPlayerState>(AttackController->PlayerState) : nullptr;
 	ANecroSyntexPlayerState* VictimPlayerState = VictimController ? Cast<ANecroSyntexPlayerState>(VictimController->PlayerState) : nullptr;
 
-	// ¡°ºˆ √ﬂ∞°
-	ANecroSyntexGameState* NecroSyntexGameState = GetGameState<ANecroSyntexGameState>();
-
-	if (AttackerPlayerState && AttackerPlayerState != VictimPlayerState && NecroSyntexGameState)
+	// ÔøΩÔøΩÔøΩÔøΩ ÔøΩﬂ∞ÔøΩ
+	if (AttackerPlayerState && AttackerPlayerState != VictimPlayerState)
 	{
-		AttackerPlayerState->AddToScore(1.f);
-		NecroSyntexGameState->UpdateTopScore(AttackerPlayerState);
+		AttackerPlayerState->AddToScore(-100.f);
 	}
 	if (VictimPlayerState)
 	{
@@ -121,7 +96,7 @@ void ANecroSyntexGameMode::RequestRespawn(ACharacter* ElimmedCharacter, AControl
 void ANecroSyntexGameMode::SetupPlayers()
 {
 	UE_LOG(LogTemp, Warning, TEXT("22222"));
-	for (FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It) {
+	for (FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It){
 		ANecroSyntexPlayerController* MyPC = Cast<ANecroSyntexPlayerController>(*It);
 		UE_LOG(LogTemp, Warning, TEXT("33333"));
 		if (MyPC)
@@ -143,11 +118,8 @@ void ANecroSyntexGameMode::SetupPlayers()
 				{
 					UE_LOG(LogTemp, Warning, TEXT("66666"));
 					FActorSpawnParameters SpawnParams;
-					FVector SpawnVector;
-					SpawnVector = FVector(-500.0f, -200.0f, 140.0f);
-
 					APlayerCharacter* NewCharacter = GetWorld()->SpawnActor<APlayerCharacter>(
-						PS->SelectedCharacterClass, SpawnVector, FRotator::ZeroRotator);
+						PS->SelectedCharacterClass, FVector::ZeroVector, FRotator::ZeroRotator);
 					UE_LOG(LogTemp, Warning, TEXT("777777"));
 					if (NewCharacter)
 					{
@@ -156,7 +128,7 @@ void ANecroSyntexGameMode::SetupPlayers()
 							NewCharacter->UDC->SetFirstDopingKey(PS->FirstDopingCode);
 							NewCharacter->UDC->SetSecondDopingKey(PS->SecondDopingCode);
 						}
-						// «√∑π¿ÃæÓ ƒ¡∆Æ∑—∑Ø∞° ªı ƒ≥∏Ø≈Õ∏¶ º“¿Ø«œµµ∑œ ∫Ø∞Ê
+						// ÌîåÎ†àÏù¥Ïñ¥ Ïª®Ìä∏Î°§Îü¨Í∞Ä ÏÉà Ï∫êÎ¶≠ÌÑ∞Î•º ÏÜåÏú†ÌïòÎèÑÎ°ù Î≥ÄÍ≤Ω
 						MyPC->Possess(NewCharacter);
 						UE_LOG(LogTemp, Warning, TEXT("88888"));
 						MyPC->ClientRestart(NewCharacter);
@@ -176,8 +148,7 @@ void ANecroSyntexGameMode::PostLogin(APlayerController* NewPlayer)
 	ANecroSyntexPlayerController* PC = Cast<ANecroSyntexPlayerController>(NewPlayer);
 	if (PC)
 	{
-		TotalPlayers++;
-		PC->ShowCharacterSelectUI(); // ≈¨∂Û¿Ãæ∆Æø°º≠ UI ∂ÁøÏ±‚
+		PC->ShowCharacterSelectUI(); // ÌÅ¥ÎùºÏù¥Ïñ∏Ìä∏ÏóêÏÑú UI ÎùÑÏö∞Í∏∞
 	}
 }
 
@@ -192,13 +163,13 @@ void ANecroSyntexGameMode::SelectAndReadyComplete_Implementation()
 
 void ANecroSyntexGameMode::ShowCharacterSelectionUI()
 {
-	// «ˆ¿Á ¡¢º”«— ∏µÁ «√∑π¿ÃæÓ ƒ¡∆Æ∑—∑Ø ∞°¡Æø¿±‚
+	// ÌòÑÏû¨ Ï†ëÏÜçÌïú Î™®Îì† ÌîåÎ†àÏù¥Ïñ¥ Ïª®Ìä∏Î°§Îü¨ Í∞ÄÏ†∏Ïò§Í∏∞
 	for (FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
 	{
 		ANecroSyntexPlayerController* PC = Cast<ANecroSyntexPlayerController>(*It);
 		if (PC)
 		{
-			PC->ShowCharacterSelectUI(); // ≈¨∂Û¿Ãæ∆Æø°º≠ UI ∂ÁøÏ±‚
+			PC->ShowCharacterSelectUI(); // ÌÅ¥ÎùºÏù¥Ïñ∏Ìä∏ÏóêÏÑú UI ÎùÑÏö∞Í∏∞
 		}
 	}
 }

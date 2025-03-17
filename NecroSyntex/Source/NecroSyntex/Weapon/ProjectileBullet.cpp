@@ -8,7 +8,7 @@
 
 AProjectileBullet::AProjectileBullet()
 {
-	// ï¿½ï¿½ï¿½ï¿½Ã¼ ï¿½Ìµï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ® ï¿½Ê±ï¿½È­
+	// Åõ»çÃ¼ ÀÌµ¿ ÄÄÆ÷³ÍÆ® ÃÊ±âÈ­
 	ProjectileMovementComponent = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("ProjectileMovementComponent"));
 	ProjectileMovementComponent->bRotationFollowsVelocity = true;
 	ProjectileMovementComponent->SetIsReplicated(true);
