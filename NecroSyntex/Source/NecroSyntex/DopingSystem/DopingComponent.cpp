@@ -136,43 +136,48 @@ void UDopingComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
-	if (OneKeyBool) {
-		One_DopingCoolTime = OneKeyDoping->DopingCoolTime;
-		One_DopingItemNum = OneKeyDoping->DopingItemNum;
-		One_BuffDuration = OneKeyDoping->BuffDuration;
-		One_DeBuffDuration = OneKeyDoping->DeBuffDuration;
-		One_CheckBuff = OneKeyDoping->CheckBuff;
-		One_CheckDeBuff = OneKeyDoping->CheckDeBuff;
-		One_Able = OneKeyDoping->Able;
-	}
 
-	if (TwoKeyBool) {
-		Two_DopingCoolTime = TwoKeyDoping->DopingCoolTime;
-		Two_DopingItemNum = TwoKeyDoping->DopingItemNum;
-		Two_BuffDuration = TwoKeyDoping->BuffDuration;
-		Two_DeBuffDuration = TwoKeyDoping->DeBuffDuration;
-		Two_CheckBuff = TwoKeyDoping->CheckBuff;
-		Two_CheckDeBuff = TwoKeyDoping->CheckDeBuff;
-		Two_Able = TwoKeyDoping->Able;
-	}
+	if (GetOwner()->HasAuthority())
+	{
+		if (OneKeyBool) {
+			One_DopingCoolTime = OneKeyDoping->DopingCoolTime;
+			One_DopingItemNum = OneKeyDoping->DopingItemNum;
+			One_BuffDuration = OneKeyDoping->BuffDuration;
+			One_DeBuffDuration = OneKeyDoping->DeBuffDuration;
+			One_CheckBuff = OneKeyDoping->CheckBuff;
+			One_CheckDeBuff = OneKeyDoping->CheckDeBuff;
+			One_Able = OneKeyDoping->Able;
+		}
 
-	if (PID != PIDCheck) {
-		PID = PIDCheck;
-	}
-	// Player 정보 갱신
-	MaxHealth = PID->MaxHealth;
-	CurrentHealth = PID->CurrentHealth;
-	MaxShield = PID->MaxShield;
-	CurrentShield = PID->CurrentShield;
-	MoveSpeed = PID->MoveSpeed;
-	RunningSpeed = PID->RunningSpeed;
-	MLAtaackPoint = PID->MLAtaackPoint;
-	Rebound = PID->Rebound;
-	Defense = PID->Defense;
-	Blurred = PID->Blurred;
-	ROF = PID->ROF;
+		if (TwoKeyBool) {
+			Two_DopingCoolTime = TwoKeyDoping->DopingCoolTime;
+			Two_DopingItemNum = TwoKeyDoping->DopingItemNum;
+			Two_BuffDuration = TwoKeyDoping->BuffDuration;
+			Two_DeBuffDuration = TwoKeyDoping->DeBuffDuration;
+			Two_CheckBuff = TwoKeyDoping->CheckBuff;
+			Two_CheckDeBuff = TwoKeyDoping->CheckDeBuff;
+			Two_Able = TwoKeyDoping->Able;
+		}
 
-	TotalDamage = GunDamage + PID->DopingDamageBuff;
+		if (PID != PIDCheck) {
+			PID = PIDCheck;
+		}
+		// Player 정보 갱신
+
+		MaxHealth = PID->MaxHealth;
+		CurrentHealth = PID->CurrentHealth;
+		MaxShield = PID->MaxShield;
+		CurrentShield = PID->CurrentShield;
+		MoveSpeed = PID->MoveSpeed;
+		RunningSpeed = PID->RunningSpeed;
+		MLAtaackPoint = PID->MLAtaackPoint;
+		Rebound = PID->Rebound;
+		Defense = PID->Defense;
+		Blurred = PID->Blurred;
+		ROF = PID->ROF;
+
+		TotalDamage = GunDamage + PID->DopingDamageBuff;
+	}
 
 }
 

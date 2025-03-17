@@ -11,23 +11,39 @@ class NECROSYNTEX_API USubComponent : public UActorComponent
 {
 	GENERATED_BODY()
 
-public:	
-	USubComponent();
-	friend class APlayerCharacter;
-	void Heal(float HealAmount, float HealingTime);
+public:
+    USubComponent();
+
 protected:
-	virtual void BeginPlay() override;
-	void HealRampUp(float DeltaTime);
+    virtual void BeginPlay() override;
+
+public:
+    virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+
+    // ------------------ Health ------------------
+    void Heal(float HealAmount, float HealingTime);
 
 private:
-	UPROPERTY()
-	class APlayerCharacter* Character;
+    void HealRampUp(float DeltaTime);
 
-	bool bHealing = false;
-	float HealingRate = 0;
-	float AmountToHeal = 0.f;
+    bool bHealing = false;
+    UPROPERTY(EditAnywhere, Category = "HealthHeal")
+    float HealingRate = 3.f;
+    UPROPERTY(EditAnywhere, Category = "HealthHeal")
+    float AmountToHeal = 100.f;
 
-public:	
-	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
-		
+    // ------------------ Shield ------------------
+public:
+    void OnTakeDamage();
+
+private:
+    void ShieldRampUp(float DeltaTime);
+
+    float LastDamageTime = 0.f;
+    UPROPERTY(EditAnywhere, Category = "ShieldHeal")
+    float ShieldRegenDelay = 3.f;
+    UPROPERTY(EditAnywhere, Category = "ShieldHeal")
+    float ShieldRegenRate = 100.f;
+
+    class APlayerCharacter* Character = nullptr;
 };
