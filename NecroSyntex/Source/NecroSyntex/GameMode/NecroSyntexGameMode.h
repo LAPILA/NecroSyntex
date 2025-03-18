@@ -6,9 +6,11 @@
 #include "GameFramework/GameMode.h"
 #include "NecroSyntexGameMode.generated.h"
 
-/**
- * 
- */
+namespace MatchState
+{
+	extern NECROSYNTEX_API const FName Cooldown; // Match duration has been reached. Display winner and begin cooldown timer.
+}
+
 UCLASS()
 class NECROSYNTEX_API ANecroSyntexGameMode : public AGameMode
 {
@@ -26,6 +28,9 @@ public:
 	UPROPERTY(EditDefaultsOnly)
 	float MatchTime = 120.f;
 
+	UPROPERTY(EditDefaultsOnly)
+	float CooldownTime = 10.f;
+
 	float LevelStartingTime = 0.f;
 
 protected:
@@ -38,24 +43,24 @@ private:
 
 public:
 
-	//¹ÚÅÂÇõ ÆíÁý ±¸°£
-	 // ¸ðµç ÇÃ·¹ÀÌ¾î¿¡°Ô Ä³¸¯ÅÍ ¼±ÅÃ UI¸¦ Ç¥½Ã
+	//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
+	 // ï¿½ï¿½ï¿½ ï¿½Ã·ï¿½ï¿½Ì¾î¿¡ï¿½ï¿½ Ä³ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ UIï¿½ï¿½ Ç¥ï¿½ï¿½
 	void ShowCharacterSelectionUI();
 
-	// ÇÃ·¹ÀÌ¾î°¡ Ä³¸¯ÅÍ¸¦ ¼±ÅÃÇÏ¸é ¼­¹ö¿¡ ¾Ë¸®´Â ÇÔ¼ö
+	// ï¿½Ã·ï¿½ï¿½Ì¾î°¡ Ä³ï¿½ï¿½ï¿½Í¸ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï¸ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ë¸ï¿½ï¿½ï¿½ ï¿½Ô¼ï¿½
 	UFUNCTION(Server, Reliable)
 	void SelectAndReadyComplete();
 
-	// ¸ðµç ÇÃ·¹ÀÌ¾î°¡ ¼±ÅÃÀ» ¿Ï·áÇß´ÂÁö È®ÀÎ
+	// ï¿½ï¿½ï¿½ ï¿½Ã·ï¿½ï¿½Ì¾î°¡ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ï·ï¿½ï¿½ß´ï¿½ï¿½ï¿½ È®ï¿½ï¿½
 	void CheckAllPlayersReady();
 
 
 public:
-	// ¼±ÅÃÀ» ¿Ï·áÇÑ ÇÃ·¹ÀÌ¾î ¼ö
+	// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ï·ï¿½ï¿½ï¿½ ï¿½Ã·ï¿½ï¿½Ì¾ï¿½ ï¿½ï¿½
 	int32 PlayersReadyCount = 0;
 
-	// ÃÑ ÇÃ·¹ÀÌ¾î ¼ö
-	int32 TotalPlayers = 1; // ·Îºñ¿¡¼­ ¼³Á¤µÉ ¼ö ÀÖÀ½
+	// ï¿½ï¿½ ï¿½Ã·ï¿½ï¿½Ì¾ï¿½ ï¿½ï¿½
+	int32 TotalPlayers = 0; // ï¿½Îºñ¿¡¼ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 
 	FTimerHandle CheckPlayerStateTimer;
 
