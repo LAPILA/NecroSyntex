@@ -7,14 +7,17 @@ void UDCAleks::BeginPlay()
 {
 	Super::BeginPlay();
 
-	PID->MaxHealth = 200;
-	PID->CurrentHealth = PID->MaxHealth;
-	PID->MaxShield = 75.0f;
-	PID->CurrentShield = PID->CurrentShield;
-	PID->MoveSpeed = 550.0f;
-	PID->RunningSpeed = 1000.0f;
-	PID->MLAtaackPoint = 200.0f;
-	PID->Defense = 30;
+	if (GetOwner()->HasAuthority())
+	{
+		PID->MaxHealth = 200;
+		PID->CurrentHealth = PID->MaxHealth;
+		PID->MaxShield = 75.0f;
+		PID->CurrentShield = PID->CurrentShield;
+		PID->MoveSpeed = 550.0f;
+		PID->RunningSpeed = 1000.0f;
+		PID->MLAtaackPoint = 200.0f;
+		PID->Defense = 30;
+	}
 
 
 }
