@@ -4,7 +4,6 @@
 
 #include "CoreMinimal.h"
 #include "DopingComponent.h"
-#include "NecroSyntex/Character/PlayerCharacter.h"
 #include "DCElis.generated.h"
 
 /**
@@ -17,12 +16,8 @@ class NECROSYNTEX_API UDCElis : public UDopingComponent
 	
 	virtual void BeginPlay() override;
 
-	void Elis_Passive_Start(APlayerCharacter* HitCharacter);
+	void Passive_Start() override;
 
-	void Elis_Passive_End(APlayerCharacter* HitCharacter);
-
-	void FirstDopingForAlly_Implementation() override;
-
-	void SecondDopingForAlly_Implementation() override;
+	void Passive_End() override;
 
 };
