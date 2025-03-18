@@ -247,6 +247,13 @@ private:
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<AWeapon> SubWeaponClass;
 
+	UFUNCTION()
+	void ReloadMontageEndedHandler(UAnimMontage* Montage, bool bInterrupted);
+
+	FTimerHandle ReloadTimer;
+
+	UFUNCTION()
+	void ReloadTimerFinished();
 public:
 	//Pahu
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
@@ -286,4 +293,5 @@ public:
 	FORCEINLINE UCombatComponent* GetCombat() const { return Combat; }
 	FORCEINLINE USubComponent* GetSubComp() const { return SubComp; }
 	FORCEINLINE bool GetDisableGameplay() const { return bDisableGameplay; }
+	bool IsLocallyReloading();
 };
