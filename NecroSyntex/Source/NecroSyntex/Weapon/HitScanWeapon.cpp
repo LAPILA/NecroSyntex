@@ -4,10 +4,13 @@
 #include "HitScanWeapon.h"
 #include "Engine/SkeletalMeshSocket.h"
 #include "NecroSyntex\Character\PlayerCharacter.h"
+#include "NecroSyntex\PlayerController\NecroSyntexPlayerController.h"
 #include "Kismet/GameplayStatics.h"
 #include "Particles\ParticleSystemComponent.h"
 #include "Sound/SoundCue.h"
 #include "WeaponTypes.h"
+#include "NecroSyntex\NecroSyntaxComponents\LagCompensationComponent.h"
+
 #include "DrawDebugHelpers.h"
 
 void AHitScanWeapon::Fire(const FVector& HitTarget)
@@ -29,15 +32,33 @@ void AHitScanWeapon::Fire(const FVector& HitTarget)
 		WeaponTraceHit(Start, HitTarget, FireHit);
 
 		APlayerCharacter* PlayerCharacter = Cast<APlayerCharacter>(FireHit.GetActor());
-		if(PlayerCharacter && HasAuthority() && InstigatorController)
+		if(PlayerCharacter && InstigatorController)
 		{
-			UGameplayStatics::ApplyDamage(
-				PlayerCharacter,
-				Damage,
-				InstigatorController,
-				this,
-				UDamageType::StaticClass()
-			);
+			if (HasAuthority() && !bUseServerSideRewind)
+			{
+				UGameplayStatics::ApplyDamage(
+					PlayerCharacter,
+					Damage,
+					InstigatorController,
+					this,
+					UDamageType::StaticClass()
+				);
+			}
+			if (!HasAuthority() && bUseServerSideRewind)
+			{
+				PlayerOwnerCharacter = PlayerOwnerCharacter == nullptr ? Cast<APlayerCharacter>(OwnerPawn) : PlayerOwnerCharacter;
+				NecroSyntexPlayerController = NecroSyntexPlayerController == nullptr ? Cast<ANecroSyntexPlayerController>(InstigatorController) : NecroSyntexPlayerController;
+				if (PlayerOwnerCharacter && NecroSyntexPlayerController && PlayerOwnerCharacter->GetLagCompensation())
+				{
+					PlayerOwnerCharacter->GetLagCompensation()->ServerScoreRequest(
+						PlayerCharacter,
+						Start,
+						HitTarget,
+						NecroSyntexPlayerController->GetServerTime() - NecroSyntexPlayerController->SingleTripTime,
+						this
+					);
+				}
+			}
 		}
 		if (ImpactParticles)
 		{

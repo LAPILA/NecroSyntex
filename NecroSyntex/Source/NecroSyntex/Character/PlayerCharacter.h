@@ -360,4 +360,5 @@ public:
 	FORCEINLINE USubComponent* GetSubComp() const { return SubComp; }
 	FORCEINLINE bool GetDisableGameplay() const { return bDisableGameplay; }
 	bool IsLocallyReloading();
+	FORCEINLINE ULagCompensationComponent* GetLagCompensation() const { return LagCompensation; }
 };
