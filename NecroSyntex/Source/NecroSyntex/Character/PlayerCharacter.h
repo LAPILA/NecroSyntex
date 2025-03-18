@@ -90,7 +90,12 @@ public:
 
 	void UpdateHUDShield();
 
+	void UpdateHUDAmmo();
+
 	void SpawnDefaultWeapon();
+
+	UPROPERTY()
+	TMap<FName, class UBoxComponent*> HitCollisionBoxes;
 protected:
     virtual void BeginPlay() override;
 
@@ -118,9 +123,9 @@ protected:
 
 	UFUNCTION()
 	void ReceiveDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, class AController* InstigatorController, AActor* DamageCauser);
-	void UpdateHUDAmmo();
 	void PollInit();
 	void RotateInPlace(float DeltaTime);
+
 
 	UFUNCTION(Server, Reliable, WithValidation)
 	void ServerSprintStart();
@@ -199,12 +204,18 @@ private:
 	UFUNCTION()
 	void OnRep_OverlappingWeapon(AWeapon* LastWeapon);
 
+	/**
+	* NecroSyntex components
+	*/
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	class USubComponent* SubComp;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	class UCombatComponent* Combat;
 
+	UPROPERTY(VisibleAnywhere)
+	class ULagCompensationComponent* LagCompensation;
 
 	UFUNCTION(Server, Reliable)
 	void ServerEquipButtonPressed();
