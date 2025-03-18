@@ -19,7 +19,7 @@ void ANecroSyntexHud::AddCharacterOverlay()
 	if (PlayerController && CharacterOverlayClass)
 	{
 		CharacterOverlay = CreateWidget<UCharacterOverlay>(PlayerController, CharacterOverlayClass);
-		CharacterOverlay->AddToViewport(-1);
+		CharacterOverlay->AddToViewport();
 	}
 }
 

@@ -7,16 +7,12 @@ void UDCVelis::BeginPlay()
 {
 	Super::BeginPlay();
 
-
-	if (GetOwner()->HasAuthority())
-	{
-		PID->MaxHealth = 150;
-		PID->CurrentHealth = PID->MaxHealth;
-		PID->MoveSpeed = 650.0f;
-		PID->RunningSpeed = 1200.0f;
-		PID->MLAtaackPoint = 50.0f;
-		PID->Defense = 0;
-	}
+	PID->MaxHealth = 150;
+	PID->CurrentHealth = PID->MaxHealth;
+	PID->MoveSpeed = 650.0f;
+	PID->RunningSpeed = 1200.0f;
+	PID->MLAtaackPoint = 50.0f;
+	PID->Defense = 0;
 	
 
 }
@@ -37,20 +33,4 @@ void UDCVelis::Passive_End()
 {
 	PID->RunningSpeed = PID->RunningSpeed - 100;
 	UE_LOG(LogTemp, Warning, TEXT("Velis Passive OFF"));
-}
-
-void UDCVelis::FirstDopingUse_Implementation()
-{
-
-	Super::FirstDopingUse_Implementation();
-
-	Passive_Start();
-}
-
-void UDCVelis::SecondDopingUse_Implementation() {
-
-	Super::SecondDopingUse_Implementation();
-
-	Passive_Start();
-
 }

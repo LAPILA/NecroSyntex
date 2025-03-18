@@ -13,7 +13,7 @@ AProjectile::AProjectile()
 {
 	PrimaryActorTick.bCanEverTick = true;
 	bReplicates = true;
-	// ï¿½æµ¹ ï¿½Ú½ï¿½ ï¿½Ê±ï¿½È­
+	// Ãæµ¹ ¹Ú½º ÃÊ±âÈ­
 	CollisionBox = CreateDefaultSubobject<UBoxComponent>(TEXT("CollisionBox"));
 	SetRootComponent(CollisionBox);
 	CollisionBox->SetCollisionObjectType(ECollisionChannel::ECC_WorldDynamic);
