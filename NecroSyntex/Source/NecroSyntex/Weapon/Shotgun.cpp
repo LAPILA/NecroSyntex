@@ -29,16 +29,16 @@ void AShotgun::FireShotgun(const TArray<FVector_NetQuantize>& HitTargets)
 			FHitResult FireHit;
 			WeaponTraceHit(Start, HitTarget, FireHit);
 
-			ACharacter* PlayerCharacter = Cast<ACharacter>(FireHit.GetActor());
-			if (PlayerCharacter)
+			ACharacter* AnyCharacter = Cast<ACharacter>(FireHit.GetActor());//PlayerCharacter -> AnyCharacter
+			if (AnyCharacter)
 			{
-				if (HitMap.Contains(PlayerCharacter))
+				if (HitMap.Contains(AnyCharacter))
 				{
-					HitMap[PlayerCharacter]++;
+					HitMap[AnyCharacter]++;
 				}
 				else
 				{
-					HitMap.Emplace(PlayerCharacter, 1);
+					HitMap.Emplace(AnyCharacter, 1);
 				}
 			}
 
