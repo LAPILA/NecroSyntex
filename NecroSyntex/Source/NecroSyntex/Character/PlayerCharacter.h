@@ -256,6 +256,9 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "Doping")
 	TSubclassOf<UDopingComponent> DopingComponentClass;
 
+	UFUNCTION(BlueprintCallable)
+	UDopingComponent* GetDopingComponent();
+
 	UPROPERTY(EditAnywhere)
 	float TotalDamage;
 

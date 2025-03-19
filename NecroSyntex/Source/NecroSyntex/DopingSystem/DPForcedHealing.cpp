@@ -34,15 +34,16 @@ void UDPForcedHealing::BuffOn(UPlayerInformData* PID)
 
 		PID->CurrentDoped += 1;
 
+		GetWorld()->GetTimerManager().SetTimer(
+			HealingTimer,
+			[this, PID]() { HealCharacter(PID); },
+			0.2f,
+			true
+		);
+
 		CheckBuff = true;
 	}
 
-	GetWorld()->GetTimerManager().SetTimer(
-		HealingTimer,
-		[this, PID]() { HealCharacter(PID); },
-		0.2f,
-		true
-	);
 
 	StartBuff(PID);
 }

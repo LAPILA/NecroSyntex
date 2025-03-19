@@ -459,6 +459,13 @@ void APlayerCharacter::Move(const FInputActionValue& Value)
 	if (bDisableGameplay) return;
 	FVector2D MovementVector = Value.Get<FVector2D>();
 
+	if (UDC->CurseofChaos->CheckDeBuff == true)
+	{
+		MovementVector.X *= -1;
+		MovementVector.Y *= -1;
+	}
+
+
 	if (Controller != nullptr)
 	{
 		const FRotator Rotation = Controller->GetControlRotation();
@@ -904,4 +911,10 @@ float APlayerCharacter::GetTotalDamage()
 
 	return TotalDamage;
 
+}
+
+
+UDopingComponent* APlayerCharacter::GetDopingComponent()
+{
+	return UDC;
 }

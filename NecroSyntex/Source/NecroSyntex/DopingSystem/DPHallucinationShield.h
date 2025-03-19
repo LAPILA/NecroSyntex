@@ -14,4 +14,21 @@ class NECROSYNTEX_API UDPHallucinationShield : public UDopingParent
 {
 	GENERATED_BODY()
 	
+private:
+	UDPHallucinationShield();
+
+public:
+
+	UFUNCTION(BlueprintCallable)
+	void CallCameraShake();
+
+	void UseDopingItem(UPlayerInformData* PID) override;
+
+	void BuffOn(UPlayerInformData* PID) override;
+
+	void DeBuffOn(UPlayerInformData* PID) override;
+
+	void BuffOff(UPlayerInformData* PID) override;
+
+	void DeBuffOff(UPlayerInformData* PID) override;
 };

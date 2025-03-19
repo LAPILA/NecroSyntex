@@ -71,6 +71,11 @@ void UDopingComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 	DOREPLIFETIME(UDopingComponent, BurningFurnace);
 	DOREPLIFETIME(UDopingComponent, SolidFortress);
 	DOREPLIFETIME(UDopingComponent, Painless);
+	DOREPLIFETIME(UDopingComponent, ParadoxofGuardianship);
+	DOREPLIFETIME(UDopingComponent, HallucinationShield);
+	DOREPLIFETIME(UDopingComponent, HPconversion);
+	DOREPLIFETIME(UDopingComponent, CurseofChaos);
+
 
 	DOREPLIFETIME(UDopingComponent, DopingMode);
 
@@ -97,6 +102,10 @@ void UDopingComponent::BeginPlay()
 		BurningFurnace = NewObject<UDPBurningFurnace>(this);
 		SolidFortress = NewObject<UDPSolidFortress>(this);
 		Painless = NewObject<UDPPainless>(this);
+		ParadoxofGuardianship = NewObject<UDPParadoxofGuardianship>(this);
+		HallucinationShield = NewObject<UDPHallucinationShield>(this);
+		HPconversion = NewObject<UDPHPconversion>(this);
+		CurseofChaos = NewObject<UDPCurseofChaos>(this);
 
 		//도핑 모드(아군에게 도핑을 줄지 나에게 줄지 설정)
 		DopingMode = false;
@@ -197,8 +206,12 @@ void UDopingComponent::SetDopingKey(UDopingParent*& DopingKey, int32 Num)
 	case 4: DopingKey = FinalEmber; break;
 	case 5: DopingKey = ReducePain; break;
 	case 6: DopingKey = SolidFortress; break;
-	case 7: DopingKey = LegEnforce; break;
-	case 8: DopingKey = ForcedHealing; break;
+	case 7: DopingKey = ParadoxofGuardianship; break;
+	case 8: DopingKey = HallucinationShield; break;
+	case 9: DopingKey = LegEnforce; break;
+	case 10: DopingKey = ForcedHealing; break;
+	case 11: DopingKey = HPconversion; break;
+	case 12: DopingKey = CurseofChaos; break;
 	default: UE_LOG(LogTemp, Warning, TEXT("Invalid Doping Key Set!")); break;
 	}
 }
@@ -207,12 +220,14 @@ void UDopingComponent::SetDopingKey(UDopingParent*& DopingKey, int32 Num)
 void UDopingComponent::SetFirstDopingKey_Implementation(int32 Num)
 {
 	SetDopingKey(OneKeyDoping, Num);
+	FirstDopingCode = Num;
 	OneKeyBool = true;
 }
 
 void UDopingComponent::SetSecondDopingKey_Implementation(int32 Num)
 {
 	SetDopingKey(TwoKeyDoping, Num);
+	SecondDopingCode = Num;
 	TwoKeyBool = true;
 }
 
@@ -305,14 +320,18 @@ void UDopingComponent::FirstDopingForAlly_Implementation()
 			//UE_LOG(LogTemp, Warning, TEXT("6"));
 			switch (FirstDopingCode)
 			{
-			case 1: HitCharacter->UDC->LegEnforce->BuffOn(HitCharacter->UDC->PID); UE_LOG(LogTemp, Warning, TEXT("7ㄴ")); break;
-			case 2: HitCharacter->UDC->ReducePain->BuffOn(HitCharacter->UDC->PID); break;
-			case 3: HitCharacter->UDC->SupremeStrength->BuffOn(HitCharacter->UDC->PID); break;
-			case 4: HitCharacter->UDC->ForcedHealing->BuffOn(HitCharacter->UDC->PID); break;
-			case 5: HitCharacter->UDC->FinalEmber->BuffOn(HitCharacter->UDC->PID); break;
-			case 6: HitCharacter->UDC->BurningFurnace->BuffOn(HitCharacter->UDC->PID); break;
-			case 7: HitCharacter->UDC->SolidFortress->BuffOn(HitCharacter->UDC->PID); break;
-			case 8: HitCharacter->UDC->Painless->BuffOn(HitCharacter->UDC->PID); break;
+			case 1: HitCharacter->UDC->SupremeStrength->BuffOn(HitCharacter->UDC->PID); UE_LOG(LogTemp, Warning, TEXT("7ㄴ")); break;
+			case 2: HitCharacter->UDC->BurningFurnace->BuffOn(HitCharacter->UDC->PID); break;
+			case 3: HitCharacter->UDC->Painless->BuffOn(HitCharacter->UDC->PID); break;
+			case 4: HitCharacter->UDC->FinalEmber->BuffOn(HitCharacter->UDC->PID); break;
+			case 5: HitCharacter->UDC->ReducePain->BuffOn(HitCharacter->UDC->PID); break;
+			case 6: HitCharacter->UDC->SolidFortress->BuffOn(HitCharacter->UDC->PID); break;
+			case 7: HitCharacter->UDC->ParadoxofGuardianship->BuffOn(HitCharacter->UDC->PID); break;
+			case 8: HitCharacter->UDC->HallucinationShield->BuffOn(HitCharacter->UDC->PID); break;
+			case 9: HitCharacter->UDC->LegEnforce->BuffOn(HitCharacter->UDC->PID); break;
+			case 10: HitCharacter->UDC->ForcedHealing->BuffOn(HitCharacter->UDC->PID); break;
+			case 11: HitCharacter->UDC->HPconversion->BuffOn(HitCharacter->UDC->PID); break;
+			case 12: HitCharacter->UDC->CurseofChaos->BuffOn(HitCharacter->UDC->PID); break;
 			default: UE_LOG(LogTemp, Warning, TEXT("Invalid Doping Key Set!")); break;
 
 			}
@@ -347,14 +366,18 @@ void UDopingComponent::SecondDopingForAlly_Implementation()
 		if (HitCharacter) {
 			switch (SecondDopingCode)
 			{
-			case 1: HitCharacter->UDC->LegEnforce->BuffOn(HitCharacter->UDC->PID); UE_LOG(LogTemp, Warning, TEXT("7ㄴ")); break;
-			case 2: HitCharacter->UDC->ReducePain->BuffOn(HitCharacter->UDC->PID); break;
-			case 3: HitCharacter->UDC->SupremeStrength->BuffOn(HitCharacter->UDC->PID); break;
-			case 4: HitCharacter->UDC->ForcedHealing->BuffOn(HitCharacter->UDC->PID); break;
-			case 5: HitCharacter->UDC->FinalEmber->BuffOn(HitCharacter->UDC->PID); break;
-			case 6: HitCharacter->UDC->BurningFurnace->BuffOn(HitCharacter->UDC->PID); break;
-			case 7: HitCharacter->UDC->SolidFortress->BuffOn(HitCharacter->UDC->PID); break;
-			case 8: HitCharacter->UDC->Painless->BuffOn(HitCharacter->UDC->PID); break;
+			case 1: HitCharacter->UDC->SupremeStrength->BuffOn(HitCharacter->UDC->PID); UE_LOG(LogTemp, Warning, TEXT("7ㄴ")); break;
+			case 2: HitCharacter->UDC->BurningFurnace->BuffOn(HitCharacter->UDC->PID); break;
+			case 3: HitCharacter->UDC->Painless->BuffOn(HitCharacter->UDC->PID); break;
+			case 4: HitCharacter->UDC->FinalEmber->BuffOn(HitCharacter->UDC->PID); break;
+			case 5: HitCharacter->UDC->ReducePain->BuffOn(HitCharacter->UDC->PID); break;
+			case 6: HitCharacter->UDC->SolidFortress->BuffOn(HitCharacter->UDC->PID); break;
+			case 7: HitCharacter->UDC->ParadoxofGuardianship->BuffOn(HitCharacter->UDC->PID); break;
+			case 8: HitCharacter->UDC->HallucinationShield->BuffOn(HitCharacter->UDC->PID); break;
+			case 9: HitCharacter->UDC->LegEnforce->BuffOn(HitCharacter->UDC->PID); break;
+			case 10: HitCharacter->UDC->ForcedHealing->BuffOn(HitCharacter->UDC->PID); break;
+			case 11: HitCharacter->UDC->HPconversion->BuffOn(HitCharacter->UDC->PID); break;
+			case 12: HitCharacter->UDC->CurseofChaos->BuffOn(HitCharacter->UDC->PID); break;
 			default: UE_LOG(LogTemp, Warning, TEXT("Invalid Doping Key Set!")); break;
 
 			}
