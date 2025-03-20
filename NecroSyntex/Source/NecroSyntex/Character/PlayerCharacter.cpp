@@ -459,10 +459,16 @@ void APlayerCharacter::Move(const FInputActionValue& Value)
 	if (bDisableGameplay) return;
 	FVector2D MovementVector = Value.Get<FVector2D>();
 
-	if (UDC->CurseofChaos->CheckDeBuff == true)
-	{
-		MovementVector.X *= -1;
-		MovementVector.Y *= -1;
+	if (HasAuthority()) {
+		if (UDC) {
+			if (UDC->CurseofChaos) {
+				if (UDC->CurseofChaos->CheckDeBuff == true)
+				{
+					MovementVector.X *= -1;
+					MovementVector.Y *= -1;
+				}
+			}
+		}
 	}
 
 
@@ -917,4 +923,9 @@ float APlayerCharacter::GetTotalDamage()
 UDopingComponent* APlayerCharacter::GetDopingComponent()
 {
 	return UDC;
+}
+
+void APlayerCharacter::GetDopingFromAlly()
+{
+
 }

@@ -224,6 +224,18 @@ public:
 	UFUNCTION(Server, Reliable, BlueprintCallable)
 	virtual void SecondDopingForAlly();
 
+	/*UFUNCTION(BlueprintCallable)
+	void CallFirstDopingUse();
+
+	UFUNCTION(BlueprintCallable)
+	void CallSecondDopingUse();
+
+	UFUNCTION(BlueprintCallable)
+	void CallFirstDopingForAlly();
+
+	UFUNCTION(BlueprintCallable)
+	void CallSecondDopingForAlly();*/
+
 
 
 };

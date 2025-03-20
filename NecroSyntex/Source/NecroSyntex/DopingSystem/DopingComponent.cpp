@@ -333,8 +333,9 @@ void UDopingComponent::FirstDopingForAlly_Implementation()
 			case 11: HitCharacter->UDC->HPconversion->BuffOn(HitCharacter->UDC->PID); break;
 			case 12: HitCharacter->UDC->CurseofChaos->BuffOn(HitCharacter->UDC->PID); break;
 			default: UE_LOG(LogTemp, Warning, TEXT("Invalid Doping Key Set!")); break;
-
 			}
+
+			HitCharacter->GetDopingFromAlly();
 
 		}
 	}
@@ -382,6 +383,7 @@ void UDopingComponent::SecondDopingForAlly_Implementation()
 
 			}
 
+			HitCharacter->GetDopingFromAlly();
 		}
 	}
 }

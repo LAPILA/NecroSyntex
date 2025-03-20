@@ -57,7 +57,7 @@ public:
 
 public:
 	// ������ �Ϸ��� �÷��̾� ��
-	int32 PlayersReadyCount = 0;
+	int32 PlayersReadyCount = 2;
 
 	// �� �÷��̾� ��
 	int32 TotalPlayers = 0; // �κ񿡼� ������ �� ����

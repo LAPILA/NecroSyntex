@@ -264,6 +264,9 @@ public:
 
 	UFUNCTION()
 	float GetTotalDamage();
+
+	UFUNCTION(BlueprintCallable)
+	void GetDopingFromAlly();
 	//Pahu end
 
 	void SetOverlappingWeapon(AWeapon* Weapon);
