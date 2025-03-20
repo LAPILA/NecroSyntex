@@ -642,7 +642,12 @@ void APlayerCharacter::SprintStart()
 
 		if (HasAuthority())
 		{
-			GetCharacterMovement()->MaxWalkSpeed = UDC->PID->RunningSpeed;
+			if (UDC) {
+				GetCharacterMovement()->MaxWalkSpeed = UDC->PID->RunningSpeed;
+			}
+			else {
+				GetCharacterMovement()->MaxWalkSpeed = 550.0f;
+			}
 		}
 		else
 		{
@@ -660,7 +665,12 @@ void APlayerCharacter::SprintStop()
 
 		if (HasAuthority())
 		{
-			GetCharacterMovement()->MaxWalkSpeed = UDC->PID->MoveSpeed;
+			if (UDC) {
+				GetCharacterMovement()->MaxWalkSpeed = UDC->PID->MoveSpeed;
+			}
+			else {
+				GetCharacterMovement()->MaxWalkSpeed = 1000.0f;
+			}
 		}
 		else
 		{
@@ -671,12 +681,22 @@ void APlayerCharacter::SprintStop()
 
 void APlayerCharacter::ServerSprintStart_Implementation()
 {
-	GetCharacterMovement()->MaxWalkSpeed = UDC->PID->RunningSpeed;
+	if (UDC) {
+		GetCharacterMovement()->MaxWalkSpeed = UDC->PID->RunningSpeed;
+	}
+	else {
+		GetCharacterMovement()->MaxWalkSpeed = 550.0f;
+	}
 }
 
 void APlayerCharacter::ServerSprintStop_Implementation()
 {
-	GetCharacterMovement()->MaxWalkSpeed = UDC->PID->MoveSpeed;
+	if (UDC) {
+		GetCharacterMovement()->MaxWalkSpeed = GetCharacterMovement()->MaxWalkSpeed = UDC->PID->MoveSpeed;
+	}
+	else {
+		GetCharacterMovement()->MaxWalkSpeed = 1000.0f;
+	}
 }
 
 bool APlayerCharacter::ServerSprintStart_Validate()
