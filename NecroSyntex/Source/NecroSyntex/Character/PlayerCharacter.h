@@ -329,11 +329,17 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "Doping")
 	TSubclassOf<UDopingComponent> DopingComponentClass;
 
+	UFUNCTION(BlueprintCallable)
+	UDopingComponent* GetDopingComponent();
+
 	UPROPERTY(EditAnywhere)
 	float TotalDamage;
 
 	UFUNCTION()
 	float GetTotalDamage();
+
+	UFUNCTION(BlueprintCallable)
+	void GetDopingFromAlly();
 	//Pahu end
 
 	void SetOverlappingWeapon(AWeapon* Weapon);

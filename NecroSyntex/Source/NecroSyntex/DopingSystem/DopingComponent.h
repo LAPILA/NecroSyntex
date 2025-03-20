@@ -12,6 +12,10 @@
 #include "DPBurningFurnace.h"
 #include "DPSolidFortress.h"
 #include "DPPainless.h"
+#include "DPParadoxofGuardianship.h"
+#include "DPHallucinationShield.h"
+#include "DPHPconversion.h"
+#include "DPCurseofChaos.h"
 #include "PlayerInformData.h"
 #include "Components/ActorComponent.h"
 #include "DopingComponent.generated.h"
@@ -191,6 +195,18 @@ public:
 	UPROPERTY(Replicated)
 	UDPPainless* Painless;
 
+	UPROPERTY(Replicated)
+	UDPParadoxofGuardianship* ParadoxofGuardianship;
+
+	UPROPERTY(Replicated)
+	UDPHallucinationShield* HallucinationShield;
+
+	UPROPERTY(Replicated)
+	UDPHPconversion* HPconversion;
+
+	UPROPERTY(Replicated)
+	UDPCurseofChaos* CurseofChaos;
+
 	// 1-1. 아군에게 도핑주는 모드 전환
 	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite)
 	bool DopingMode;
@@ -207,6 +223,18 @@ public:
 
 	UFUNCTION(Server, Reliable, BlueprintCallable)
 	virtual void SecondDopingForAlly();
+
+	/*UFUNCTION(BlueprintCallable)
+	void CallFirstDopingUse();
+
+	UFUNCTION(BlueprintCallable)
+	void CallSecondDopingUse();
+
+	UFUNCTION(BlueprintCallable)
+	void CallFirstDopingForAlly();
+
+	UFUNCTION(BlueprintCallable)
+	void CallSecondDopingForAlly();*/
 
 
 

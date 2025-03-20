@@ -13,5 +13,20 @@ UCLASS()
 class NECROSYNTEX_API UDPHPconversion : public UDopingParent
 {
 	GENERATED_BODY()
+private:
+	UDPHPconversion();
+
+public:
+
 	
+
+	void UseDopingItem(UPlayerInformData* PID) override;
+
+	void BuffOn(UPlayerInformData* PID) override;
+
+	void DeBuffOn(UPlayerInformData* PID) override;
+
+	void BuffOff(UPlayerInformData* PID) override;
+
+	void DeBuffOff(UPlayerInformData* PID) override;
 };

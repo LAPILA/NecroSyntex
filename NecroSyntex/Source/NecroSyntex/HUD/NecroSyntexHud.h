@@ -33,6 +33,7 @@ public:
 
 	void AddCharacterOverlay();
 
+	UPROPERTY(BlueprintReadOnly)
 	class UCharacterOverlay* CharacterOverlay;
 
 	UPROPERTY(EditAnywhere, Category = "Announcements")
