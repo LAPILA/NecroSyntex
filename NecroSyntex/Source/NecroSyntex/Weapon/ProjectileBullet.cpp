@@ -4,6 +4,7 @@
 #include "ProjectileBullet.h"
 #include "Kismet/GameplayStatics.h"
 #include "GameFramework/Character.h"
+#include "NecroSyntex\Monster\BasicMonsterAI.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 
 AProjectileBullet::AProjectileBullet()
