@@ -31,35 +31,21 @@ void AHitScanWeapon::Fire(const FVector& HitTarget)
 
 		WeaponTraceHit(Start, HitTarget, FireHit);
 
-		APlayerCharacter* PlayerCharacter = Cast<APlayerCharacter>(FireHit.GetActor());
-		if(PlayerCharacter && InstigatorController)
+		ACharacter* HitCharacter = Cast<ACharacter>(FireHit.GetActor());
+		if (HitCharacter && HasAuthority() && InstigatorController)
 		{
-			if (HasAuthority() && !bUseServerSideRewind)
-			{
-				UGameplayStatics::ApplyDamage(
-					PlayerCharacter,
-					Damage,
-					InstigatorController,
-					this,
-					UDamageType::StaticClass()
-				);
-			}
-			if (!HasAuthority() && bUseServerSideRewind)
-			{
-				PlayerOwnerCharacter = PlayerOwnerCharacter == nullptr ? Cast<APlayerCharacter>(OwnerPawn) : PlayerOwnerCharacter;
-				NecroSyntexPlayerController = NecroSyntexPlayerController == nullptr ? Cast<ANecroSyntexPlayerController>(InstigatorController) : NecroSyntexPlayerController;
-				if (PlayerOwnerCharacter && NecroSyntexPlayerController && PlayerOwnerCharacter->GetLagCompensation())
-				{
-					PlayerOwnerCharacter->GetLagCompensation()->ServerScoreRequest(
-						PlayerCharacter,
-						Start,
-						HitTarget,
-						NecroSyntexPlayerController->GetServerTime() - NecroSyntexPlayerController->SingleTripTime,
-						this
-					);
-				}
-			}
+			UGameplayStatics::ApplyDamage(
+				HitCharacter,
+				Damage,
+				InstigatorController,
+				this,
+				UDamageType::StaticClass()
+			);
+
+			UE_LOG(LogTemp, Warning, TEXT("HitScanWeapon hit: %s (Damage: %.2f)"),
+				*HitCharacter->GetName(), Damage);
 		}
+
 		if (ImpactParticles)
 		{
 			UGameplayStatics::SpawnEmitterAtLocation(
@@ -107,7 +93,8 @@ void AHitScanWeapon::WeaponTraceHit(const FVector& TraceStart, const FVector& Hi
 			OutHit,
 			TraceStart,
 			End,
-			ECollisionChannel::ECC_Visibility
+			ECollisionChannel::ECC_Pawn
+			//ECollisionChannel::ECC_Visibility
 		);
 		FVector BeamEnd = End;
 		if (OutHit.bBlockingHit)

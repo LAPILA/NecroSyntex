@@ -23,22 +23,22 @@ void AShotgun::FireShotgun(const TArray<FVector_NetQuantize>& HitTargets)
 		const FVector Start = SocketTransform.GetLocation();
 
 		// Maps hit character to number of times hit
-		TMap<APlayerCharacter*, uint32> HitMap;
+		TMap<ACharacter*, uint32> HitMap;
 		for (FVector_NetQuantize HitTarget : HitTargets)
 		{
 			FHitResult FireHit;
 			WeaponTraceHit(Start, HitTarget, FireHit);
 
-			APlayerCharacter* PlayerCharacter = Cast<APlayerCharacter>(FireHit.GetActor());
-			if (PlayerCharacter)
+			ACharacter* HitCharacter = Cast<ACharacter>(FireHit.GetActor());//PlayerCharacter -> AnyCharacter
+			if (HitCharacter)
 			{
-				if (HitMap.Contains(PlayerCharacter))
+				if (HitMap.Contains(HitCharacter))
 				{
-					HitMap[PlayerCharacter]++;
+					HitMap[HitCharacter]++;
 				}
 				else
 				{
-					HitMap.Emplace(PlayerCharacter, 1);
+					HitMap.Emplace(HitCharacter, 1);
 				}
 			}
 
