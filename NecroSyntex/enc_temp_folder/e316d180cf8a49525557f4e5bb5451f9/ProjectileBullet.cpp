@@ -51,7 +51,6 @@ void AProjectileBullet::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, 
 
 void AProjectileBullet::BeginPlay()
 {
-	/*
 	Super::BeginPlay();
 
 	FPredictProjectilePathParams PathParams;
@@ -70,5 +69,4 @@ void AProjectileBullet::BeginPlay()
 	FPredictProjectilePathResult PathResult;
 
 	UGameplayStatics::PredictProjectilePath(this, PathParams, PathResult);
-	*/
 }
