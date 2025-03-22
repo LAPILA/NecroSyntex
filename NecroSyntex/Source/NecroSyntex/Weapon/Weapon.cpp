@@ -182,10 +182,10 @@ void AWeapon::SetHUDAmmo()
 	PlayerOwnerCharacter = PlayerOwnerCharacter == nullptr ? Cast<APlayerCharacter>(GetOwner()) : PlayerOwnerCharacter;
 	if (PlayerOwnerCharacter)
 	{
-		NecroSyntexPlayerController = NecroSyntexPlayerController == nullptr ? Cast<ANecroSyntexPlayerController>(PlayerOwnerCharacter->Controller) : NecroSyntexPlayerController;
-		if (NecroSyntexPlayerController)
+		NecroSyntexPlayerOwnerController = NecroSyntexPlayerOwnerController == nullptr ? Cast<ANecroSyntexPlayerController>(PlayerOwnerCharacter->Controller) : NecroSyntexPlayerOwnerController;
+		if (NecroSyntexPlayerOwnerController)
 		{
-			NecroSyntexPlayerController->SetHUDWeaponAmmo(Ammo);
+			NecroSyntexPlayerOwnerController->SetHUDWeaponAmmo(Ammo);
 		}
 	}
 }
@@ -229,7 +229,7 @@ void AWeapon::OnRep_Owner()
 	if (Owner == nullptr)
 	{
 		PlayerOwnerCharacter = nullptr;
-		NecroSyntexPlayerController = nullptr;
+		NecroSyntexPlayerOwnerController = nullptr;
 	}
 	else
 	{
@@ -330,5 +330,5 @@ void AWeapon::Dropped()
 	WeaponMesh->DetachFromComponent(DetachRules);
 	SetOwner(nullptr);
 	PlayerOwnerCharacter = nullptr;
-	NecroSyntexPlayerController = nullptr;
+	NecroSyntexPlayerOwnerController = nullptr;
 }

@@ -137,7 +137,7 @@ protected:
 	UPROPERTY()
 	class APlayerCharacter* PlayerOwnerCharacter;
 	UPROPERTY()
-	class ANecroSyntexPlayerController* NecroSyntexPlayerController;
+	class ANecroSyntexPlayerController* NecroSyntexPlayerOwnerController;
 
 private:
 	UPROPERTY(VisibleAnywhere, Category = "Weapon Properties")
