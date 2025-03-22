@@ -94,28 +94,28 @@ void AShotgun::FireShotgun(const TArray<FVector_NetQuantize>& HitTargets)
         {
             ACharacter* HitChar = HitPair.Key;
             if (!HitChar) continue;
+            if (HasAuthority() && OwnerPawn->IsLocallyControlled())
+            {
 
-            UGameplayStatics::ApplyDamage(
-                HitChar,
-                Damage * HitPair.Value, // 펠릿 맞은 횟수만큼 누적
-                InstigatorController,
-                this,
-                UDamageType::StaticClass()
-            );
+                UGameplayStatics::ApplyDamage(
+                    HitChar,
+                    Damage * HitPair.Value, // 펠릿 맞은 횟수만큼 누적
+                    InstigatorController,
+                    this,
+                    UDamageType::StaticClass()
+                );
+            }
         }
     }
     // (B) 클라이언트이고 SSR을 사용한다면 => 서버에 ‘ShotgunServerScoreRequest’ 요청
-    else if (!HasAuthority() && bUseServerSideRewind)
+    if (!HasAuthority() && bUseServerSideRewind && OwnerPawn->IsLocallyControlled())
     {
         // 내 Pawn, Controller 캐싱
         PlayerOwnerCharacter = (PlayerOwnerCharacter == nullptr) ? Cast<APlayerCharacter>(OwnerPawn) : PlayerOwnerCharacter;
         NecroSyntexPlayerOwnerController = (NecroSyntexPlayerOwnerController == nullptr) ? Cast<ANecroSyntexPlayerController>(InstigatorController) : NecroSyntexPlayerOwnerController;
 
         // 로컬 컨트롤러 + LagCompensation이 존재해야 SSR 요청 가능
-        if (NecroSyntexPlayerOwnerController &&
-            PlayerOwnerCharacter &&
-            PlayerOwnerCharacter->GetLagCompensation() &&
-            PlayerOwnerCharacter->IsLocallyControlled())
+        if (NecroSyntexPlayerOwnerController && PlayerOwnerCharacter && PlayerOwnerCharacter->GetLagCompensation())
         {
             PlayerOwnerCharacter->GetLagCompensation()->ShotgunServerScoreRequest(
                 HitCharacters,             // 맞춘 캐릭터들
