@@ -28,22 +28,37 @@ void AHitScanWeapon::Fire(const FVector& HitTarget)
 		FVector Start = SocketTransform.GetLocation();
 
 		FHitResult FireHit;
-
 		WeaponTraceHit(Start, HitTarget, FireHit);
 
-		ACharacter* HitCharacter = Cast<ACharacter>(FireHit.GetActor());
-		if (HitCharacter && HasAuthority() && InstigatorController)
+		APlayerCharacter* PlayerCharacter = Cast<APlayerCharacter>(FireHit.GetActor());
+		if (PlayerCharacter && InstigatorController)
 		{
-			UGameplayStatics::ApplyDamage(
-				HitCharacter,
-				Damage,
-				InstigatorController,
-				this,
-				UDamageType::StaticClass()
-			);
-
-			UE_LOG(LogTemp, Warning, TEXT("HitScanWeapon hit: %s (Damage: %.2f)"),
-				*HitCharacter->GetName(), Damage);
+			bool bCauseAuthDamage = !bUseServerSideRewind || OwnerPawn->IsLocallyControlled();
+			if (HasAuthority() && bCauseAuthDamage)
+			{
+				UGameplayStatics::ApplyDamage(
+					PlayerCharacter,
+					Damage,
+					InstigatorController,
+					this,
+					UDamageType::StaticClass()
+				);
+			}
+			if (!HasAuthority() && bUseServerSideRewind)
+			{
+				PlayerOwnerCharacter = PlayerOwnerCharacter == nullptr ? Cast<APlayerCharacter>(OwnerPawn) : PlayerOwnerCharacter;
+				NecroSyntexPlayerOwnerController = NecroSyntexPlayerOwnerController == nullptr ? Cast<ANecroSyntexPlayerController>(InstigatorController) : NecroSyntexPlayerOwnerController;
+				if (NecroSyntexPlayerOwnerController && PlayerOwnerCharacter && PlayerOwnerCharacter->GetLagCompensation() && PlayerOwnerCharacter->IsLocallyControlled())
+				{
+					PlayerOwnerCharacter->GetLagCompensation()->ServerScoreRequest(
+						PlayerCharacter,
+						Start,
+						HitTarget,
+						NecroSyntexPlayerOwnerController->GetServerTime() - NecroSyntexPlayerOwnerController->SingleTripTime,
+						this
+					);
+				}
+			}
 		}
 
 		if (ImpactParticles)
