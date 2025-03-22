@@ -8,6 +8,7 @@
 #include "GameFramework/PlayerStart.h"
 #include "NecroSyntex\NecroSyntexGameState.h"
 #include "NecroSyntex\PlayerState\NecroSyntexPlayerState.h"
+#include "NecroSyntex\DopingSystem\DopingComponent.h"
 
 namespace MatchState
 {
