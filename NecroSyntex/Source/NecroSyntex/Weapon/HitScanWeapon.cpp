@@ -28,22 +28,37 @@ void AHitScanWeapon::Fire(const FVector& HitTarget)
 		FVector Start = SocketTransform.GetLocation();
 
 		FHitResult FireHit;
-
 		WeaponTraceHit(Start, HitTarget, FireHit);
 
-		ACharacter* HitCharacter = Cast<ACharacter>(FireHit.GetActor());
-		if (HitCharacter && HasAuthority() && InstigatorController)
+		APlayerCharacter* PlayerCharacter = Cast<APlayerCharacter>(FireHit.GetActor());
+		if (PlayerCharacter && InstigatorController && OwnerPawn->IsLocallyControlled())
 		{
-			UGameplayStatics::ApplyDamage(
-				HitCharacter,
-				Damage,
-				InstigatorController,
-				this,
-				UDamageType::StaticClass()
-			);
-
-			UE_LOG(LogTemp, Warning, TEXT("HitScanWeapon hit: %s (Damage: %.2f)"),
-				*HitCharacter->GetName(), Damage);
+			bool bCauseAuthDamage = !bUseServerSideRewind || OwnerPawn->IsLocallyControlled();
+			if (HasAuthority()&& bCauseAuthDamage)
+			{
+				const float DamageToCause = FireHit.BoneName.ToString() == FString("head") ? HeadShotDamage : Damage;
+				UGameplayStatics::ApplyDamage(
+					PlayerCharacter,
+					DamageToCause,
+					InstigatorController,
+					this,
+					UDamageType::StaticClass()
+				);
+			}
+			if (!HasAuthority() && bUseServerSideRewind)
+			{
+				PlayerOwnerCharacter = PlayerOwnerCharacter == nullptr ? Cast<APlayerCharacter>(OwnerPawn) : PlayerOwnerCharacter;
+				NecroSyntexPlayerOwnerController = NecroSyntexPlayerOwnerController == nullptr ? Cast<ANecroSyntexPlayerController>(InstigatorController) : NecroSyntexPlayerOwnerController;
+				if (NecroSyntexPlayerOwnerController && PlayerOwnerCharacter && PlayerOwnerCharacter->GetLagCompensation() && PlayerOwnerCharacter->IsLocallyControlled())
+				{
+					PlayerOwnerCharacter->GetLagCompensation()->ServerScoreRequest(
+						PlayerCharacter,
+						Start,
+						HitTarget,
+						NecroSyntexPlayerOwnerController->GetServerTime() - NecroSyntexPlayerOwnerController->SingleTripTime
+					);
+				}
+			}
 		}
 
 		if (ImpactParticles)
@@ -101,7 +116,10 @@ void AHitScanWeapon::WeaponTraceHit(const FVector& TraceStart, const FVector& Hi
 		{
 			BeamEnd = OutHit.ImpactPoint;
 		}
-
+		else
+		{
+			OutHit.ImpactPoint = End;
+		}
 		DrawDebugSphere(GetWorld(), BeamEnd, 16.f, 12, FColor::Orange, true);
 		if (BeamParticles)
 		{

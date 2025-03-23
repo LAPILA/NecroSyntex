@@ -10,8 +10,8 @@
 #include "NecroSyntex/GameMode/NecroSyntexGameMode.h"
 #include "NecroSyntex/PlayerState/NecroSyntexPlayerState.h"
 #include "NecroSyntex/HUD/Announcement.h"
-#include "NecroSyntex\NecroSyntaxComponents\CombatComponent.h"
 #include "NecroSyntex\Weapon\Weapon.h"
+#include "NecroSyntex\NecroSyntaxComponents\CombatComponent.h"
 #include "NecroSyntex\NecroSyntexGameState.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
@@ -87,23 +87,29 @@ void ANecroSyntexPlayerController::StopHighPingWarning()
 
 void ANecroSyntexPlayerController::CheckPing(float DeltaTime)
 {
+	if (HasAuthority()) return;
+
 	HighPingRunningTime += DeltaTime;
 
 	if (HighPingRunningTime > CheckPingFrequency)
 	{
-		if (PlayerState == nullptr)
-		{
-			PlayerState = GetPlayerState<APlayerState>();
-		}
+		PlayerState = GetPlayerState<APlayerState>();
 
 		if (PlayerState)
 		{
 			const float CurrentPing = PlayerState->GetPingInMilliseconds();
 
+			UE_LOG(LogTemp, Warning, TEXT("PlayerState->Ping: %.1f ms"), CurrentPing);
+
 			if (CurrentPing > HighPingThreshold)
 			{
 				HighPingWarning();
 				PingAnimationRunningTime = 0.f;
+				ServerReportPingStatus(true);
+			}
+			else
+			{
+				ServerReportPingStatus(false);
 			}
 		}
 
@@ -111,7 +117,8 @@ void ANecroSyntexPlayerController::CheckPing(float DeltaTime)
 	}
 
 	bool bHighPingAnimationPlaying =
-		NecroSyntexHUD && NecroSyntexHUD->CharacterOverlay &&
+		NecroSyntexHUD &&
+		NecroSyntexHUD->CharacterOverlay &&
 		NecroSyntexHUD->CharacterOverlay->HighPingAnimation &&
 		NecroSyntexHUD->CharacterOverlay->IsAnimationPlaying(NecroSyntexHUD->CharacterOverlay->HighPingAnimation);
 
@@ -125,6 +132,7 @@ void ANecroSyntexPlayerController::CheckPing(float DeltaTime)
 		}
 	}
 }
+
 
 
 void ANecroSyntexPlayerController::ServerCheckMatchState_Implementation()
@@ -618,6 +626,11 @@ void ANecroSyntexPlayerController::ShowCharacterSelectUI_Implementation()
 	}
 }
 
+
+void ANecroSyntexPlayerController::ServerReportPingStatus_Implementation(bool bHighPing)
+{
+	HighPingDelegate.Broadcast(bHighPing);
+}
 
 void ANecroSyntexPlayerController::CheckPlayerState()
 {

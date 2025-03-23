@@ -136,7 +136,7 @@ void UCombatComponent::FireProjectileWeapon()
 	{
 		HitTarget = EquippedWeapon->bUseScatter ? EquippedWeapon->TraceEndWithScatter(HitTarget) : HitTarget;
 		if (!Character->HasAuthority()) LocalFire(HitTarget);
-		ServerFire(HitTarget);
+		ServerFire(HitTarget, EquippedWeapon->FireDelay);
 	}
 }
 
@@ -146,7 +146,7 @@ void UCombatComponent::FireHitScanWeapon()
 	{
 		HitTarget = EquippedWeapon->bUseScatter ? EquippedWeapon->TraceEndWithScatter(HitTarget) : HitTarget;
 		if (!Character->HasAuthority()) LocalFire(HitTarget);
-		ServerFire(HitTarget);
+		ServerFire(HitTarget, EquippedWeapon->FireDelay);
 	}
 }
 
@@ -158,7 +158,7 @@ void UCombatComponent::FireShotgun()
 		TArray<FVector_NetQuantize> HitTargets;
 		Shotgun->ShotgunTraceEndWithScatter(HitTarget, HitTargets);
 		if (!Character->HasAuthority()) ShotgunLocalFire(HitTargets);
-		ServerShotgunFire(HitTargets);
+		ServerShotgunFire(HitTargets, EquippedWeapon->FireDelay);
 	}
 }
 
@@ -263,6 +263,10 @@ void UCombatComponent::SwapWeapons()
 	EquippedWeapon = SecondaryWeapon;
 	SecondaryWeapon = TempWeapon;
 
+
+	SecondaryWeapon->SetWeaponState(EWeaponState::EWS_EquippedSecondary);
+	AttachActorToBackPack(SecondaryWeapon);
+
 	EquippedWeapon->SetWeaponState(EWeaponState::EWS_Equipped);
 	AttachActorToRightHand(EquippedWeapon);
 	EquippedWeapon->SetHUDAmmo();
@@ -271,8 +275,6 @@ void UCombatComponent::SwapWeapons()
 	ReloadEmptyWeapon();
 
 
-	SecondaryWeapon->SetWeaponState(EWeaponState::EWS_EquippedSecondary);
-	AttachActorToBackPack(SecondaryWeapon);
 }
 
 bool UCombatComponent::ShouldSwapWeapons()
@@ -285,9 +287,9 @@ void UCombatComponent::EquipPrimariyWeapon(AWeapon* WeaponToEquip)
 	if (WeaponToEquip == nullptr) return;
 	DropEquippedWeapon();
 	EquippedWeapon = WeaponToEquip;
+	EquippedWeapon->SetOwner(Character);
 	EquippedWeapon->SetWeaponState(EWeaponState::EWS_Equipped);
 	AttachActorToRightHand(EquippedWeapon);
-	EquippedWeapon->SetOwner(Character);
 	EquippedWeapon->SetHUDAmmo();
 	UpdateCarriedAmmo();
 	PlayEquipWeaponSound(WeaponToEquip);
@@ -658,19 +660,62 @@ void UCombatComponent::OnRep_CombatState()
 	}
 }
 
-void UCombatComponent::ServerFire_Implementation(const FVector_NetQuantize& TraceHitTarget)
+bool UCombatComponent::ServerFire_Validate(const FVector_NetQuantize& TraceHitTarget, float FireDelay)
 {
+	// 클라이언트에서 FireDelay를 보내는 걸 제거하고, 서버 무기 기준으로 검증하도록 수정
+	if (!EquippedWeapon) return false;
+	float ServerDelay = EquippedWeapon->FireDelay;
+	bool bNearlyEqual = FMath::IsNearlyEqual(ServerDelay, FireDelay, 0.001f);
+	return bNearlyEqual;
+}
+
+void UCombatComponent::ServerFire_Implementation(const FVector_NetQuantize& TraceHitTarget, float FireDelay)
+{
+	if (!EquippedWeapon || !Character) return;
+
+	const float CurrentTime = GetWorld()->GetTimeSeconds();
+	const float FireDelaySec = EquippedWeapon->FireDelay;
+
+	if (CurrentTime - LastServerFireTime < FireDelaySec)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("[CHEAT DETECTED] %s fired too quickly (%.3f s < %.3f s)"), *Character->GetName(), CurrentTime - LastServerFireTime, FireDelaySec);
+		return;
+	}
+
+	LastServerFireTime = CurrentTime;
+
 	MulticastFire(TraceHitTarget);
 }
+
+bool UCombatComponent::ServerShotgunFire_Validate(const TArray<FVector_NetQuantize>& TraceHitTargets, float FireDelay)
+{
+	if (!EquippedWeapon) return false;
+	float ServerDelay = EquippedWeapon->FireDelay;
+	bool bNearlyEqual = FMath::IsNearlyEqual(ServerDelay, FireDelay, 0.001f);
+	return bNearlyEqual;
+}
+
 
 void UCombatComponent::MulticastFire_Implementation(const FVector_NetQuantize& TraceHitTarget)
 {
 	if (Character && Character->IsLocallyControlled() && !Character->HasAuthority()) return;
 	LocalFire(TraceHitTarget);
 }
-
-void UCombatComponent::ServerShotgunFire_Implementation(const TArray<FVector_NetQuantize>& TraceHitTargets)
+void UCombatComponent::ServerShotgunFire_Implementation(const TArray<FVector_NetQuantize>& TraceHitTargets, float FireDelay)
 {
+	if (!EquippedWeapon || !Character) return;
+
+	const float CurrentTime = GetWorld()->GetTimeSeconds();
+	const float FireDelaySec = EquippedWeapon->FireDelay;
+
+	if (CurrentTime - LastServerShotgunFireTime < FireDelaySec)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("[CHEAT DETECTED] %s fired shotgun too quickly (%.3f s < %.3f s)"), *Character->GetName(), CurrentTime - LastServerShotgunFireTime, FireDelaySec);
+		return;
+	}
+
+	LastServerShotgunFireTime = CurrentTime;
+
 	MulticastShotgunFire(TraceHitTargets);
 }
 
@@ -696,6 +741,7 @@ void UCombatComponent::ShotgunLocalFire(const TArray<FVector_NetQuantize>& Trace
 	if (Shotgun == nullptr || Character == nullptr) return;
 	if (CombatState == ECombatState::ECS_Reloading || CombatState == ECombatState::ECS_Unoccupied)
 	{
+		bLocallyReloading = false;
 		Character->PlayFireMontage(bAiming);
 		Shotgun->FireShotgun(TraceHitTargets);
 		CombatState = ECombatState::ECS_Unoccupied;
