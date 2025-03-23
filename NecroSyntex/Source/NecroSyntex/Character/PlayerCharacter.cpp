@@ -1113,8 +1113,3 @@ UDopingComponent* APlayerCharacter::GetDopingComponent()
 {
 	return UDC;
 }
-
-void APlayerCharacter::GetDopingFromAlly()
-{
-
-}

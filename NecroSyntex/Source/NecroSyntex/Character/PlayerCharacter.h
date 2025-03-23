@@ -338,7 +338,7 @@ public:
 	UFUNCTION()
 	float GetTotalDamage();
 
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION(BlueprintImplementableEvent ,BlueprintCallable)
 	void GetDopingFromAlly();
 	//Pahu end
 

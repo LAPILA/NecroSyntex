@@ -63,7 +63,7 @@ void UDopingComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 	DOREPLIFETIME(UDopingComponent, GunDamage);
 	DOREPLIFETIME(UDopingComponent, TotalDamage);
 
-	DOREPLIFETIME(UDopingComponent, LegEnforce);
+	/*DOREPLIFETIME(UDopingComponent, LegEnforce);
 	DOREPLIFETIME(UDopingComponent, ReducePain);
 	DOREPLIFETIME(UDopingComponent, SupremeStrength);
 	DOREPLIFETIME(UDopingComponent, ForcedHealing);
@@ -74,7 +74,7 @@ void UDopingComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 	DOREPLIFETIME(UDopingComponent, ParadoxofGuardianship);
 	DOREPLIFETIME(UDopingComponent, HallucinationShield);
 	DOREPLIFETIME(UDopingComponent, HPconversion);
-	DOREPLIFETIME(UDopingComponent, CurseofChaos);
+	DOREPLIFETIME(UDopingComponent, CurseofChaos);*/
 
 
 	DOREPLIFETIME(UDopingComponent, DopingMode);

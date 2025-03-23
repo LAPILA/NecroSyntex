@@ -234,7 +234,14 @@ public:
 	void CallFirstDopingForAlly();
 
 	UFUNCTION(BlueprintCallable)
-	void CallSecondDopingForAlly();*/
+	void CallSecondDopingForAlly();
+	
+	UFUNCTION(BlueprintCallable)
+	void CallDopingModeChange();
+
+
+	
+	*/
 
 
 
