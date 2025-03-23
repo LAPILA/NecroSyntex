@@ -10,121 +10,126 @@
 
 void AShotgun::FireShotgun(const TArray<FVector_NetQuantize>& HitTargets)
 {
-    // 1) 기본 Fire 처리 (애니메이션 재생 등)
-    AWeapon::Fire(FVector());
+	AWeapon::Fire(FVector());
+	APawn* OwnerPawn = Cast<APawn>(GetOwner());
+	if (OwnerPawn == nullptr) return;
+	AController* InstigatorController = OwnerPawn->GetController();
 
-    APawn* OwnerPawn = Cast<APawn>(GetOwner());
-    if (OwnerPawn == nullptr) return;
-    AController* InstigatorController = OwnerPawn->GetController();
-    if (InstigatorController == nullptr) return;
+	const USkeletalMeshSocket* MuzzleFlashSocket = GetWeaponMesh()->GetSocketByName("MuzzleFlash");
+	if (MuzzleFlashSocket)
+	{
+		const FTransform SocketTransform = MuzzleFlashSocket->GetSocketTransform(GetWeaponMesh());
+		const FVector Start = SocketTransform.GetLocation();
 
-    // 2) MuzzleFlash 소켓에서 트레이스 시작점 계산
-    const USkeletalMeshSocket* MuzzleFlashSocket = GetWeaponMesh()->GetSocketByName("MuzzleFlash");
-    if (MuzzleFlashSocket == nullptr) return;
-    const FTransform SocketTransform = MuzzleFlashSocket->GetSocketTransform(GetWeaponMesh());
-    const FVector TraceStart = SocketTransform.GetLocation();
+		// Maps hit character to number of times hit
+		TMap<APlayerCharacter*, uint32> HitMap;
+		TMap<APlayerCharacter*, uint32> HeadShotHitMap;
+		for (FVector_NetQuantize HitTarget : HitTargets)
+		{
+			FHitResult FireHit;
+			WeaponTraceHit(Start, HitTarget, FireHit);
 
-    // 3) 먼저, 클라이언트/서버 구분 없이 “누구를 몇 번 맞췄는지”를 로컬에서 계산
-    TMap<ACharacter*, uint32> HitMap;
-    for (const FVector_NetQuantize& HitTarget : HitTargets)
-    {
-        FHitResult FireHit;
-        WeaponTraceHit(TraceStart, HitTarget, FireHit);
+			APlayerCharacter* PlayerCharacter = Cast<APlayerCharacter>(FireHit.GetActor());
+			if (PlayerCharacter)
+			{
+				const bool bHeadShot = FireHit.BoneName.ToString() == FString("head");
 
-        ACharacter* HitCharacter = Cast<ACharacter>(FireHit.GetActor());
-        if (HitCharacter)
-        {
-            // 이미 존재하는 키라면 +=1, 처음이면 1
-            if (HitMap.Contains(HitCharacter))
-            {
-                HitMap[HitCharacter]++;
-            }
-            else
-            {
-                HitMap.Emplace(HitCharacter, 1);
-            }
-        }
+				if (bHeadShot)
+				{
+					if (HeadShotHitMap.Contains(PlayerCharacter)) HeadShotHitMap[PlayerCharacter]++;
+					else HeadShotHitMap.Emplace(PlayerCharacter, 1);
+				}
+				else
+				{
+					if (HitMap.Contains(PlayerCharacter)) HitMap[PlayerCharacter]++;
+					else HitMap.Emplace(PlayerCharacter, 1);
+				}
 
-        // 이펙트/사운드
-        if (ImpactParticles)
-        {
-            UGameplayStatics::SpawnEmitterAtLocation(
-                GetWorld(),
-                ImpactParticles,
-                FireHit.ImpactPoint,
-                FireHit.ImpactNormal.Rotation()
-            );
-        }
-        if (HitSound)
-        {
-            UGameplayStatics::PlaySoundAtLocation(
-                this,
-                HitSound,
-                FireHit.ImpactPoint,
-                0.5f,
-                FMath::FRandRange(-0.5f, 0.5f)
-            );
-        }
-    }
 
-    // 4) TArray<APlayerCharacter*>로 변환 (SSR에서 누구를 맞췄는지 전달하기 위함)
-    TArray<APlayerCharacter*> HitCharacters;
-    for (auto& HitPair : HitMap)
-    {
-        ACharacter* HitChar = HitPair.Key;
-        if (!HitChar) continue;
+				if (ImpactParticles)
+				{
+					UGameplayStatics::SpawnEmitterAtLocation(
+						GetWorld(),
+						ImpactParticles,
+						FireHit.ImpactPoint,
+						FireHit.ImpactNormal.Rotation()
+					);
+				}
+				if (HitSound)
+				{
+					UGameplayStatics::PlaySoundAtLocation(
+						this,
+						HitSound,
+						FireHit.ImpactPoint,
+						.5f,
+						FMath::FRandRange(-.5f, .5f)
+					);
+				}
+			}
+		}
+		TArray<APlayerCharacter*> HitCharacters;
 
-        APlayerCharacter* PlayerChar = Cast<APlayerCharacter>(HitChar);
-        if (PlayerChar)
-        {
-            HitCharacters.Add(PlayerChar);
-        }
-    }
+		// Maps Character hit to total damage
+		TMap<APlayerCharacter*, float> DamageMap;
 
-    /**
-     * 5) 데미지 처리는 “서버 + SSR OFF”와 “클라이언트 + SSR ON”으로 분기
-     *    (서버 + SSR OFF) → 서버에서 즉시 데미지
-     *    (클라이언트 + SSR ON) → 서버에 RPC로 ‘ShotgunServerScoreRequest’ 요청
-     */
+		// Calculate body shot damage by multiplying times hit x Damage - store in DamageMap
+		for (auto HitPair : HitMap)
+		{
+			if (HitPair.Key)
+			{
+				DamageMap.Emplace(HitPair.Key, HitPair.Value * Damage);
 
-     // (A) 서버이고 SSR을 안 쓴다면 => 즉시 데미지
-    if (HasAuthority() && !bUseServerSideRewind)
-    {
-        for (auto& HitPair : HitMap)
-        {
-            ACharacter* HitChar = HitPair.Key;
-            if (!HitChar) continue;
-            if (HasAuthority() && OwnerPawn->IsLocallyControlled())
-            {
+				HitCharacters.AddUnique(HitPair.Key);
+			}
+		}
 
-                UGameplayStatics::ApplyDamage(
-                    HitChar,
-                    Damage * HitPair.Value, // 펠릿 맞은 횟수만큼 누적
-                    InstigatorController,
-                    this,
-                    UDamageType::StaticClass()
-                );
-            }
-        }
-    }
-    // (B) 클라이언트이고 SSR을 사용한다면 => 서버에 ‘ShotgunServerScoreRequest’ 요청
-    if (!HasAuthority() && bUseServerSideRewind && OwnerPawn->IsLocallyControlled())
-    {
-        // 내 Pawn, Controller 캐싱
-        PlayerOwnerCharacter = (PlayerOwnerCharacter == nullptr) ? Cast<APlayerCharacter>(OwnerPawn) : PlayerOwnerCharacter;
-        NecroSyntexPlayerOwnerController = (NecroSyntexPlayerOwnerController == nullptr) ? Cast<ANecroSyntexPlayerController>(InstigatorController) : NecroSyntexPlayerOwnerController;
+		// Calculate head shot damage by multiplying times hit x HeadShotDamage - store in DamageMap
+		for (auto HeadShotHitPair : HeadShotHitMap)
+		{
+			if (HeadShotHitPair.Key)
+			{
+				if (DamageMap.Contains(HeadShotHitPair.Key)) DamageMap[HeadShotHitPair.Key] += HeadShotHitPair.Value * HeadShotDamage;
+				else DamageMap.Emplace(HeadShotHitPair.Key, HeadShotHitPair.Value * HeadShotDamage);
 
-        // 로컬 컨트롤러 + LagCompensation이 존재해야 SSR 요청 가능
-        if (NecroSyntexPlayerOwnerController && PlayerOwnerCharacter && PlayerOwnerCharacter->GetLagCompensation())
-        {
-            PlayerOwnerCharacter->GetLagCompensation()->ShotgunServerScoreRequest(
-                HitCharacters,             // 맞춘 캐릭터들
-                TraceStart,                // 시작점
-                HitTargets,                // 각 펠릿 도달점
-                NecroSyntexPlayerOwnerController->GetServerTime() - NecroSyntexPlayerOwnerController->SingleTripTime
-            );
-        }
-    }
+				HitCharacters.AddUnique(HeadShotHitPair.Key);
+			}
+		}
+
+		// Loop through DamageMap to get total damage for each character
+		for (auto DamagePair : DamageMap)
+		{
+			if (DamagePair.Key && InstigatorController)
+			{
+				bool bCauseAuthDamage = !bUseServerSideRewind || OwnerPawn->IsLocallyControlled();
+				if (HasAuthority() && bCauseAuthDamage)
+				{
+					UGameplayStatics::ApplyDamage(
+						DamagePair.Key, // Character that was hit
+						DamagePair.Value, // Damage calculated in the two for loops above
+						InstigatorController,
+						this,
+						UDamageType::StaticClass()
+					);
+				}
+			}
+		}
+
+
+		if (!HasAuthority() && bUseServerSideRewind)
+		{
+			PlayerOwnerCharacter = PlayerOwnerCharacter == nullptr ? Cast<APlayerCharacter>(OwnerPawn) : PlayerOwnerCharacter;
+			NecroSyntexPlayerOwnerController = NecroSyntexPlayerOwnerController == nullptr ? Cast<ANecroSyntexPlayerController>(InstigatorController) : NecroSyntexPlayerOwnerController;
+			if (NecroSyntexPlayerOwnerController && PlayerOwnerCharacter && PlayerOwnerCharacter->GetLagCompensation() && PlayerOwnerCharacter->IsLocallyControlled())
+			{
+				PlayerOwnerCharacter->GetLagCompensation()->ShotgunServerScoreRequest(
+					HitCharacters,
+					Start,
+					HitTargets,
+					NecroSyntexPlayerOwnerController->GetServerTime() - NecroSyntexPlayerOwnerController->SingleTripTime
+				);
+			}
+		}
+	}
 
 }
 
