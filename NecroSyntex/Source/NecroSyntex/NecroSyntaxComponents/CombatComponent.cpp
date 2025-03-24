@@ -788,12 +788,18 @@ void UCombatComponent::ShotgunLocalFire(const TArray<FVector_NetQuantize>& Trace
 
 void UCombatComponent::TraceUnderCrosshairs(FHitResult& TraceHitResult)
 {
+	if (!Character) return; // Character가 nullptr면 바로 리턴
+
 	FVector2D ViewportSize;
 	if (GEngine && GEngine->GameViewport)
 	{
 		GEngine->GameViewport->GetViewportSize(ViewportSize);
 	}
+
+	// 화면 정중앙의 2D 좌표(크로스헤어 위치)
 	FVector2D CrosshairLocation(ViewportSize.X / 2.f, ViewportSize.Y / 2.f);
+
+	// 2D 화면 좌표 → 3D 월드 좌표/방향
 	FVector CrosshairWorldPosition;
 	FVector CrosshairWorldDirection;
 	bool bScreenToWorld = UGameplayStatics::DeprojectScreenToWorld(
@@ -802,18 +808,37 @@ void UCombatComponent::TraceUnderCrosshairs(FHitResult& TraceHitResult)
 		CrosshairWorldPosition,
 		CrosshairWorldDirection
 	);
-	
+
 	if (bScreenToWorld)
 	{
-		FVector Start = CrosshairWorldPosition;
-		FVector End = Start + CrosshairWorldDirection * TRACE_LENGTH;
+		// 자기 자신 캐릭터나 무기 등을 트레이스에서 무시하기 위한 파라미터
+		FCollisionQueryParams QueryParams;
+		QueryParams.AddIgnoredActor(Character); // 플레이어 캐릭터 무시
+		// 만약 현재 무기도 트레이스에서 제외하고 싶다면
+		if (Character->GetEquippedWeapon())
+		{
+			QueryParams.AddIgnoredActor(Character->GetEquippedWeapon());
+		}
+
+		const FVector Start = CrosshairWorldPosition;
+		const FVector End = Start + CrosshairWorldDirection * TRACE_LENGTH;
+
+		// 자기 자신, 무기 등을 제외한 상태로 라인 트레이스
 		GetWorld()->LineTraceSingleByChannel(
 			TraceHitResult,
 			Start,
 			End,
-			ECollisionChannel::ECC_Visibility
+			ECollisionChannel::ECC_Visibility,
+			QueryParams
 		);
-		if (!TraceHitResult.bBlockingHit) TraceHitResult.ImpactPoint = End;
+
+		// 충돌이 없으면 ImpactPoint는 End로 설정
+		if (!TraceHitResult.bBlockingHit)
+		{
+			TraceHitResult.ImpactPoint = End;
+		}
+
+		// 적/맞출 대상 색깔 표시 로직 등
 		if (TraceHitResult.GetActor() && TraceHitResult.GetActor()->Implements<UInteractWithCrossHairsInterface>())
 		{
 			HUDPackage.CrosshairsColor = FLinearColor::Red;
@@ -824,6 +849,7 @@ void UCombatComponent::TraceUnderCrosshairs(FHitResult& TraceHitResult)
 		}
 	}
 }
+
 
 void UCombatComponent::SetHUDCrosshairs(float DeltaTime)
 {
