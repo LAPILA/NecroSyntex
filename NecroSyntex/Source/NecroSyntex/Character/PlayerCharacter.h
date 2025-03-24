@@ -94,6 +94,11 @@ public:
 
 	void UpdateHUDShield();
 
+	bool bInitializeAmmo = false;
+	int32 InitialCarriedAmmo = 0;
+	int32 InitialWeaponAmmo = 0;
+
+
 	void UpdateHUDAmmo();
 
 	void SpawnDefaultWeapon();

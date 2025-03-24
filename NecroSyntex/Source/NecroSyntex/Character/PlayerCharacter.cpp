@@ -290,9 +290,16 @@ void APlayerCharacter::BeginPlay()
 			SubSystem->AddMappingContext(DefaultMappingContext, 0);
 	}
 	SpawnDefaultWeapon();
-	UpdateHUDAmmo();
 	UpdateHUDShield();
 	UpdateHUDHealth();
+
+	if (Combat && Combat->EquippedWeapon)
+	{
+		InitialCarriedAmmo = Combat->CarriedAmmo;
+		InitialWeaponAmmo = Combat->EquippedWeapon->GetAmmo();
+		bInitializeAmmo = true;
+	}
+
 	if (HasAuthority())
 	{
 		OnTakeAnyDamage.AddDynamic(this, &APlayerCharacter::ReceiveDamage);
@@ -373,7 +380,7 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 		EnhancedInputComponent->BindAction(FireAction, ETriggerEvent::Started, this, &APlayerCharacter::FireButtonPressed);
 		EnhancedInputComponent->BindAction(FireAction, ETriggerEvent::Completed, this, &APlayerCharacter::FireButtonReleased);
 		EnhancedInputComponent->BindAction(FlashAction, ETriggerEvent::Triggered, this, &APlayerCharacter::FlashButtonPressed);
-		EnhancedInputComponent->BindAction(ReloadAction, ETriggerEvent::Triggered, this, &APlayerCharacter::ReloadButtonPressed);
+		EnhancedInputComponent->BindAction(ReloadAction, ETriggerEvent::Started, this, &APlayerCharacter::ReloadButtonPressed);
 		EnhancedInputComponent->BindAction(ThrowGrenade, ETriggerEvent::Triggered, this, &APlayerCharacter::GrenadeButtonPressed);
 		EnhancedInputComponent->BindAction(SwapWeaponAction, ETriggerEvent::Triggered, this, &APlayerCharacter::SwapWeaponWheel);
 
@@ -462,6 +469,9 @@ void APlayerCharacter::PlayReloadMontage()
 	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
 	if (AnimInstance && ReloadMontage)
 	{
+		AnimInstance->OnMontageEnded.RemoveDynamic(this, &APlayerCharacter::ReloadMontageEndedHandler);
+		AnimInstance->OnMontageEnded.AddDynamic(this, &APlayerCharacter::ReloadMontageEndedHandler);
+
 		AnimInstance->Montage_Play(ReloadMontage);
 
 		FName SectionName;
@@ -486,8 +496,6 @@ void APlayerCharacter::PlayReloadMontage()
 		}
 
 		AnimInstance->Montage_JumpToSection(SectionName, ReloadMontage);
-
-		AnimInstance->OnMontageEnded.AddDynamic(this, &APlayerCharacter::ReloadMontageEndedHandler);
 	}
 }
 
@@ -921,11 +929,24 @@ void APlayerCharacter::UpdateHUDShield()
 
 void APlayerCharacter::UpdateHUDAmmo()
 {
-	NecroSyntexPlayerController = NecroSyntexPlayerController == nullptr ? Cast<ANecroSyntexPlayerController>(Controller) : NecroSyntexPlayerController;
-	if (NecroSyntexPlayerController && Combat && Combat->EquippedWeapon)
+	if (!Combat || !Combat->EquippedWeapon) return;
+
+	if (NecroSyntexPlayerController == nullptr)
+	{
+		NecroSyntexPlayerController = Cast<ANecroSyntexPlayerController>(Controller);
+	}
+
+	if (NecroSyntexPlayerController)
 	{
 		NecroSyntexPlayerController->SetHUDCarriedAmmo(Combat->CarriedAmmo);
-		NecroSyntexPlayerController->SetHUDCarriedAmmo(Combat->EquippedWeapon->GetAmmo());
+		NecroSyntexPlayerController->SetHUDWeaponAmmo(Combat->EquippedWeapon->GetAmmo());
+		bInitializeAmmo = false;
+	}
+	else
+	{
+		InitialCarriedAmmo = Combat->CarriedAmmo;
+		InitialWeaponAmmo = Combat->EquippedWeapon->GetAmmo();
+		bInitializeAmmo = true;
 	}
 }
 
@@ -1031,57 +1052,42 @@ bool APlayerCharacter::IsLocallyReloading()
 
 void APlayerCharacter::ReloadMontageEndedHandler(UAnimMontage* Montage, bool bInterrupted)
 {
-	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
-	if (AnimInstance == nullptr || Combat == nullptr) return;
+    UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+    if (AnimInstance == nullptr || Combat == nullptr) return;
 
-	// Checking if we got an interruption on the montage. I get interruption on high ping even if there is nothing overriding it, so the animation will still play
-	if (bInterrupted)
-	{
-		// The current time on the reload montage
-		float CurrentPosition = AnimInstance->Montage_GetPosition(ReloadMontage);
+    if (bInterrupted)
+    {
+        float CurrentPosition = AnimInstance->Montage_GetPosition(ReloadMontage);
+        FName SectionName = AnimInstance->Montage_GetCurrentSection();
+        int32 SectionIndex = ReloadMontage->GetSectionIndex(SectionName);
 
-		FName SectionName = AnimInstance->Montage_GetCurrentSection();
+        float OutStartTime, OutEndTime;
+        ReloadMontage->GetSectionStartAndEndTime(SectionIndex, OutStartTime, OutEndTime);
+        float TimeToWait = FMath::Clamp(OutEndTime - CurrentPosition, 0.f, OutEndTime - OutStartTime);
 
-		int32 SectionIndex = ReloadMontage->GetSectionIndex(SectionName);
+        if (TimeToWait > 0.f)
+        {
+            GetWorldTimerManager().SetTimer(
+                ReloadTimer,
+                this,
+                &APlayerCharacter::ReloadTimerFinished,
+                TimeToWait
+            );
+        }
+        else if (Combat->EquippedWeapon->GetWeaponType() == EWeaponType::EWT_Shotgun)
+        {
+            Combat->JumpToShotgunEnd();
+        }
 
-		// From OutStart and OutEndTime we can know the length of the section, we do it so it will work with every reload animation runtime, to prevent going into our reload montage and store all durations in a map or similar.
-		float OutStartTime;
-		float OutEndTime;
-		ReloadMontage->GetSectionStartAndEndTime(SectionIndex, OutStartTime, OutEndTime);
-
-		// How long we need to wait depending on where the montage was interrupted
-		float TimeToWait = FMath::Clamp(OutEndTime - CurrentPosition, 0, OutEndTime - OutStartTime);
-
-
-		// If we get interrupted at the end of our reload sequence, there is no need to start a timer if TimeToWait is 0, otherwise we start a wait timer.
-		if (TimeToWait > 0.f)
-		{
-			GetWorldTimerManager().SetTimer(
-				ReloadTimer,
-				this,
-				&APlayerCharacter::ReloadTimerFinished,
-				TimeToWait);
-		}
-		// We need special case if we are on a shotgun, we want to be able to shoot during reload
-		// Then 
-		else if (Combat->EquippedWeapon->GetWeaponType() == EWeaponType::EWT_Shotgun)
-		{
-			// JumpToShotgunEnd got an update too to set state Unoccupied if we are on server (posted below)
-			Combat->JumpToShotgunEnd();
-		}
-
-		// Unbind ReloadMontageEndedHandler
-		AnimInstance->OnMontageEnded.RemoveDynamic(this, &APlayerCharacter::ReloadMontageEndedHandler);
-
-	}
-	else
-	{
-		// If we didn't get an interruption, then everything is fine and we just call finish reloading directly
-		Combat->FinishReloading();
-		// Unbind ReloadMontageEndedHandler
-		AnimInstance->OnMontageEnded.RemoveDynamic(this, &APlayerCharacter::ReloadMontageEndedHandler);
-	}
+        AnimInstance->OnMontageEnded.RemoveDynamic(this, &APlayerCharacter::ReloadMontageEndedHandler);
+    }
+    else
+    {
+        Combat->FinishReloading();
+        AnimInstance->OnMontageEnded.RemoveDynamic(this, &APlayerCharacter::ReloadMontageEndedHandler);
+    }
 }
+
 
 
 void APlayerCharacter::ReloadTimerFinished()
