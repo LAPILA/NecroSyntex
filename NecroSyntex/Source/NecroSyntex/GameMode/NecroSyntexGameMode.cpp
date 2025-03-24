@@ -122,52 +122,70 @@ void ANecroSyntexGameMode::RequestRespawn(ACharacter* ElimmedCharacter, AControl
 void ANecroSyntexGameMode::SetupPlayers()
 {
 	UE_LOG(LogTemp, Warning, TEXT("22222"));
-	for (FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It) {
+
+	// 모든 PlayerController 순회
+	for (FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
+	{
 		ANecroSyntexPlayerController* MyPC = Cast<ANecroSyntexPlayerController>(*It);
+		if (!MyPC) continue;
+
 		UE_LOG(LogTemp, Warning, TEXT("33333"));
-		if (MyPC)
+		MyPC->CheckPSSetTimer();
+
+		// PlayerState 가져오기
+		ANecroSyntexPlayerState* PS = MyPC->GetPlayerState<ANecroSyntexPlayerState>();
+
+		// 기존 Pawn(임시 캐릭터)을 지우기
+		if (APawn* OldPawn = MyPC->GetPawn())
 		{
-			MyPC->CheckPSSetTimer();
-			ANecroSyntexPlayerState* PS = MyPC->GetPlayerState<ANecroSyntexPlayerState>();
+			OldPawn->Destroy();
+		}
 
-			if (APawn* OldPawn = MyPC->GetPawn())
+		UE_LOG(LogTemp, Warning, TEXT("4444"));
+		if (PS)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("555555"));
+
+			// 플레이어가 선택한 캐릭터 클래스가 있으면 스폰 진행
+			if (PS->SelectedCharacterClass)
 			{
-				OldPawn->Destroy();
-			}
+				UE_LOG(LogTemp, Warning, TEXT("66666"));
 
-			UE_LOG(LogTemp, Warning, TEXT("4444"));
-			if (PS)
-			{
+				// 1) 기존 DefaultPawnClass 저장
+				TSubclassOf<APawn> OldDefault = DefaultPawnClass;
 
-				UE_LOG(LogTemp, Warning, TEXT("555555"));
-				if (PS->SelectedCharacterClass)
+				// 2) DefaultPawnClass를 플레이어가 선택한 클래스로 임시 변경
+				DefaultPawnClass = PS->SelectedCharacterClass;
+
+				// 3) RestartPlayer() → 내부적으로 PlayerStart를 찾아 Spawn & Possess
+				RestartPlayer(MyPC);
+
+				// 다시 원상 복귀
+				DefaultPawnClass = OldDefault;
+
+				// Spawn된 새 캐릭터(= MyPC->GetPawn())에서 DopingComponent 등을 설정
+				if (APlayerCharacter* NewCharacter = Cast<APlayerCharacter>(MyPC->GetPawn()))
 				{
-					UE_LOG(LogTemp, Warning, TEXT("66666"));
-					FActorSpawnParameters SpawnParams;
-					FVector SpawnVector;
-					SpawnVector = FVector(-500.0f, -200.0f, 140.0f);
-
-					APlayerCharacter* NewCharacter = GetWorld()->SpawnActor<APlayerCharacter>(
-						PS->SelectedCharacterClass, SpawnVector, FRotator::ZeroRotator);
 					UE_LOG(LogTemp, Warning, TEXT("777777"));
-					if (NewCharacter)
+
+					if (NewCharacter->UDC)
 					{
-						if (NewCharacter->UDC)
-						{
-							NewCharacter->UDC->SetFirstDopingKey(PS->FirstDopingCode);
-							NewCharacter->UDC->SetSecondDopingKey(PS->SecondDopingCode);
-						}
-						// 플레이어 컨트롤러가 새 캐릭터를 소유하도록 변경
-						MyPC->Possess(NewCharacter);
-						UE_LOG(LogTemp, Warning, TEXT("88888"));
-						MyPC->ClientRestart(NewCharacter);
-						UE_LOG(LogTemp, Warning, TEXT("99999"));
+						NewCharacter->UDC->SetFirstDopingKey(PS->FirstDopingCode);
+						NewCharacter->UDC->SetSecondDopingKey(PS->SecondDopingCode);
 					}
+
+					UE_LOG(LogTemp, Warning, TEXT("88888"));
+					// 아래 ClientRestart 호출은 필수가 아니지만,
+					// 별도 이유로 UI/State 재동기화가 필요하다면 유지
+					MyPC->ClientRestart(NewCharacter);
+
+					UE_LOG(LogTemp, Warning, TEXT("99999"));
 				}
 			}
 		}
 	}
 }
+
 
 void ANecroSyntexGameMode::PostLogin(APlayerController* NewPlayer)
 {
