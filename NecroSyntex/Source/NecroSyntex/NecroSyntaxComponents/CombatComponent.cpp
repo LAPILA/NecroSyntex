@@ -714,9 +714,15 @@ void UCombatComponent::ServerFire_Implementation(const FVector_NetQuantize& Trac
 	const float CurrentTime = GetWorld()->GetTimeSeconds();
 	const float FireDelaySec = EquippedWeapon->FireDelay;
 
-	if (CurrentTime - LastServerFireTime < FireDelaySec)
+	const float Tolerance = 0.02f;
+
+	if ((CurrentTime - LastServerFireTime + Tolerance) < FireDelaySec)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("[CHEAT DETECTED] %s fired too quickly (%.3f s < %.3f s)"), *Character->GetName(), CurrentTime - LastServerFireTime, FireDelaySec);
+		// 로그는 남기되, 너무 자주 뜨지 않도록 하거나 완전히 지워도 됨
+		UE_LOG(LogTemp, Warning, TEXT("[CHEAT DETECTED?] %s fired quickly (%.3f s < %.3f s)"),
+			*Character->GetName(),
+			CurrentTime - LastServerFireTime,
+			FireDelaySec);
 		return;
 	}
 
@@ -739,6 +745,7 @@ void UCombatComponent::MulticastFire_Implementation(const FVector_NetQuantize& T
 	if (Character && Character->IsLocallyControlled() && !Character->HasAuthority()) return;
 	LocalFire(TraceHitTarget);
 }
+
 void UCombatComponent::ServerShotgunFire_Implementation(const TArray<FVector_NetQuantize>& TraceHitTargets, float FireDelay)
 {
 	if (!EquippedWeapon || !Character) return;
@@ -746,9 +753,14 @@ void UCombatComponent::ServerShotgunFire_Implementation(const TArray<FVector_Net
 	const float CurrentTime = GetWorld()->GetTimeSeconds();
 	const float FireDelaySec = EquippedWeapon->FireDelay;
 
-	if (CurrentTime - LastServerShotgunFireTime < FireDelaySec)
+	const float Tolerance = 0.02f;
+
+	if ((CurrentTime - LastServerShotgunFireTime + Tolerance) < FireDelaySec)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("[CHEAT DETECTED] %s fired shotgun too quickly (%.3f s < %.3f s)"), *Character->GetName(), CurrentTime - LastServerShotgunFireTime, FireDelaySec);
+		UE_LOG(LogTemp, Warning, TEXT("[CHEAT DETECTED?] %s fired shotgun quickly (%.3f s < %.3f s)"),
+			*Character->GetName(),
+			CurrentTime - LastServerShotgunFireTime,
+			FireDelaySec);
 		return;
 	}
 
