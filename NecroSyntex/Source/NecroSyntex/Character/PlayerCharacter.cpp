@@ -720,6 +720,11 @@ bool APlayerCharacter::ServerSprintStop_Validate()
 
 void APlayerCharacter::FireButtonPressed(const FInputActionValue& Value)
 {
+	if (bElimed || bDisableGameplay)
+	{
+		return;
+	}
+
 	if (Combat && Combat->EquippedWeapon)
 	{
 		Combat->FireButtonPressed(true);
@@ -728,6 +733,11 @@ void APlayerCharacter::FireButtonPressed(const FInputActionValue& Value)
 
 void APlayerCharacter::FireButtonReleased(const FInputActionValue& Value)
 {
+	if (bElimed || bDisableGameplay)
+	{
+		return;
+	}
+
 	if (Combat && Combat->EquippedWeapon)
 	{
 		Combat->FireButtonPressed(false);
@@ -1093,7 +1103,6 @@ void APlayerCharacter::ReloadMontageEndedHandler(UAnimMontage* Montage, bool bIn
         AnimInstance->OnMontageEnded.RemoveDynamic(this, &APlayerCharacter::ReloadMontageEndedHandler);
     }
 }
-
 
 
 void APlayerCharacter::ReloadTimerFinished()
