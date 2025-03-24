@@ -515,6 +515,12 @@ void APlayerCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, const U
 	}
 
 	PlayerHitReactMontage();
+
+	if (Combat && Combat->CombatState == ECombatState::ECS_Reloading)
+	{
+		Combat->CancelReload();
+	}
+
 	if (Shield > 0)
 	{
 		float NewShieldValue = FMath::Clamp(Shield - Damage, 0.f, MaxShield);

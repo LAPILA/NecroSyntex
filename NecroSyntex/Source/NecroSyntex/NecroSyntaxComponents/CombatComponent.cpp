@@ -422,6 +422,44 @@ void UCombatComponent::ReloadEmptyWeapon()
 	}
 }
 
+void UCombatComponent::CancelReload()
+{
+	if (CombatState == ECombatState::ECS_Reloading)
+	{
+		if (Character && Character->HasAuthority())
+		{
+			ServerCancelReload();
+		}
+		else
+		{
+			ServerCancelReload();
+		}
+	}
+}
+
+void UCombatComponent::ServerCancelReload_Implementation()
+{
+	MulticastCancelReload();
+}
+
+void UCombatComponent::MulticastCancelReload_Implementation()
+{
+	if (CombatState == ECombatState::ECS_Reloading)
+	{
+		CombatState = ECombatState::ECS_Unoccupied;
+		bLocallyReloading = false;
+		if (Character)
+		{
+			UAnimInstance* AnimInstance = Character->GetMesh()->GetAnimInstance();
+			if (AnimInstance && Character->GetReloadMontage())
+			{
+				AnimInstance->Montage_Stop(0.1f, Character->GetReloadMontage());
+			}
+		}
+	}
+}
+
+
 void UCombatComponent::ShowAttachedGrenade(bool bShowGrenade)
 {
 	if (Character && Character->GetAttachedGrenade())
