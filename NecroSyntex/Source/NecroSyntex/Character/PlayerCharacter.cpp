@@ -29,6 +29,7 @@
 #include "NecroSyntex/PlayerState/NecroSyntexPlayerState.h"
 #include "NecroSyntex/DopingSystem/DopingComponent.h"
 #include "NecroSyntex\NecroSyntaxComponents\LagCompensationComponent.h"
+#include "NecroSyntex\PickUps\HealingStation.h"
 
 // �ִϸ��̼� ���� ���
 #include "PlayerAnimInstance.h"
@@ -163,6 +164,7 @@ APlayerCharacter::APlayerCharacter()
 			Box.Value->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 		}
 	}
+	HealingStationActor = nullptr;
 }
 
 void APlayerCharacter::OnRep_ReplicatedMovement()
@@ -276,6 +278,11 @@ void APlayerCharacter::SpawnDefaultWeapon()
 		}
 	}
 
+}
+
+void APlayerCharacter::SetHealingStationActor(AHealingStation* Station)
+{
+	HealingStationActor = Station;
 }
 
 void APlayerCharacter::BeginPlay()
@@ -412,6 +419,7 @@ void APlayerCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 	DOREPLIFETIME(APlayerCharacter, bDisableGameplay);
 	DOREPLIFETIME(APlayerCharacter, Health);
 	DOREPLIFETIME(APlayerCharacter, Shield);
+	DOREPLIFETIME(APlayerCharacter, HealingStationActor);
 }
 
 void APlayerCharacter::PlayFireMontage(bool bAiming)
@@ -599,6 +607,10 @@ void APlayerCharacter::EquipButtonPressed()
 	if (Combat)
 	{
 		ServerEquipButtonPressed();
+	}
+	if (HealingStationActor)
+	{
+		ServerRequestHealing();
 	}
 }
 
@@ -1113,6 +1125,13 @@ void APlayerCharacter::ReloadTimerFinished()
 	}
 }
 
+void APlayerCharacter::ServerRequestHealing_Implementation()
+{
+	if (HealingStationActor)
+	{
+		HealingStationActor->Interact(this);
+	}
+}
 
 //Pahu
 float APlayerCharacter::GetTotalDamage()

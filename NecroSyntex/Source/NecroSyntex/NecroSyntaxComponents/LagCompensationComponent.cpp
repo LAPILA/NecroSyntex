@@ -110,6 +110,15 @@ FServerSideRewindResult ULagCompensationComponent::ConfirmHit(const FFramePackag
 
 FServerSideRewindResult ULagCompensationComponent::ProjectileConfirmHit(const FFramePackage& Package, APlayerCharacter* HitCharacter, const FVector_NetQuantize& TraceStart, const FVector_NetQuantize100& InitialVelocity, float HitTime)
 {
+	if (!HitCharacter || HitCharacter->HitCollisionBoxes.Num() == 0)
+	{
+		return FServerSideRewindResult{ false, false };
+	}
+	if (!HitCharacter->HitCollisionBoxes.Contains(FName("head")) ||
+		!IsValid(HitCharacter->HitCollisionBoxes[FName("head")]))
+	{
+		return FServerSideRewindResult{ false, false };
+	}
 	FFramePackage CurrentFrame;
 	CacheBoxPositions(HitCharacter, CurrentFrame);
 	MoveBoxes(HitCharacter, Package);
