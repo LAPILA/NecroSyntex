@@ -12,6 +12,8 @@
 #include "Engine/SkeletalMeshSocket.h"
 #include "NecroSyntex\PlayerController\NecroSyntexPlayerController.h"
 #include "NecroSyntex\NecroSyntaxComponents\CombatComponent.h"
+#include "Perception/AIPerceptionComponent.h"
+#include "Perception/AIPerceptionSystem.h"
 #include "Kismet\KismetMathLibrary.h"
 
 // Sets default values
@@ -301,8 +303,15 @@ void AWeapon::Fire(const FVector& HitTarget)
 {
 	if (FireAnimation)
 	{
+		//Monster chase sound point
+		if (GEngine)
+		{
+			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Play Fire!!!!!!"));
+			PlayFireSound();
+		}
 		WeaponMesh->PlayAnimation(FireAnimation, false);
 	}
+
 	if (CasingClass)
 	{
 		const USkeletalMeshSocket* AmmoEjectSocket = WeaponMesh->GetSocketByName(FName("AmmoEject"));
