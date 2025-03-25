@@ -17,6 +17,12 @@ class NECROSYNTEX_API UDPPainless : public UDopingParent
 
 public:
 	UDPPainless();
+	UPROPERTY()
+	float WalkingBuffNum;
+	UPROPERTY()
+	float RunningBuffNum;
+
+
 
 	void UseDopingItem(UPlayerInformData* PID) override;
 

@@ -8,12 +8,9 @@
 
 namespace MatchState
 {
-	extern NECROSYNTEX_API const FName Cooldown; // Match duration has been reached. Deiplay winner and begin cooldown timer
+	extern NECROSYNTEX_API const FName Cooldown; // Match duration has been reached. Display winner and begin cooldown timer.
 }
 
-/**
- * 
- */
 UCLASS()
 class NECROSYNTEX_API ANecroSyntexGameMode : public AGameMode
 {
@@ -26,7 +23,7 @@ public:
 	virtual void RequestRespawn(ACharacter* ElimmedCharacter, AController* ElimmedController);
 
 	UPROPERTY(EditDefaultsOnly)
-	float WarmupTime = 10.f;
+	float WarmUpTime = 10.f;
 	
 	UPROPERTY(EditDefaultsOnly)
 	float MatchTime = 120.f;
@@ -42,4 +39,37 @@ protected:
 
 private:
 	float CountdownTime = 0.f;
+
+
+public:
+
+	//������ ���� ����
+	 // ��� �÷��̾�� ĳ���� ���� UI�� ǥ��
+	void ShowCharacterSelectionUI();
+
+	// �÷��̾ ĳ���͸� �����ϸ� ������ �˸��� �Լ�
+	UFUNCTION(Server, Reliable)
+	void SelectAndReadyComplete();
+
+	// ��� �÷��̾ ������ �Ϸ��ߴ��� Ȯ��
+	void CheckAllPlayersReady();
+
+
+public:
+	// ������ �Ϸ��� �÷��̾� ��
+	int32 PlayersReadyCount = 2;
+
+	// �� �÷��̾� ��
+	int32 TotalPlayers = 0; // �κ񿡼� ������ �� ����
+
+	FTimerHandle CheckPlayerStateTimer;
+
+	void SetupPlayers();
+
+	UPROPERTY()
+	FVector SpawnLocation;
+	FVector SpawnRotation;
+
+protected:
+	virtual void PostLogin(APlayerController* NewPlayer) override;
 };

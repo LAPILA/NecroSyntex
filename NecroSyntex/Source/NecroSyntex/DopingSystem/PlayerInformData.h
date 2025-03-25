@@ -22,8 +22,14 @@ public:
 	float MaxHealth; // 최대 체력
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float CurrentHealth; // 현재 체력
-	UPROPERTY(EditAnywhere)
-	float AttackPointMag; // 공격력 배율
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float MaxShield; // 최대 쉴드 량
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float CurrentShield; // 현재 쉴드 량
+
+
 	UPROPERTY(EditAnywhere)
 	float MoveSpeed; // 이동속도
 	UPROPERTY(EditAnywhere)
@@ -31,7 +37,7 @@ public:
 
 
 
-	//float Redbound; // 반동
+	float Rebound; // 반동
 
 	UPROPERTY(EditAnywhere)
 	float MLAtaackPoint; // 근접 공격력
@@ -43,17 +49,24 @@ public:
 	float ROF; // 총 연사속도
 	//float Item_UseRate; // 아이템 사용비율
 
+	UPROPERTY(EditAnywhere)
+	float DopingDamageBuff; // 도핑으로 강화된 공격력
+
 	float BaseMaxHealth;
 	float BaseCurrentHealth;
+	float BaseMaxShield;
+	float BaseCurrentShield;
 	float BaseAttackPointMag;
 	float BaseMoveSpeed;
 	float BaseRunningSpeed;
-	//float BaseRebound;
+	float BaseRebound;
 	float BaseMLAttackPoint;
 	float BaseDefense;
 	float BaseBlurred;
 	float BaseROF;
 
-
+	//현재 캐릭터가 걸려있는 도핑(디버프 상태 포함)
+	UPROPERTY()
+	int CurrentDoped;
 
 };

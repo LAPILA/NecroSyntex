@@ -12,9 +12,20 @@ enum class EWeaponState : uint8
 {
 	EWS_Initial UMETA(DisplayName = "Initial State"),
 	EWS_Equipped UMETA(DisplayName = "Equipped"),
+	EWS_EquippedSecondary UMETA(DisplayName = "Equipped Secondary"),
 	EWS_Dropped UMETA(DisplayName = "Dropped"),
 
 	EWS_Max UMETA(DisplayName = "DefaultMAX")
+};
+
+UENUM(BlueprintType)
+enum class EFireType : uint8
+{
+	EFT_HitScan UMETA(DisplayName = "Hit Scan Weapon"),
+	EFT_Projectile UMETA(DisplayName = "Projectile Weapon"),
+	EFT_Shotgun UMETA(DisplayName = "Shotgun Weapon"),
+
+	EFT_MAX UMETA(DisplayName = "DefaultMAX")
 };
 
 UCLASS()
@@ -33,6 +44,8 @@ public:
 	virtual void Fire(const FVector& HitTarget);
 	void Dropped();
 	void AddAmmo(int32 AmmoToAdd);
+
+	FVector TraceEndWithScatter(const FVector& HitTarget);
 
 	/*
 	* Cross Hair Texture
@@ -67,10 +80,28 @@ public:
 	UPROPERTY(EditAnywhere, Category = Combat)
 	class USoundCue* EquipSound;
 
+	/*
+	* Enable or disable custom depth
+	*/
+	void EnableCustomDepth(bool bEnable);
+
+	bool bDestroyWeapon = false;
+
+	UPROPERTY(EditAnywhere)
+	EFireType FireType;
+
+	UPROPERTY(EditAnywhere, Category = "Weapon Scatter")
+	bool bUseScatter = false;
+
+	UFUNCTION(BlueprintImplementableEvent)
+	void PlayFireSound();
 
 protected:
 	virtual void BeginPlay() override;
-
+	virtual void OnWeaponStateSet();
+	virtual void OnEquipped();
+	virtual void OnDropped();
+	virtual void OnEquippedSecondary();
 
 	UFUNCTION()
 	virtual void OnSphereOverlap(
@@ -89,6 +120,33 @@ protected:
 		UPrimitiveComponent* OtherComp,
 		int32 OtherBoxIndex
 	);
+
+	/**
+	* Trace end with scatter
+	*/
+
+	UPROPERTY(EditAnywhere, Category = "Weapon Scatter")
+	float DistanceToSphere = 800.f;
+
+	UPROPERTY(EditAnywhere, Category = "Weapon Scatter")
+	float SphereRadius = 75.f;
+
+	UPROPERTY(EditAnywhere)
+	float Damage = 20.f;
+
+	UPROPERTY(EditAnywhere)
+	float HeadShotDamage = 40.f;
+
+	UPROPERTY(Replicated, EditAnywhere)
+	bool bUseServerSideRewind = false;
+
+	UPROPERTY()
+	class APlayerCharacter* PlayerOwnerCharacter;
+	UPROPERTY()
+	class ANecroSyntexPlayerController* NecroSyntexPlayerOwnerController;
+
+	UFUNCTION()
+	void OnPingTooHigh(bool bPingTooHigh);
 
 private:
 	UPROPERTY(VisibleAnywhere, Category = "Weapon Properties")
@@ -110,23 +168,27 @@ private:
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<class ACasing> CasingClass;
 
-	//źȯ
-	UPROPERTY(EditAnywhere, ReplicatedUsing = OnRep_Ammo)
+
+	UPROPERTY(EditAnywhere)
 	int32 Ammo;
 
-	UFUNCTION()
-	void OnRep_Ammo();
+	UFUNCTION(Client, Reliable)
+	void ClientUpdateAmmo(int32 ServerAmmo);
+
+	UFUNCTION(Client, Reliable)
+	void ClientAddAmmo(int32 AmmoToAdd);
 
 	void SpendRound();
 	UPROPERTY(EditAnywhere)
 	int32 MagCapacity;
-	UPROPERTY()
-	class APlayerCharacter* PlayerOwnerCharacter;
-	UPROPERTY()
-	class ANecroSyntexPlayerController* NecroSyntexPlayerController;
+
+	// The number of unprocessed server requests for Ammo.
+	// Incremented in SpendRound, decremented in ClientUpdateAmmo.
+	int32 Sequence = 0;
 
 	UPROPERTY(EditAnywhere)
 	EWeaponType WeaponType;
+
 public:
 	void SetWeaponState(EWeaponState State);
 	FORCEINLINE USphereComponent* GetAreaSphere() const { return AreaSphere; }
@@ -134,7 +196,10 @@ public:
 	FORCEINLINE float GetZoomedFOV() const { return ZoomFOV; }
 	FORCEINLINE float GetZoomedInterpedSpeed() const { return ZoomInterpSpeed; }
 	bool IsEmpty();
+	bool IsFull();
 	FORCEINLINE EWeaponType GetWeaponType() const { return WeaponType; }
 	FORCEINLINE int32 GetAmmo() const { return Ammo; }
 	FORCEINLINE int32 GetMagCapacity() const { return MagCapacity; }
+	FORCEINLINE float GetDamage() const { return Damage; }
+	FORCEINLINE float GetHeadShotDamage() const { return HeadShotDamage; }
 };

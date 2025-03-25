@@ -17,6 +17,7 @@ class NECROSYNTEX_API UCharacterOverlay : public UUserWidget
 	GENERATED_BODY()
 
 public:
+	
 	// Player State UI
 	UPROPERTY(meta = (BindWidget))
 	class UImage* HealthBar;
@@ -48,4 +49,15 @@ public:
 	// Game Info UI
 	UPROPERTY(meta = (BindWidget))
 	UTextBlock* MatchCountdownText;
+
+	UPROPERTY(meta = (BindWidget))
+	UTextBlock* GrenadesText;
+
+	// Net Info UI
+
+	UPROPERTY(meta = (BindWidget))
+	UImage* HighPingImage;
+
+	UPROPERTY(meta = (BindWidgetAnim), Transient)
+	UWidgetAnimation* HighPingAnimation;
 };
