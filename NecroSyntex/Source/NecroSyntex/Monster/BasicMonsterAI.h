@@ -16,7 +16,7 @@ public:
 	// Sets default values for this character's properties
 	ABasicMonsterAI();
 
-	UFUNCTION()
+	UFUNCTION(BlueprintCallable)
 	void UpdateWalkSpeed(float NewWalkSpeed);
 
 	UFUNCTION(BlueprintCallable)
