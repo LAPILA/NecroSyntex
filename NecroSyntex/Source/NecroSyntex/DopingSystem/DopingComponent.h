@@ -16,7 +16,7 @@
 #include "DPHallucinationShield.h"
 #include "DPHPconversion.h"
 #include "DPCurseofChaos.h"
-#include "PlayerInformData.h"
+#include "NecroSyntex/Character/PlayerCharacter.h"
 #include "Components/ActorComponent.h"
 #include "DopingComponent.generated.h"
 
@@ -44,24 +44,19 @@ public:
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
-	UPROPERTY(Replicated)
+	UPROPERTY()
 	UDopingParent* OneKeyDoping; // 키보드 1번키 도핑
 	UPROPERTY(Replicated)
 	int FirstDopingCode;
 	UPROPERTY(Replicated)
 	bool OneKeyBool;
 
-	UPROPERTY(Replicated)
+	UPROPERTY()
 	UDopingParent* TwoKeyDoping; // 키보드 2번키 도핑
 	UPROPERTY(Replicated)
 	int SecondDopingCode;
 	UPROPERTY(Replicated)
 	bool TwoKeyBool;
-
-	UPROPERTY(Replicated, BlueprintReadOnly)
-	UPlayerInformData* PID;
-	UPROPERTY(Replicated)
-	UPlayerInformData* PIDCheck;
 
 	//패시브
 	UPROPERTY(Replicated)
@@ -72,8 +67,6 @@ public:
 	
 	UFUNCTION()
 	virtual void Passive_End();
-
-
 
 	
 	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite, Category = "FirstDopping")
@@ -88,8 +81,11 @@ public:
 	bool One_CheckBuff;
 	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite, Category = "FirstDopping")
 	bool One_CheckDeBuff;
-	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite, Category = "FirstDopping")
+	UPROPERTY(ReplicatedUsing = OnRep_OneAble, EditAnywhere, BlueprintReadWrite, Category = "FirstDopping")
 	bool One_Able; // 사용 가능 & 불가능
+
+	UFUNCTION()
+	void OnRep_OneAble();
 
 
 	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite, Category = "SecondDopping")
@@ -104,34 +100,11 @@ public:
 	bool Two_CheckBuff;
 	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite, Category = "SecondDopping")
 	bool Two_CheckDeBuff;
-	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite, Category = "SecondDopping")
+	UPROPERTY(ReplicatedUsing = OnRep_TwoAble, EditAnywhere, BlueprintReadWrite, Category = "SecondDopping")
 	bool Two_Able; // 사용 가능 & 불가능
 
-
-	// 캐릭터 스텟
-	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite, Category = "PlayerDopingInform")
-	float MaxHealth;
-	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite, Category = "PlayerDopingInform")
-	float CurrentHealth;
-	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite, Category = "PlayerDopingInform")
-	float MaxShield;
-	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite, Category = "PlayerDopingInform")
-	float CurrentShield;
-	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite, Category = "PlayerDopingInform")
-	float MoveSpeed;
-	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite, Category = "PlayerDopingInform")
-	float RunningSpeed;
-	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite, Category = "PlayerDopingInform")
-	float Rebound; // 반동
-	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite, Category = "PlayerDopingInform")
-	float MLAtaackPoint;
-	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite, Category = "PlayerDopingInform")
-	float Defense;
-	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite, Category = "PlayerDopingInform")
-	float Blurred;
-	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite, Category = "PlayerDopingInform")
-	float ROF;
-	//float ItemUseRate; // 아이템 사용비율
+	UFUNCTION()
+	void OnRep_TwoAble();
 
 	//데미지
 	//임시 총 데미지
@@ -142,22 +115,48 @@ public:
 	//([총 데미지] * [캐릭터 공격력 배율])*도핑강화배율(무통증(10%), 마지막 불꽃(20%), 합연산)
 	float TotalDamage;
 
+	UFUNCTION(BlueprintCallable)
+	void PressedFirstDopingKey();
 
-	// 도핑 설정 및 사용
-	UFUNCTION(Server, Reliable, BlueprintCallable)
+	UFUNCTION(Server, Reliable)
+	void ServerPressedFirstDopingKey();
+
+	UFUNCTION(BlueprintCallable)
+	void PressedSecondDopingKey();
+
+	UFUNCTION(Server, Reliable)
+	void ServerPressedSecondDopingKey();
+
+	UFUNCTION()
 	virtual void FirstDopingUse();
 
-	UFUNCTION(Server, Reliable, BlueprintCallable)
+	UFUNCTION()
 	virtual void SecondDopingUse();
+
+	UFUNCTION()
+	void FirstDopingCoolStart();
+	
+	UFUNCTION()
+	void FirstDopingCoolEnd();
+
+
+	UFUNCTION()
+	void SecondDopingCoolStart();
+
+	UFUNCTION()
+	void SecondDopingCoolEnd();
+
+	FTimerHandle FirstDopingCoolTimehandle;
+	FTimerHandle SecondDopingCoolTimehandle;
 
 	UFUNCTION()
 	void SetDopingKey(UDopingParent*& DopingKey, int32 Num);
 
 
-	UFUNCTION(Server, Reliable, BlueprintCallable)
+	UFUNCTION(Server, Reliable)
 	void SetFirstDopingKey(int32 Num);
 
-	UFUNCTION(Server, Reliable, BlueprintCallable)
+	UFUNCTION(Server, Reliable)
 	void SetSecondDopingKey(int32 Num);
 
 	UDopingComponent* GetDopingComponent();
@@ -209,20 +208,22 @@ public:
 
 	// 1-1. 아군에게 도핑주는 모드 전환
 	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite)
-	bool DopingMode;
+	bool DopingforAllyMode;
 
-	UFUNCTION(Server, Reliable, BlueprintCallable)
+	UFUNCTION(BlueprintCallable)
 	void DopingModeChange();
 
-	// 2. 라인트레이스로 아군을 찾는 함수
+	UFUNCTION(Server, Reliable)
+	void ServerDopingModeChange();
+
 
 	// 3. 아군에게 도핑을 주는 함수
-	UFUNCTION(Server, Reliable, BlueprintCallable)
+	UFUNCTION()
 	virtual void FirstDopingForAlly();
 
-
-	UFUNCTION(Server, Reliable, BlueprintCallable)
+	UFUNCTION()
 	virtual void SecondDopingForAlly();
+
 
 	/*UFUNCTION(BlueprintCallable)
 	void CallFirstDopingUse();

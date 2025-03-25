@@ -7,14 +7,18 @@ void UDCDeks::BeginPlay()
 {
 	Super::BeginPlay();
 
-	if (GetOwner()->HasAuthority())
+
+	APlayerCharacter* OwnerCharacter = Cast<APlayerCharacter>(GetOwner());
+	if (!OwnerCharacter) return;
+
+	if (OwnerCharacter->HasAuthority())
 	{
-		PID->MaxHealth = 250;
-		PID->CurrentHealth = PID->MaxHealth;
-		PID->MoveSpeed = 450.0f;
-		PID->RunningSpeed = 800.0f;
-		PID->MLAtaackPoint = 100.0f;
-		PID->Defense = 60.0f;
+		OwnerCharacter->MaxHealth = 250;
+		OwnerCharacter->Health = OwnerCharacter->MaxHealth;
+		OwnerCharacter->WalkSpeed = 450.0f;
+		OwnerCharacter->RunningSpeed = 800.0f;
+		OwnerCharacter->MLAtaackPoint = 100.0f;
+		OwnerCharacter->Defense = 60.0f;
 	}
 
 
@@ -22,7 +26,10 @@ void UDCDeks::BeginPlay()
 
 void UDCDeks::Passive_Start()
 {
-	PID->Defense = PID->Defense + 10.0f;
+	APlayerCharacter* OwnerCharacter = Cast<APlayerCharacter>(GetOwner());
+	if (!OwnerCharacter) return;
+
+	OwnerCharacter->Defense = OwnerCharacter->Defense + 10.0f;
 	UE_LOG(LogTemp, Warning, TEXT("Decks Passive On"));
 	GetWorld()->GetTimerManager().SetTimer(
 		PassiveTimerHandle,
@@ -34,21 +41,24 @@ void UDCDeks::Passive_Start()
 
 void UDCDeks::Passive_End()
 {
-	PID->Defense = PID->Defense - 10.0f;
+	APlayerCharacter* OwnerCharacter = Cast<APlayerCharacter>(GetOwner());
+	if (!OwnerCharacter) return;
+
+	OwnerCharacter->Defense = OwnerCharacter->Defense - 10.0f;
 	UE_LOG(LogTemp, Warning, TEXT("Decks Passive OFF"));
 }
 
-void UDCDeks::FirstDopingUse_Implementation()
+void UDCDeks::FirstDopingUse()
 {
 
-	Super::FirstDopingUse_Implementation();
+	Super::FirstDopingUse();
 
 	Passive_Start();
 }
 
-void UDCDeks::SecondDopingUse_Implementation() {
+void UDCDeks::SecondDopingUse() {
 
-	Super::SecondDopingUse_Implementation();
+	Super::SecondDopingUse();
 
 	Passive_Start();
 

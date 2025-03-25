@@ -19,14 +19,14 @@ public:
 
 	float DefenseBuffNum;
 
-	void UseDopingItem(UPlayerInformData* PID) override;
+	void UseDopingItem(APlayerCharacter* DopedPC) override;
 
-	void BuffOn(UPlayerInformData* PID) override;
+	void BuffOn(APlayerCharacter* DopedPC) override;
 
-	void DeBuffOn(UPlayerInformData* PID) override;
+	void DeBuffOn(APlayerCharacter* DopedPC) override;
 
-	void BuffOff(UPlayerInformData* PID) override;
+	void BuffOff(APlayerCharacter* DopedPC) override;
 
-	void DeBuffOff(UPlayerInformData* PID) override;
+	void DeBuffOff(APlayerCharacter* DopedPC) override;
 
 };

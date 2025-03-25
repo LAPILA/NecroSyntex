@@ -268,19 +268,11 @@ private:
 	/**
 	* Player health
 	*/
-	UPROPERTY(EditAnywhere, Category = "Player Stats")
-	float MaxHealth = 100.f;
-	UPROPERTY(ReplicatedUsing = OnRep_Health, VisibleAnywhere, Category = "Player Stats")
-	float Health = 100.f;
 	UFUNCTION()
 	void OnRep_Health(float LastHealth);
 	/**
 	* Player sheild
 	*/
-	UPROPERTY(EditAnywhere, Category = "Player Stats")
-	float MaxShield = 200.f;
-	UPROPERTY(ReplicatedUsing = OnRep_Shield, VisibleAnywhere, Category = "Player Stats")
-	float Shield = 200.f;
 	UFUNCTION()
 	void OnRep_Shield(float LastShield);
 
@@ -348,8 +340,75 @@ public:
 	UFUNCTION()
 	float GetTotalDamage();
 
-	UFUNCTION(BlueprintImplementableEvent ,BlueprintCallable)
-	void GetDopingFromAlly();
+	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
+	void PlayDopingEffect();
+
+	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
+	void SetHUDFirstDopingTrueicon();
+
+	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
+	void SetHUDFirstDopingFalseicon();
+
+	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
+	void SetHUDSecondDopingTrueicon();
+
+	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
+	void SetHUDSecondDopingFalseicon();
+
+
+
+	//PID(Player Inform Data)
+	UPROPERTY(EditAnywhere, Category = "Player Stats")
+	float MaxHealth = 100.f;
+	UPROPERTY(ReplicatedUsing = OnRep_Health, VisibleAnywhere, Category = "Player Stats")
+	float Health = 100.f;
+
+	UPROPERTY(EditAnywhere, Category = "Player Stats")
+	float MaxShield = 200.f;
+	UPROPERTY(ReplicatedUsing = OnRep_Shield, VisibleAnywhere, Category = "Player Stats")
+	float Shield = 200.f;
+
+
+	UPROPERTY(Replicated, EditAnywhere)
+	float WalkSpeed; // 이동속도
+	UPROPERTY(Replicated ,EditAnywhere)
+	float RunningSpeed; // 달리기속도
+
+	float Rebound; // 반동
+
+	UPROPERTY(Replicated, EditAnywhere)
+	float MLAtaackPoint; // 근접 공격력
+	UPROPERTY(Replicated, EditAnywhere)
+	float Defense; // 방어력
+	UPROPERTY(Replicated, EditAnywhere)
+	float Blurred; // 시야(화면 흐림도)
+	UPROPERTY(Replicated, EditAnywhere)
+	float ROF; // 총 연사속도
+	//float Item_UseRate; // 아이템 사용비율
+
+	UPROPERTY(Replicated, EditAnywhere)
+	float DopingDamageBuff; // 도핑으로 강화된 공격력
+
+	UPROPERTY(Replicated, EditAnywhere)
+	bool ReservedMoving = false; //좌우 뒤바낌 움직임 여부
+
+	/*float BaseMaxHealth;
+	float BaseCurrentHealth;
+	float BaseMaxShield;
+	float BaseCurrentShield;
+	float BaseAttackPointMag;
+	float BaseMoveSpeed;
+	float BaseRunningSpeed;
+	float BaseRebound;
+	float BaseMLAttackPoint;
+	float BaseDefense;
+	float BaseBlurred;
+	float BaseROF;*/
+
+	//현재 캐릭터가 걸려있는 도핑(디버프 상태 포함)
+	UPROPERTY()
+	int CurrentDoped;
+
 	//Pahu end
 
 	void SetOverlappingWeapon(AWeapon* Weapon);
