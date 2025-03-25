@@ -13,42 +13,42 @@ UDPPainless::UDPPainless()
 	CheckDeBuff = false;
 }
 
-void UDPPainless::BuffOn(UPlayerInformData* PID)
+void UDPPainless::BuffOn(APlayerCharacter* DopedPC)
 {
 	if (CheckBuff == false) {
-		WalkingBuffNum = PID->MoveSpeed * 0.1f;
-		RunningBuffNum = PID->RunningSpeed * 0.1f;
+		WalkingBuffNum = DopedPC->WalkSpeed * 0.1f;
+		RunningBuffNum = DopedPC->RunningSpeed * 0.1f;
 
 
-		PID->DopingDamageBuff += 10.0f;
+		DopedPC->DopingDamageBuff += 10.0f;
 
 
-		PID->MoveSpeed = PID->MoveSpeed + WalkingBuffNum;
-		PID->RunningSpeed = PID->RunningSpeed + RunningBuffNum;
+		DopedPC->WalkSpeed = DopedPC->WalkSpeed + WalkingBuffNum;
+		DopedPC->RunningSpeed = DopedPC->RunningSpeed + RunningBuffNum;
 
-		PID->CurrentDoped += 1;
+		DopedPC->CurrentDoped += 1;
 
 		CheckBuff = true;
 	}
 
-	StartBuff(PID);
+	StartBuff(DopedPC);
 
-	DeBuffOn(PID);
+	DeBuffOn(DopedPC);
 }
 
-void UDPPainless::BuffOff(UPlayerInformData* PID)
+void UDPPainless::BuffOff(APlayerCharacter* DopedPC)
 {
 	if (CheckBuff == true) {
-		PID->DopingDamageBuff -= 10.0f;
+		DopedPC->DopingDamageBuff -= 10.0f;
 
 
-		PID->MoveSpeed = PID->MoveSpeed - WalkingBuffNum;
-		PID->RunningSpeed = PID->RunningSpeed - RunningBuffNum;
+		DopedPC->WalkSpeed = DopedPC->WalkSpeed - WalkingBuffNum;
+		DopedPC->RunningSpeed = DopedPC->RunningSpeed - RunningBuffNum;
 		CheckBuff = false;
 	}
 }
 
-void UDPPainless::DeBuffOn(UPlayerInformData* PID)
+void UDPPainless::DeBuffOn(APlayerCharacter* DopedPC)
 {
 	if (CheckDeBuff == false) {
 		//체력 회복량 50% 감소?
@@ -57,18 +57,18 @@ void UDPPainless::DeBuffOn(UPlayerInformData* PID)
 	}
 
 
-	StartDeBuff(PID);
+	StartDeBuff(DopedPC);
 }
 
-void UDPPainless::DeBuffOff(UPlayerInformData* PID)
+void UDPPainless::DeBuffOff(APlayerCharacter* DopedPC)
 {
 	if (CheckDeBuff == true) {
-		PID->CurrentDoped -= 1;
+		DopedPC->CurrentDoped -= 1;
 		CheckDeBuff = false;
 	}
 }
 
-void UDPPainless::UseDopingItem(UPlayerInformData* PID)
+void UDPPainless::UseDopingItem(APlayerCharacter* DopedPC)
 {
 	if (Able && DopingItemNum > 0)
 	{
@@ -78,7 +78,7 @@ void UDPPainless::UseDopingItem(UPlayerInformData* PID)
 
 		UE_LOG(LogTemp, Warning, TEXT("Painless Use"));
 		//효과
-		BuffOn(PID);
+		BuffOn(DopedPC);
 		//
 		StartCooldown();
 	}

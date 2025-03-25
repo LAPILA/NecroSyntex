@@ -14,7 +14,7 @@ UDopingParent::UDopingParent()
 	CheckDeBuff = false;
 }
 
-void UDopingParent::UseDopingItem(UPlayerInformData* PID)
+void UDopingParent::UseDopingItem(APlayerCharacter* DopedPC)
 {
 	if (Able && DopingItemNum > 0)
 	{
@@ -22,15 +22,17 @@ void UDopingParent::UseDopingItem(UPlayerInformData* PID)
 		Able = false;
 
 		// Buff 시작
-		BuffOn(PID);
-		StartBuff(PID);
+		BuffOn(DopedPC);
+		StartBuff(DopedPC);
 
 		// 쿨타임 시작
 		StartCooldown();
+
+		DopedPC->PlayDopingEffect();
 	}
 }
 
-void UDopingParent::BuffOn(UPlayerInformData* PID)
+void UDopingParent::BuffOn(APlayerCharacter* DopedPC)
 {
 	// 기본 버프 로직 (자식에서 오버라이드 가능)
 	CheckBuff = true;
@@ -38,19 +40,19 @@ void UDopingParent::BuffOn(UPlayerInformData* PID)
 	UE_LOG(LogTemp, Warning, TEXT("DopingParent: Buff On"));
 }
 
-void UDopingParent::BuffOff(UPlayerInformData* PID)
+void UDopingParent::BuffOff(APlayerCharacter* DopedPC)
 {
 	// 기본 버프 종료 로직
 	CheckBuff = false;
 
 	// 디버프 시작
-	DeBuffOn(PID);
-	StartDeBuff(PID);
+	DeBuffOn(DopedPC);
+	StartDeBuff(DopedPC);
 
 	UE_LOG(LogTemp, Warning, TEXT("DopingParent: Buff Off"));
 }
 
-void UDopingParent::DeBuffOn(UPlayerInformData* PID)
+void UDopingParent::DeBuffOn(APlayerCharacter* DopedPC)
 {
 	// 기본 디버프 로직
 	CheckDeBuff = true;
@@ -58,7 +60,7 @@ void UDopingParent::DeBuffOn(UPlayerInformData* PID)
 	UE_LOG(LogTemp, Warning, TEXT("DopingParent: DeBuff On"));
 }
 
-void UDopingParent::DeBuffOff(UPlayerInformData* PID)
+void UDopingParent::DeBuffOff(APlayerCharacter* DopedPC)
 {
 	// 기본 디버프 종료 로직
 	CheckDeBuff = false;
@@ -66,21 +68,21 @@ void UDopingParent::DeBuffOff(UPlayerInformData* PID)
 	UE_LOG(LogTemp, Warning, TEXT("DopingParent: DeBuff Off"));
 }
 
-void UDopingParent::StartBuff(UPlayerInformData* PID)
+void UDopingParent::StartBuff(APlayerCharacter* DopedPC)
 {
 	GetWorld()->GetTimerManager().SetTimer(
 		BuffTimerHandle,
-		[this, PID]() { EndBuff(PID); },
+		[this, DopedPC]() { EndBuff(DopedPC); },
 		BuffDuration,
 		false
 	);
 }
 
-void UDopingParent::StartDeBuff(UPlayerInformData* PID)
+void UDopingParent::StartDeBuff(APlayerCharacter* DopedPC)
 {
 	GetWorld()->GetTimerManager().SetTimer(
 		DeBuffTimerHandle,
-		[this, PID]() { EndDeBuff(PID); },
+		[this, DopedPC]() { EndDeBuff(DopedPC); },
 		DeBuffDuration,
 		false
 	);
@@ -96,14 +98,14 @@ void UDopingParent::StartCooldown()
 	);
 }
 
-void UDopingParent::EndBuff(UPlayerInformData* PID)
+void UDopingParent::EndBuff(APlayerCharacter* DopedPC)
 {
-	BuffOff(PID);
+	BuffOff(DopedPC);
 }
 
-void UDopingParent::EndDeBuff(UPlayerInformData* PID)
+void UDopingParent::EndDeBuff(APlayerCharacter* DopedPC)
 {
-	DeBuffOff(PID);
+	DeBuffOff(DopedPC);
 }
 
 void UDopingParent::EndCooldown()

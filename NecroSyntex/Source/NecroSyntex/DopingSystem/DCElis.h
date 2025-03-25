@@ -21,8 +21,8 @@ class NECROSYNTEX_API UDCElis : public UDopingComponent
 
 	void Elis_Passive_End(APlayerCharacter* HitCharacter);
 
-	void FirstDopingForAlly_Implementation() override;
+	void FirstDopingForAlly() override;
 
-	void SecondDopingForAlly_Implementation() override;
+	void SecondDopingForAlly() override;
 
 };

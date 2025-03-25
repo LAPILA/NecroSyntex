@@ -7,15 +7,17 @@ void UDCVelis::BeginPlay()
 {
 	Super::BeginPlay();
 
+	APlayerCharacter* OwnerCharacter = Cast<APlayerCharacter>(GetOwner());
+	if (!OwnerCharacter) return;
 
-	if (GetOwner()->HasAuthority())
+	if (OwnerCharacter->HasAuthority())
 	{
-		PID->MaxHealth = 150;
-		PID->CurrentHealth = PID->MaxHealth;
-		PID->MoveSpeed = 650.0f;
-		PID->RunningSpeed = 1200.0f;
-		PID->MLAtaackPoint = 50.0f;
-		PID->Defense = 0;
+		OwnerCharacter->MaxHealth = 150;
+		OwnerCharacter->Health = OwnerCharacter->MaxHealth;
+		OwnerCharacter->WalkSpeed = 650.0f;
+		OwnerCharacter->RunningSpeed = 1200.0f;
+		OwnerCharacter->MLAtaackPoint = 50.0f;
+		OwnerCharacter->Defense = 0;
 	}
 	
 
@@ -23,7 +25,10 @@ void UDCVelis::BeginPlay()
 
 void UDCVelis::Passive_Start()
 {
-	PID->RunningSpeed = PID->RunningSpeed + 100;
+	APlayerCharacter* OwnerCharacter = Cast<APlayerCharacter>(GetOwner());
+	if (!OwnerCharacter) return;
+
+	OwnerCharacter->RunningSpeed = OwnerCharacter->RunningSpeed + 100;
 	UE_LOG(LogTemp, Warning, TEXT("Velis Passive On"));
 	GetWorld()->GetTimerManager().SetTimer(
 		PassiveTimerHandle,
@@ -35,21 +40,24 @@ void UDCVelis::Passive_Start()
 
 void UDCVelis::Passive_End()
 {
-	PID->RunningSpeed = PID->RunningSpeed - 100;
+	APlayerCharacter* OwnerCharacter = Cast<APlayerCharacter>(GetOwner());
+	if (!OwnerCharacter) return;
+
+	OwnerCharacter->RunningSpeed = OwnerCharacter->RunningSpeed - 100;
 	UE_LOG(LogTemp, Warning, TEXT("Velis Passive OFF"));
 }
 
-void UDCVelis::FirstDopingUse_Implementation()
+void UDCVelis::FirstDopingUse()
 {
 
-	Super::FirstDopingUse_Implementation();
+	Super::FirstDopingUse();
 
 	Passive_Start();
 }
 
-void UDCVelis::SecondDopingUse_Implementation() {
+void UDCVelis::SecondDopingUse() {
 
-	Super::SecondDopingUse_Implementation();
+	Super::SecondDopingUse();
 
 	Passive_Start();
 

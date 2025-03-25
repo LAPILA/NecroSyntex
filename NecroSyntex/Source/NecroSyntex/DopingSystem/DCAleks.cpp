@@ -7,16 +7,22 @@ void UDCAleks::BeginPlay()
 {
 	Super::BeginPlay();
 
-	if (GetOwner()->HasAuthority())
+	//UE_LOG(LogTemp, Warning, TEXT("1"));
+
+	APlayerCharacter* OwnerCharacter = Cast<APlayerCharacter>(GetOwner());
+	if (!OwnerCharacter) return;
+
+
+	if (OwnerCharacter->HasAuthority())
 	{
-		PID->MaxHealth = 200;
-		PID->CurrentHealth = PID->MaxHealth;
-		PID->MaxShield = 75.0f;
-		PID->CurrentShield = PID->CurrentShield;
-		PID->MoveSpeed = 550.0f;
-		PID->RunningSpeed = 1000.0f;
-		PID->MLAtaackPoint = 200.0f;
-		PID->Defense = 30;
+		OwnerCharacter->MaxHealth = 200.0f;
+		OwnerCharacter->Health = 200.0f;
+		OwnerCharacter->MaxShield = 75.0f;
+		OwnerCharacter->Shield = 75.0f;
+		OwnerCharacter->WalkSpeed = 550.0f;
+		OwnerCharacter->RunningSpeed = 1000.0f;
+		OwnerCharacter->MLAtaackPoint = 200.0f;
+		OwnerCharacter->Defense = 30;
 	}
 
 
@@ -25,37 +31,47 @@ void UDCAleks::BeginPlay()
 void UDCAleks::Passive_Start()
 {	
 
-	UE_LOG(LogTemp, Warning, TEXT("Aleks Passive On"));
+	APlayerCharacter* OwnerCharacter = Cast<APlayerCharacter>(GetOwner());
+	if (!OwnerCharacter) return;
 
-	PID->MaxHealth += 20.0f;
 
-	GetWorld()->GetTimerManager().SetTimer(
-		PassiveTimerHandle,
-		[this]() {Passive_End(); },
-		Passive_Duration,
-		false
-	);
+	if (OwnerCharacter->HasAuthority()) {
+		UE_LOG(LogTemp, Warning, TEXT("Aleks Passive On"));
+
+		OwnerCharacter->MaxHealth += 20.0f;
+
+		GetWorld()->GetTimerManager().SetTimer(
+			PassiveTimerHandle,
+			[this]() {Passive_End(); },
+			Passive_Duration,
+			false
+		);
+	}
 }
 
 void UDCAleks::Passive_End()
 {
+	APlayerCharacter* OwnerCharacter = Cast<APlayerCharacter>(GetOwner());
+	if (!OwnerCharacter) return;
 
-	UE_LOG(LogTemp, Warning, TEXT("Aleks Passive OFF"));
+	if (OwnerCharacter->HasAuthority()) {
+		UE_LOG(LogTemp, Warning, TEXT("Aleks Passive OFF"));
 
-	PID->MaxHealth -= 20.0f;
+		OwnerCharacter->MaxHealth -= 20.0f;
+	}
 }
 
 
-void UDCAleks::FirstDopingUse_Implementation() {
+void UDCAleks::FirstDopingUse() {
 
-	Super::FirstDopingUse_Implementation();
+	Super::FirstDopingUse();
 
 	Passive_Start();
 }
 
-void UDCAleks::SecondDopingUse_Implementation() {
+void UDCAleks::SecondDopingUse() {
 
-	Super::SecondDopingUse_Implementation();
+	Super::SecondDopingUse();
 
 	Passive_Start();
 

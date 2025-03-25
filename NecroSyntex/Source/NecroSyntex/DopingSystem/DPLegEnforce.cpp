@@ -16,7 +16,7 @@ UDPLegEnforce::UDPLegEnforce()
 
 }
 
-void UDPLegEnforce::UseDopingItem(UPlayerInformData* PID)
+void UDPLegEnforce::UseDopingItem(APlayerCharacter* DopedPC)
 {
 	if (Able && DopingItemNum > 0)
 	{
@@ -24,7 +24,7 @@ void UDPLegEnforce::UseDopingItem(UPlayerInformData* PID)
 		Able = false;
 
 		// Buff 적용 및 타이머 시작
-		BuffOn(PID);
+		BuffOn(DopedPC);
 
 		// 쿨타임 시작
 		StartCooldown();
@@ -33,60 +33,60 @@ void UDPLegEnforce::UseDopingItem(UPlayerInformData* PID)
 	}
 }
 
-void UDPLegEnforce::BuffOn(UPlayerInformData* PID)
+void UDPLegEnforce::BuffOn(APlayerCharacter* DopedPC)
 {
 	if (CheckBuff == false) {
-		PID->MoveSpeed += WalkingBuffNum;
-		PID->RunningSpeed += RunningBuffNum;
+		DopedPC->WalkSpeed += WalkingBuffNum;
+		DopedPC->RunningSpeed += RunningBuffNum;
 
 		CheckBuff = true;
 
-		PID->CurrentDoped += 1;
+		DopedPC->CurrentDoped += 1;
 
 	}
 
-	StartBuff(PID);
+	StartBuff(DopedPC);
 
 	UE_LOG(LogTemp, Warning, TEXT("LegEnforce BuffOn: Speed increased."));
 }
 
-void UDPLegEnforce::BuffOff(UPlayerInformData* PID)
+void UDPLegEnforce::BuffOff(APlayerCharacter* DopedPC)
 {
 	if (CheckBuff == true) {
-		PID->MoveSpeed -= WalkingBuffNum;
-		PID->RunningSpeed -= RunningBuffNum;
+		DopedPC->WalkSpeed -= WalkingBuffNum;
+		DopedPC->RunningSpeed -= RunningBuffNum;
 
 		CheckBuff = false;
 
 		// DeBuff 적용 및 타이머 시작
-		DeBuffOn(PID);
+		DeBuffOn(DopedPC);
 	}
 
 	UE_LOG(LogTemp, Warning, TEXT("LegEnforce BuffOff: Speed normalized."));
 }
 
-void UDPLegEnforce::DeBuffOn(UPlayerInformData* PID)
+void UDPLegEnforce::DeBuffOn(APlayerCharacter* DopedPC)
 {
 
 	if (CheckDeBuff == false) {
-		PID->MoveSpeed -= WalkingDeBuffNum;
-		PID->RunningSpeed -= RunningDeBuffNum;
+		DopedPC->WalkSpeed -= WalkingDeBuffNum;
+		DopedPC->RunningSpeed -= RunningDeBuffNum;
 
 		CheckDeBuff = true;
 	}
 
-	StartDeBuff(PID);
+	StartDeBuff(DopedPC);
 
 	UE_LOG(LogTemp, Warning, TEXT("LegEnforce DeBuffOn: Speed reduced."));
 }
 
-void UDPLegEnforce::DeBuffOff(UPlayerInformData* PID)
+void UDPLegEnforce::DeBuffOff(APlayerCharacter* DopedPC)
 {
 	if (CheckDeBuff == true) {
-		PID->MoveSpeed += WalkingDeBuffNum;
-		PID->RunningSpeed += RunningDeBuffNum;
+		DopedPC->WalkSpeed += WalkingDeBuffNum;
+		DopedPC->RunningSpeed += RunningDeBuffNum;
 
-		PID->CurrentDoped -= 1;
+		DopedPC->CurrentDoped -= 1;
 
 		CheckDeBuff = false;
 	}

@@ -15,7 +15,7 @@ UDPHPconversion::UDPHPconversion()
 
 }
 
-void UDPHPconversion::UseDopingItem(UPlayerInformData* PID)
+void UDPHPconversion::UseDopingItem(APlayerCharacter* DopedPC)
 {
 	if (Able && DopingItemNum > 0)
 	{
@@ -23,7 +23,7 @@ void UDPHPconversion::UseDopingItem(UPlayerInformData* PID)
 		Able = false;
 
 		// Buff 적용 및 타이머 시작
-		BuffOn(PID);
+		BuffOn(DopedPC);
 
 		// 쿨타임 시작
 		StartCooldown();
@@ -32,46 +32,46 @@ void UDPHPconversion::UseDopingItem(UPlayerInformData* PID)
 	}
 }
 
-void UDPHPconversion::BuffOn(UPlayerInformData* PID)
+void UDPHPconversion::BuffOn(APlayerCharacter* DopedPC)
 {
-	if (PID->CurrentShield + 50.0f > PID->MaxShield)
+	if (DopedPC->Shield + 50.0f > DopedPC->MaxShield)
 	{
-		PID->CurrentShield = PID->MaxShield;
+		DopedPC->Shield = DopedPC->MaxShield;
 	}
 	else {
-		PID->CurrentShield += 50.0f;
+		DopedPC->Shield += 50.0f;
 	}
-	DeBuffOn(PID);
+	DeBuffOn(DopedPC);
 
 	UE_LOG(LogTemp, Warning, TEXT("UDPHPconversion BuffOn"));
 }
 
-void UDPHPconversion::BuffOff(UPlayerInformData* PID)
+void UDPHPconversion::BuffOff(APlayerCharacter* DopedPC)
 {
 
 	UE_LOG(LogTemp, Warning, TEXT("UDPHPconversion BuffOff"));
 }
 
-void UDPHPconversion::DeBuffOn(UPlayerInformData* PID)
+void UDPHPconversion::DeBuffOn(APlayerCharacter* DopedPC)
 {
 
-	if (PID->CurrentHealth - 20.0f <= 0) {
-		PID->CurrentHealth = 1.0f;
+	if (DopedPC->Health - 20.0f <= 0) {
+		DopedPC->Health = 1.0f;
 	}
 	else {
-		PID->CurrentHealth -= 20.0f;
+		DopedPC->Health -= 20.0f;
 	}
 
 
 	UE_LOG(LogTemp, Warning, TEXT("UDPHPconversion DeBuffOn."));
 }
 
-void UDPHPconversion::DeBuffOff(UPlayerInformData* PID)
+void UDPHPconversion::DeBuffOff(APlayerCharacter* DopedPC)
 {
 	if (CheckDeBuff == true) {
 
 
-		PID->CurrentDoped -= 1;
+		DopedPC->CurrentDoped -= 1;
 
 		CheckDeBuff = false;
 	}

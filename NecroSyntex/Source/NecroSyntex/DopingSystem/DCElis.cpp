@@ -9,15 +9,17 @@ void UDCElis::BeginPlay()
 {
 	Super::BeginPlay();
 
+	APlayerCharacter* OwnerCharacter = Cast<APlayerCharacter>(GetOwner());
+	if (!OwnerCharacter) return;
 
-	if (GetOwner()->HasAuthority())
+	if (OwnerCharacter->HasAuthority())
 	{
-		PID->MaxHealth = 200;
-		PID->CurrentHealth = PID->MaxHealth;
-		PID->MoveSpeed = 550.0f;
-		PID->RunningSpeed = 1000.0f;
-		PID->MLAtaackPoint = 60.0f;
-		PID->Defense = 20;
+		OwnerCharacter->MaxHealth = 200;
+		OwnerCharacter->Health = OwnerCharacter->MaxHealth;
+		OwnerCharacter->WalkSpeed = 550.0f;
+		OwnerCharacter->RunningSpeed = 1000.0f;
+		OwnerCharacter->MLAtaackPoint = 60.0f;
+		OwnerCharacter->Defense = 20;
 	}
 
 
@@ -25,10 +27,14 @@ void UDCElis::BeginPlay()
 
 void UDCElis::Elis_Passive_Start(APlayerCharacter* HitCharacter)
 {
+
+	APlayerCharacter* OwnerCharacter = Cast<APlayerCharacter>(GetOwner());
+	if (!OwnerCharacter) return;
+
 	UE_LOG(LogTemp, Warning, TEXT("Elis Passive On"));
 
-	PID->DopingDamageBuff += 10.0f;
-	HitCharacter->UDC->PID->DopingDamageBuff += 10.0f;
+	OwnerCharacter->DopingDamageBuff += 10.0f;
+	HitCharacter->DopingDamageBuff += 10.0f;
 
 	GetWorld()->GetTimerManager().SetTimer(
 		PassiveTimerHandle,
@@ -40,13 +46,16 @@ void UDCElis::Elis_Passive_Start(APlayerCharacter* HitCharacter)
 
 void UDCElis::Elis_Passive_End(APlayerCharacter* HitCharacter)
 {
+	APlayerCharacter* OwnerCharacter = Cast<APlayerCharacter>(GetOwner());
+	if (!OwnerCharacter) return;
+
 	UE_LOG(LogTemp, Warning, TEXT("Elis Passive OFF"));
 
-	PID->DopingDamageBuff -= 10.0f;
-	HitCharacter->UDC->PID->DopingDamageBuff -= 10.0f;
+	OwnerCharacter->DopingDamageBuff -= 10.0f;
+	HitCharacter->DopingDamageBuff -= 10.0f;
 }
 
-void UDCElis::FirstDopingForAlly_Implementation()
+void UDCElis::FirstDopingForAlly()
 {
 	UE_LOG(LogTemp, Warning, TEXT("First Doping for Team"));
 
@@ -82,24 +91,26 @@ void UDCElis::FirstDopingForAlly_Implementation()
 			//UE_LOG(LogTemp, Warning, TEXT("6"));
 			switch (FirstDopingCode)
 			{
-			case 1: HitCharacter->UDC->LegEnforce->BuffOn(HitCharacter->UDC->PID); UE_LOG(LogTemp, Warning, TEXT("7��")); break;
-			case 2: HitCharacter->UDC->ReducePain->BuffOn(HitCharacter->UDC->PID); break;
-			case 3: HitCharacter->UDC->SupremeStrength->BuffOn(HitCharacter->UDC->PID); break;
-			case 4: HitCharacter->UDC->ForcedHealing->BuffOn(HitCharacter->UDC->PID); break;
-			case 5: HitCharacter->UDC->FinalEmber->BuffOn(HitCharacter->UDC->PID); break;
-			case 6: HitCharacter->UDC->BurningFurnace->BuffOn(HitCharacter->UDC->PID); break;
-			case 7: HitCharacter->UDC->SolidFortress->BuffOn(HitCharacter->UDC->PID); break;
-			case 8: HitCharacter->UDC->Painless->BuffOn(HitCharacter->UDC->PID); break;
+			case 1: HitCharacter->UDC->LegEnforce->BuffOn(HitCharacter); UE_LOG(LogTemp, Warning, TEXT("7��")); break;
+			case 2: HitCharacter->UDC->ReducePain->BuffOn(HitCharacter); break;
+			case 3: HitCharacter->UDC->SupremeStrength->BuffOn(HitCharacter); break;
+			case 4: HitCharacter->UDC->ForcedHealing->BuffOn(HitCharacter); break;
+			case 5: HitCharacter->UDC->FinalEmber->BuffOn(HitCharacter); break;
+			case 6: HitCharacter->UDC->BurningFurnace->BuffOn(HitCharacter); break;
+			case 7: HitCharacter->UDC->SolidFortress->BuffOn(HitCharacter); break;
+			case 8: HitCharacter->UDC->Painless->BuffOn(HitCharacter); break;
 			default: UE_LOG(LogTemp, Warning, TEXT("Invalid Doping Key Set!")); break;
 			}
 
 			Elis_Passive_Start(HitCharacter);
 
+			HitCharacter->PlayDopingEffect();
+
 		}
 	}
 }
 
-void UDCElis::SecondDopingForAlly_Implementation()
+void UDCElis::SecondDopingForAlly()
 {
 
 	UE_LOG(LogTemp, Warning, TEXT("Second Doping for Team"));
@@ -127,20 +138,21 @@ void UDCElis::SecondDopingForAlly_Implementation()
 		if (HitCharacter) {
 			switch (SecondDopingCode)
 			{
-			case 1: HitCharacter->UDC->LegEnforce->BuffOn(HitCharacter->UDC->PID); break;
-			case 2: HitCharacter->UDC->ReducePain->BuffOn(HitCharacter->UDC->PID); break;
-			case 3: HitCharacter->UDC->SupremeStrength->BuffOn(HitCharacter->UDC->PID); break;
-			case 4: HitCharacter->UDC->ForcedHealing->BuffOn(HitCharacter->UDC->PID); break;
-			case 5: HitCharacter->UDC->FinalEmber->BuffOn(HitCharacter->UDC->PID); break;
-			case 6: HitCharacter->UDC->BurningFurnace->BuffOn(HitCharacter->UDC->PID); break;
-			case 7: HitCharacter->UDC->SolidFortress->BuffOn(HitCharacter->UDC->PID); break;
-			case 8: HitCharacter->UDC->Painless->BuffOn(HitCharacter->UDC->PID); break;
+			case 1: HitCharacter->UDC->LegEnforce->BuffOn(HitCharacter); break;
+			case 2: HitCharacter->UDC->ReducePain->BuffOn(HitCharacter); break;
+			case 3: HitCharacter->UDC->SupremeStrength->BuffOn(HitCharacter); break;
+			case 4: HitCharacter->UDC->ForcedHealing->BuffOn(HitCharacter); break;
+			case 5: HitCharacter->UDC->FinalEmber->BuffOn(HitCharacter); break;
+			case 6: HitCharacter->UDC->BurningFurnace->BuffOn(HitCharacter); break;
+			case 7: HitCharacter->UDC->SolidFortress->BuffOn(HitCharacter); break;
+			case 8: HitCharacter->UDC->Painless->BuffOn(HitCharacter); break;
 			default: UE_LOG(LogTemp, Warning, TEXT("Invalid Doping Key Set!")); break;
 
 			}
 
 			Elis_Passive_Start(HitCharacter);
 
+			HitCharacter->PlayDopingEffect();
 		}
 	}
 }

@@ -13,60 +13,60 @@ UDPSolidFortress::UDPSolidFortress()
 	CheckDeBuff = false;
 }
 
-void UDPSolidFortress::BuffOn(UPlayerInformData* PID)
+void UDPSolidFortress::BuffOn(APlayerCharacter* DopedPC)
 {
 	if (CheckBuff == false) {
-		HPBuffNum = PID->MaxHealth * 0.5f;
+		HPBuffNum = DopedPC->MaxHealth * 0.5f;
 
-		PID->MaxHealth = PID->MaxHealth + HPBuffNum;
+		DopedPC->MaxHealth = DopedPC->MaxHealth + HPBuffNum;
 
-		PID->CurrentDoped += 1;
+		DopedPC->CurrentDoped += 1;
 
 
 		CheckBuff = true;
 	}
-	StartBuff(PID);
+	StartBuff(DopedPC);
 
-	DeBuffOn(PID);
+	DeBuffOn(DopedPC);
 }
 
-void UDPSolidFortress::BuffOff(UPlayerInformData* PID)
+void UDPSolidFortress::BuffOff(APlayerCharacter* DopedPC)
 {
 	if (CheckBuff == true) {
-		PID->MaxHealth = PID->MaxHealth - HPBuffNum;
+		DopedPC->MaxHealth = DopedPC->MaxHealth - HPBuffNum;
 		CheckBuff = false;
 	}
 }
 
-void UDPSolidFortress::DeBuffOn(UPlayerInformData* PID)
+void UDPSolidFortress::DeBuffOn(APlayerCharacter* DopedPC)
 {
 	if (CheckDeBuff == false) {
-		WalkingDeBuffNum = PID->MoveSpeed * 0.2f;
-		RunningDeBuffNum = PID->RunningSpeed * 0.2f;
+		WalkingDeBuffNum = DopedPC->WalkSpeed * 0.2f;
+		RunningDeBuffNum = DopedPC->RunningSpeed * 0.2f;
 
-		PID->MoveSpeed = PID->MoveSpeed - WalkingDeBuffNum;
-		PID->RunningSpeed = PID->RunningSpeed - RunningDeBuffNum;
-		PID->DopingDamageBuff -= 20.0f;
+		DopedPC->WalkSpeed = DopedPC->WalkSpeed - WalkingDeBuffNum;
+		DopedPC->RunningSpeed = DopedPC->RunningSpeed - RunningDeBuffNum;
+		DopedPC->DopingDamageBuff -= 20.0f;
 
 		CheckDeBuff = true;
 	}
-	StartDeBuff(PID);
+	StartDeBuff(DopedPC);
 }
 
-void UDPSolidFortress::DeBuffOff(UPlayerInformData* PID)
+void UDPSolidFortress::DeBuffOff(APlayerCharacter* DopedPC)
 {
 	if (CheckDeBuff == true) {
-		PID->MoveSpeed = PID->MoveSpeed + WalkingDeBuffNum;
-		PID->RunningSpeed = PID->RunningSpeed + RunningDeBuffNum;
-		PID->DopingDamageBuff += 20.0f;
+		DopedPC->WalkSpeed = DopedPC->WalkSpeed + WalkingDeBuffNum;
+		DopedPC->RunningSpeed = DopedPC->RunningSpeed + RunningDeBuffNum;
+		DopedPC->DopingDamageBuff += 20.0f;
 
-		PID->CurrentDoped -= 1;
+		DopedPC->CurrentDoped -= 1;
 		CheckDeBuff = false;
 	}
 
 }
 
-void UDPSolidFortress::UseDopingItem(UPlayerInformData* PID)
+void UDPSolidFortress::UseDopingItem(APlayerCharacter* DopedPC)
 {
 	if (Able && DopingItemNum > 0)
 	{
@@ -76,7 +76,7 @@ void UDPSolidFortress::UseDopingItem(UPlayerInformData* PID)
 
 		UE_LOG(LogTemp, Warning, TEXT("SolidFortress Use"));
 		//효과
-		BuffOn(PID);
+		BuffOn(DopedPC);
 		//
 		StartCooldown();
 	}

@@ -19,25 +19,25 @@ UDPParadoxofGuardianship::UDPParadoxofGuardianship()
 	CheckDeBuff = false;
 }
 
-void UDPParadoxofGuardianship::ShiledCalcu(UPlayerInformData* PID)
+void UDPParadoxofGuardianship::ShiledCalcu(APlayerCharacter* DopedPC)
 {
 
-	if (PID->CurrentShield > 0) {
+	if (DopedPC->Shield > 0) {
 		if (shieldOn == false) {
 			if (isfirst == true) {
-				PID->Defense = PID->Defense + DefenseBuffNum;
-				PID->MoveSpeed = PID->MoveSpeed - WalkingDeBuffNum;
-				PID->RunningSpeed = PID->RunningSpeed - RunningDeBuffNum;
+				DopedPC->Defense = DopedPC->Defense + DefenseBuffNum;
+				DopedPC->WalkSpeed = DopedPC->WalkSpeed - WalkingDeBuffNum;
+				DopedPC->RunningSpeed = DopedPC->RunningSpeed - RunningDeBuffNum;
 				isfirst = false;
 				shieldOn = true;
 			}
 			else {
-				PID->Defense = PID->Defense + DefenseDeBuffNum;
-				PID->MoveSpeed = PID->MoveSpeed - WalkingBuffNum;
-				PID->RunningSpeed = PID->RunningSpeed - RunningBuffNum;
-				PID->Defense = PID->Defense + DefenseBuffNum;
-				PID->MoveSpeed = PID->MoveSpeed - WalkingDeBuffNum;
-				PID->RunningSpeed = PID->RunningSpeed - RunningDeBuffNum;
+				DopedPC->Defense = DopedPC->Defense + DefenseDeBuffNum;
+				DopedPC->WalkSpeed = DopedPC->WalkSpeed - WalkingBuffNum;
+				DopedPC->RunningSpeed = DopedPC->RunningSpeed - RunningBuffNum;
+				DopedPC->Defense = DopedPC->Defense + DefenseBuffNum;
+				DopedPC->WalkSpeed = DopedPC->WalkSpeed - WalkingDeBuffNum;
+				DopedPC->RunningSpeed = DopedPC->RunningSpeed - RunningDeBuffNum;
 				shieldOn = true;
 			}
 		}
@@ -45,26 +45,26 @@ void UDPParadoxofGuardianship::ShiledCalcu(UPlayerInformData* PID)
 	else {
 		if (shieldOn == true) {
 			if (isfirst == true) {
-				PID->Defense = PID->Defense - DefenseDeBuffNum;
-				PID->MoveSpeed = PID->MoveSpeed + WalkingBuffNum;
-				PID->RunningSpeed = PID->RunningSpeed + RunningBuffNum;
+				DopedPC->Defense = DopedPC->Defense - DefenseDeBuffNum;
+				DopedPC->WalkSpeed = DopedPC->WalkSpeed + WalkingBuffNum;
+				DopedPC->RunningSpeed = DopedPC->RunningSpeed + RunningBuffNum;
 				isfirst = false;
 				shieldOn = false;
 			}
 			else {
-				PID->Defense = PID->Defense - DefenseBuffNum;
-				PID->MoveSpeed = PID->MoveSpeed + WalkingDeBuffNum;
-				PID->RunningSpeed = PID->RunningSpeed + RunningDeBuffNum;
-				PID->Defense = PID->Defense - DefenseDeBuffNum;
-				PID->MoveSpeed = PID->MoveSpeed + WalkingBuffNum;
-				PID->RunningSpeed = PID->RunningSpeed + RunningBuffNum;
+				DopedPC->Defense = DopedPC->Defense - DefenseBuffNum;
+				DopedPC->WalkSpeed = DopedPC->WalkSpeed + WalkingDeBuffNum;
+				DopedPC->RunningSpeed = DopedPC->RunningSpeed + RunningDeBuffNum;
+				DopedPC->Defense = DopedPC->Defense - DefenseDeBuffNum;
+				DopedPC->WalkSpeed = DopedPC->WalkSpeed + WalkingBuffNum;
+				DopedPC->RunningSpeed = DopedPC->RunningSpeed + RunningBuffNum;
 				shieldOn = false;
 			}
 		}
 	}
 }
 
-void UDPParadoxofGuardianship::UseDopingItem(UPlayerInformData* PID)
+void UDPParadoxofGuardianship::UseDopingItem(APlayerCharacter* DopedPC)
 {
 	if (Able && DopingItemNum > 0)
 	{
@@ -72,7 +72,7 @@ void UDPParadoxofGuardianship::UseDopingItem(UPlayerInformData* PID)
 		Able = false;
 
 		// Buff 적용 및 타이머 시작
-		BuffOn(PID);
+		BuffOn(DopedPC);
 
 		// 쿨타임 시작
 		StartCooldown();
@@ -81,13 +81,13 @@ void UDPParadoxofGuardianship::UseDopingItem(UPlayerInformData* PID)
 	}
 }
 
-void UDPParadoxofGuardianship::BuffOn(UPlayerInformData* PID)
+void UDPParadoxofGuardianship::BuffOn(APlayerCharacter* DopedPC)
 {
 	if (CheckBuff == false) {
 
 		isfirst = true;
 
-		if (PID->CurrentShield > 0) {
+		if (DopedPC->Shield > 0) {
 			shieldOn = false;
 		}
 		else {
@@ -98,17 +98,17 @@ void UDPParadoxofGuardianship::BuffOn(UPlayerInformData* PID)
 		CheckBuff = true;
 		GetWorld()->GetTimerManager().SetTimer(
 			ShieldCalcuBuffTimer,
-			[this, PID]() { ShiledCalcu(PID); },
+			[this, DopedPC]() { ShiledCalcu(DopedPC); },
 			0.1f,
 			true
 		);
 
-		StartBuff(PID);
+		StartBuff(DopedPC);
 
 	}
 }
 
-void UDPParadoxofGuardianship::BuffOff(UPlayerInformData* PID)
+void UDPParadoxofGuardianship::BuffOff(APlayerCharacter* DopedPC)
 {
 	if (CheckBuff == true) {
 		GetWorld()->GetTimerManager().ClearTimer(ShieldCalcuBuffTimer);
@@ -116,24 +116,24 @@ void UDPParadoxofGuardianship::BuffOff(UPlayerInformData* PID)
 	}
 
 	if (shieldOn == true) {
-		PID->Defense = PID->Defense - DefenseBuffNum;
-		PID->MoveSpeed = PID->MoveSpeed + WalkingDeBuffNum;
-		PID->RunningSpeed = PID->RunningSpeed + RunningDeBuffNum;
+		DopedPC->Defense = DopedPC->Defense - DefenseBuffNum;
+		DopedPC->WalkSpeed = DopedPC->WalkSpeed + WalkingDeBuffNum;
+		DopedPC->RunningSpeed = DopedPC->RunningSpeed + RunningDeBuffNum;
 	}
 	else {
-		PID->Defense = PID->Defense + DefenseDeBuffNum;
-		PID->MoveSpeed = PID->MoveSpeed - WalkingBuffNum;
-		PID->RunningSpeed = PID->RunningSpeed - RunningBuffNum;
+		DopedPC->Defense = DopedPC->Defense + DefenseDeBuffNum;
+		DopedPC->WalkSpeed = DopedPC->WalkSpeed - WalkingBuffNum;
+		DopedPC->RunningSpeed = DopedPC->RunningSpeed - RunningBuffNum;
 	}
 
 }
 
-void UDPParadoxofGuardianship::DeBuffOn(UPlayerInformData* PID)
+void UDPParadoxofGuardianship::DeBuffOn(APlayerCharacter* DopedPC)
 {
 
 }
 
-void UDPParadoxofGuardianship::DeBuffOff(UPlayerInformData* PID)
+void UDPParadoxofGuardianship::DeBuffOff(APlayerCharacter* DopedPC)
 {
 
 }

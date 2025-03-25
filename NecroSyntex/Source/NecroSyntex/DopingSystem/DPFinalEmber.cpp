@@ -11,79 +11,79 @@ UDPFinalEmber::UDPFinalEmber()
 	CheckDeBuff = false;
 }
 
-void UDPFinalEmber::BuffOn(UPlayerInformData* PID)
+void UDPFinalEmber::BuffOn(APlayerCharacter* DopedPC)
 {
 	if (CheckBuff == false) {
 		//체력 50% 버프
-		HPBuffNum = PID->MaxHealth * 0.5f;
-		PID->MaxHealth = PID->MaxHealth + HPBuffNum;
+		HPBuffNum = DopedPC->MaxHealth * 0.5f;
+		DopedPC->MaxHealth = DopedPC->MaxHealth + HPBuffNum;
 
 		//체력 전체 회복
-		PID->CurrentHealth = PID->MaxHealth;
+		DopedPC->Health = DopedPC->MaxHealth;
 
 		//이동 속도 20% 증가
-		WalkingBuffNum = PID->MoveSpeed * 0.2f;
-		PID->MoveSpeed = PID->MoveSpeed + WalkingBuffNum;
+		WalkingBuffNum = DopedPC->WalkSpeed * 0.2f;
+		DopedPC->WalkSpeed = DopedPC->WalkSpeed + WalkingBuffNum;
 
-		RunningBuffNum = PID->RunningSpeed * 0.2f;
-		PID->RunningSpeed = PID->RunningSpeed + RunningBuffNum;
+		RunningBuffNum = DopedPC->RunningSpeed * 0.2f;
+		DopedPC->RunningSpeed = DopedPC->RunningSpeed + RunningBuffNum;
 
 		//근접 공격 50% 증가
-		MLAttackBuffNum = PID->MLAtaackPoint * 0.5f;
-		PID->MLAtaackPoint = PID->MLAtaackPoint + MLAttackBuffNum;
+		MLAttackBuffNum = DopedPC->MLAtaackPoint * 0.5f;
+		DopedPC->MLAtaackPoint = DopedPC->MLAtaackPoint + MLAttackBuffNum;
 
 		//도핑 공격 데미지 추가
-		PID->DopingDamageBuff += 20.0f;
+		DopedPC->DopingDamageBuff += 20.0f;
 
-		PID->CurrentDoped += 1;
+		DopedPC->CurrentDoped += 1;
 
 		CheckBuff = true;
 	}
-	StartBuff(PID);
+	StartBuff(DopedPC);
 }
 
-void UDPFinalEmber::BuffOff(UPlayerInformData* PID)
+void UDPFinalEmber::BuffOff(APlayerCharacter* DopedPC)
 {
 	if (CheckBuff == true) {
 		//최대 체력 원상복귀
-		PID->MaxHealth = PID->MaxHealth - HPBuffNum;
+		DopedPC->MaxHealth = DopedPC->MaxHealth - HPBuffNum;
 
 		//이동 속도 원상 복귀
-		PID->MoveSpeed = PID->MoveSpeed - WalkingBuffNum;
+		DopedPC->WalkSpeed = DopedPC->WalkSpeed - WalkingBuffNum;
 
-		PID->RunningSpeed = PID->RunningSpeed - RunningBuffNum;
+		DopedPC->RunningSpeed = DopedPC->RunningSpeed - RunningBuffNum;
 
 		//근접 공격 원상복귀
-		PID->MLAtaackPoint = PID->MLAtaackPoint - MLAttackBuffNum;
+		DopedPC->MLAtaackPoint = DopedPC->MLAtaackPoint - MLAttackBuffNum;
 
 		//데미지 버프 원상복귀
-		PID->DopingDamageBuff -= 20.0f;
+		DopedPC->DopingDamageBuff -= 20.0f;
 
 		CheckBuff = false;
-		DeBuffOn(PID);
+		DeBuffOn(DopedPC);
 	}
 }
 
-void UDPFinalEmber::DeBuffOn(UPlayerInformData* PID)
+void UDPFinalEmber::DeBuffOn(APlayerCharacter* DopedPC)
 {
-	PID->CurrentHealth = 10.0f;
+	DopedPC->Health = 10.0f;
 
-	PID->CurrentDoped -= 1;
+	DopedPC->CurrentDoped -= 1;
 
 	//CheckDeBuff = true;
-	//StartDeBuff(PID);
+	//StartDeBuff(DopedPC);
 
 
 
 }
 
-void UDPFinalEmber::DeBuffOff(UPlayerInformData* PID)
+void UDPFinalEmber::DeBuffOff(APlayerCharacter* DopedPC)
 {
 
 }
 
 
-void UDPFinalEmber::UseDopingItem(UPlayerInformData* PID)
+void UDPFinalEmber::UseDopingItem(APlayerCharacter* DopedPC)
 {
 	if (Able && DopingItemNum > 0)
 	{
@@ -93,7 +93,7 @@ void UDPFinalEmber::UseDopingItem(UPlayerInformData* PID)
 
 		UE_LOG(LogTemp, Warning, TEXT("FinalEmber Use"));
 		//효과
-		BuffOn(PID);
+		BuffOn(DopedPC);
 		//
 		StartCooldown();
 	}
