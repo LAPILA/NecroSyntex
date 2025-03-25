@@ -10,7 +10,8 @@
 			"LoadingPhase": "Default",
 			"AdditionalDependencies": [
 				"Engine",
-				"UMG"
+				"UMG",
+				"AIModule"
 			]
 		}
 	],
@@ -23,7 +24,15 @@
 			]
 		},
 		{
-			"Name": "SteamSockets",
+			"Name": "MultiplayerSessions",
+			"Enabled": false
+		},
+		{
+			"Name": "OnlineSubsystemSteam",
+			"Enabled": true
+		},
+		{
+			"Name": "SteamShared",
 			"Enabled": true
 		}
 	],

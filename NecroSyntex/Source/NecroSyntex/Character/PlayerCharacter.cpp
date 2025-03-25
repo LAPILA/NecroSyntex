@@ -1,27 +1,38 @@
+// Unreal Engine �⺻ ���
 #include "PlayerCharacter.h"
-#include "Engine/LocalPlayer.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
-#include "GameFramework/CharacterMovementComponent.h"
-#include "GameFramework/SpringArmComponent.h"
-#include "GameFramework/Controller.h"
 #include "Components/WidgetComponent.h"
-#include "Net\UnrealNetwork.h"
-#include "EnhancedInputSubsystems.h"
-#include "EnhancedInputComponent.h"
-#include "NecroSyntex\Weapon\Weapon.h"
-#include "NecroSyntex\NecroSyntaxComponents\CombatComponent.h"
-#include "Components/CapsuleComponent.h"
+#include "Components/BoxComponent.h"
+#include "Engine/LocalPlayer.h"
+#include "GameFramework/CharacterMovementComponent.h"
+#include "GameFramework/Controller.h"
+#include "GameFramework/SpringArmComponent.h"
 #include "Kismet/KismetMathLibrary.h"
-#include "PlayerAnimInstance.h"
-#include "NecroSyntex\NecroSyntex.h"
-#include "NecroSyntex\PlayerController\NecroSyntexPlayerController.h"
-#include "NecroSyntex\GameMode\NecroSyntexGameMode.h"
-#include "TimerManager.h"
+#include "Kismet/GameplayStatics.h"
+#include "Net/UnrealNetwork.h"
 #include "NiagaraSystem.h"
+#include "TimerManager.h"
+
+// Enhanced Input ���� ���
+#include "EnhancedInputComponent.h"
+#include "EnhancedInputSubsystems.h"
+
+// ������Ʈ ���� ��� (NecroSyntex)
+#include "NecroSyntex/NecroSyntex.h"
+#include "NecroSyntex/Weapon/Weapon.h"
 #include "NecroSyntex/Weapon/WeaponTypes.h"
-#include "NecroSyntex\PlayerState\NecroSyntexPlayerState.h"
-#include <Kismet\GameplayStatics.h>
+#include "NecroSyntex/NecroSyntaxComponents/CombatComponent.h"
+#include "NecroSyntex/NecroSyntaxComponents/SubComponent.h"
+#include "NecroSyntex/GameMode/NecroSyntexGameMode.h"
+#include "NecroSyntex/PlayerController/NecroSyntexPlayerController.h"
+#include "NecroSyntex/PlayerState/NecroSyntexPlayerState.h"
+#include "NecroSyntex/DopingSystem/DopingComponent.h"
+#include "NecroSyntex\NecroSyntaxComponents\LagCompensationComponent.h"
+
+// �ִϸ��̼� ���� ���
+#include "PlayerAnimInstance.h"
+
 
 APlayerCharacter::APlayerCharacter()
 {
@@ -45,7 +56,12 @@ APlayerCharacter::APlayerCharacter()
 	Combat = CreateDefaultSubobject<UCombatComponent>(TEXT("CombatComponent"));
 	Combat->SetIsReplicated(true);
 
-	UDC = CreateDefaultSubobject<UDopingComponent>(TEXT("DopingComponent"));
+	//UDC = CreateDefaultSubobject<UDopingComponent>(TEXT("DopingComponent"));
+
+	SubComp = CreateDefaultSubobject<USubComponent>(TEXT("SubComponent"));
+	SubComp->SetIsReplicated(true);
+
+	LagCompensation = CreateDefaultSubobject<ULagCompensationComponent>(TEXT("LagCompensation"));
 
 	GetCharacterMovement()->NavAgentProps.bCanCrouch = true;
 	GetCapsuleComponent()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Ignore);
@@ -60,6 +76,93 @@ APlayerCharacter::APlayerCharacter()
 
 	DissolveEffectComponent = CreateDefaultSubobject<UNiagaraComponent>(TEXT("DissolveEffectComponent"));
 	DissolveEffectComponent->SetupAttachment(GetMesh());
+
+	AttachedGrenade = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Attached Grenade"));
+	AttachedGrenade->SetupAttachment(GetMesh(), FName("GrenadeSocket"));
+	AttachedGrenade->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+	/**
+	* Hit boxes for server-side rewind
+	*/
+
+	head = CreateDefaultSubobject<UBoxComponent>(TEXT("head"));
+	head->SetupAttachment(GetMesh(), FName("head"));
+	HitCollisionBoxes.Add(FName("head"), head);
+
+	pelvis = CreateDefaultSubobject<UBoxComponent>(TEXT("pelvis"));
+	pelvis->SetupAttachment(GetMesh(), FName("pelvis"));
+	HitCollisionBoxes.Add(FName("pelvis"), pelvis);
+
+	spine_02 = CreateDefaultSubobject<UBoxComponent>(TEXT("spine_02"));
+	spine_02->SetupAttachment(GetMesh(), FName("spine_02"));
+	HitCollisionBoxes.Add(FName("spine_02"), spine_02);
+
+	spine_03 = CreateDefaultSubobject<UBoxComponent>(TEXT("spine_03"));
+	spine_03->SetupAttachment(GetMesh(), FName("spine_03"));
+	HitCollisionBoxes.Add(FName("spine_03"), spine_03);
+
+	upperarm_l = CreateDefaultSubobject<UBoxComponent>(TEXT("upperarm_l"));
+	upperarm_l->SetupAttachment(GetMesh(), FName("upperarm_l"));
+	HitCollisionBoxes.Add(FName("upperarm_l"), upperarm_l);
+
+	upperarm_r = CreateDefaultSubobject<UBoxComponent>(TEXT("upperarm_r"));
+	upperarm_r->SetupAttachment(GetMesh(), FName("upperarm_r"));
+	HitCollisionBoxes.Add(FName("upperarm_r"), upperarm_r);
+
+	lowerarm_l = CreateDefaultSubobject<UBoxComponent>(TEXT("lowerarm_l"));
+	lowerarm_l->SetupAttachment(GetMesh(), FName("lowerarm_l"));
+	HitCollisionBoxes.Add(FName("lowerarm_l"), lowerarm_l);
+
+	lowerarm_r = CreateDefaultSubobject<UBoxComponent>(TEXT("lowerarm_r"));
+	lowerarm_r->SetupAttachment(GetMesh(), FName("lowerarm_r"));
+	HitCollisionBoxes.Add(FName("lowerarm_r"), lowerarm_r);
+
+	hand_l = CreateDefaultSubobject<UBoxComponent>(TEXT("hand_l"));
+	hand_l->SetupAttachment(GetMesh(), FName("hand_l"));
+	HitCollisionBoxes.Add(FName("hand_l"), hand_l);
+
+	hand_r = CreateDefaultSubobject<UBoxComponent>(TEXT("hand_r"));
+	hand_r->SetupAttachment(GetMesh(), FName("hand_r"));
+	HitCollisionBoxes.Add(FName("hand_r"), hand_r);
+
+	back = CreateDefaultSubobject<UBoxComponent>(TEXT("back"));
+	back->SetupAttachment(GetMesh(), FName("neck_01"));
+	HitCollisionBoxes.Add(FName("back"), back);
+
+	thigh_l = CreateDefaultSubobject<UBoxComponent>(TEXT("thigh_l"));
+	thigh_l->SetupAttachment(GetMesh(), FName("thigh_l"));
+	HitCollisionBoxes.Add(FName("thigh_l"), thigh_l);
+
+	thigh_r = CreateDefaultSubobject<UBoxComponent>(TEXT("thigh_r"));
+	thigh_r->SetupAttachment(GetMesh(), FName("thigh_r"));
+	HitCollisionBoxes.Add(FName("thigh_r"), thigh_r);
+
+	calf_l = CreateDefaultSubobject<UBoxComponent>(TEXT("calf_l"));
+	calf_l->SetupAttachment(GetMesh(), FName("calf_l"));
+	HitCollisionBoxes.Add(FName("calf_l"), calf_l);
+
+	calf_r = CreateDefaultSubobject<UBoxComponent>(TEXT("calf_r"));
+	calf_r->SetupAttachment(GetMesh(), FName("calf_r"));
+	HitCollisionBoxes.Add(FName("calf_r"), calf_r);
+
+	foot_l = CreateDefaultSubobject<UBoxComponent>(TEXT("foot_l"));
+	foot_l->SetupAttachment(GetMesh(), FName("foot_l"));
+	HitCollisionBoxes.Add(FName("foot_l"), foot_l);
+
+	foot_r = CreateDefaultSubobject<UBoxComponent>(TEXT("foot_r"));
+	foot_r->SetupAttachment(GetMesh(), FName("foot_r"));
+	HitCollisionBoxes.Add(FName("foot_r"), foot_r);
+
+	for (auto Box : HitCollisionBoxes)
+	{
+		if (Box.Value)
+		{
+			Box.Value->SetCollisionObjectType(ECC_HitBox);
+			Box.Value->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
+			Box.Value->SetCollisionResponseToChannel(ECC_HitBox, ECollisionResponse::ECR_Block);
+			Box.Value->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		}
+	}
 }
 
 void APlayerCharacter::OnRep_ReplicatedMovement()
@@ -71,10 +174,7 @@ void APlayerCharacter::OnRep_ReplicatedMovement()
 
 void APlayerCharacter::Elim()
 {
-	if (Combat && Combat->EquippedWeapon)
-	{
-		Combat->EquippedWeapon->Dropped();
-	}
+	DropOrDestroyWeapons();
 	MulticastElim();
 	GetWorldTimerManager().SetTimer(
 		ElimTimer,
@@ -99,18 +199,27 @@ void APlayerCharacter::MulticastElim_Implementation()
 	}
 
 	// Disable character movement
-	GetCharacterMovement()->DisableMovement();
-	GetCharacterMovement()->StopMovementImmediately();
 	bDisableGameplay = true;
-	GetCharacterMovement()->DisableMovement();
 	if (Combat)
 	{
 		Combat->FireButtonPressed(false);
 	}
 	// Disable collision
+	// To Do: Nedd Check Rifle  
 	GetMesh()->SetSimulatePhysics(true);
 	GetMesh()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+	bool bHideSniperScope = 
+		IsLocallyControlled() && 
+		Combat 
+		&& Combat->bAiming 
+		&& Combat->EquippedWeapon 
+		&& Combat->EquippedWeapon->GetWeaponType() == EWeaponType::EWT_SniperRifle;
+	if (bHideSniperScope)
+	{
+		ShowSniperScopeWidget(false);
+	}
 }
 
 void APlayerCharacter::ElimTimerFinished()
@@ -134,24 +243,79 @@ void APlayerCharacter::Destroyed()
 	}
 }
 
+void APlayerCharacter::SpawnDefaultWeapon()
+{
+	// GameMode�� World ��ȿ�� �˻�
+	ANecroSyntexGameMode* NecroSyntexGameMode = Cast<ANecroSyntexGameMode>(UGameplayStatics::GetGameMode(this));
+	UWorld* World = GetWorld();
+	if (!NecroSyntexGameMode || !World || bElimed) return;
+
+	// 1) �ֹ���(Primary) ����
+	if (DefaultWeaponClass && Combat)
+	{
+		AWeapon* PrimaryWeapon = World->SpawnActor<AWeapon>(DefaultWeaponClass);
+		if (PrimaryWeapon)
+		{
+			// bDestroyWeapon = true �� ��� �� �ı��Ǵ� ����
+			PrimaryWeapon->bDestroyWeapon = true;
+			Combat->EquipWeapon(PrimaryWeapon);
+			// -> Combat->EquipWeapon() ���ο��� 
+			//    '���� �̹� ���Ⱑ ������ SecondaryWeapon���� ����' ���� ó��
+		}
+	}
+
+	// 2) ���� ����(Secondary) ����
+	if (SubWeaponClass && Combat)
+	{
+		AWeapon* SecondaryWeapon = World->SpawnActor<AWeapon>(SubWeaponClass);
+		if (SecondaryWeapon)
+		{
+			SecondaryWeapon->bDestroyWeapon = true;
+			Combat->EquipWeapon(SecondaryWeapon);
+			// -> ù ��° ���Ⱑ �ֹ��Ⱑ �Ǿ����Ƿ�, �� ��°�� ���� ����� �ڵ� Equip
+		}
+	}
+
+}
+
 void APlayerCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
+	//Key Mapping
 	if (APlayerController* PlayerController = Cast<APlayerController>(GetController()))
 	{
 		if (UEnhancedInputLocalPlayerSubsystem* SubSystem =
 			ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
 			SubSystem->AddMappingContext(DefaultMappingContext, 0);
 	}
+	SpawnDefaultWeapon();
 	UpdateHUDShield();
 	UpdateHUDHealth();
+
+	if (Combat && Combat->EquippedWeapon)
+	{
+		InitialCarriedAmmo = Combat->CarriedAmmo;
+		InitialWeaponAmmo = Combat->EquippedWeapon->GetAmmo();
+		bInitializeAmmo = true;
+	}
+
 	if (HasAuthority())
 	{
 		OnTakeAnyDamage.AddDynamic(this, &APlayerCharacter::ReceiveDamage);
 	}
-
-	GetCharacterMovement()->MaxWalkSpeed = UDC->MoveSpeed;
+	if (AttachedGrenade)
+	{
+		AttachedGrenade->SetVisibility(false);
+	}
+	if (!UDC) {
+		GetCharacterMovement()->MaxWalkSpeed = 550.0f;
+	}
+	else {
+		if (HasAuthority()) {
+			GetCharacterMovement()->MaxWalkSpeed = UDC->PID->MoveSpeed;
+		}
+	}
 }
 
 void APlayerCharacter::Tick(float DeltaTime)
@@ -159,15 +323,54 @@ void APlayerCharacter::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 
 	RotateInPlace(DeltaTime);
+	if (GetLocalRole() > ENetRole::ROLE_SimulatedProxy && IsLocallyControlled())
+	{
+		AimOffset(DeltaTime);
+	}
+	else
+	{
+		TimeSinceLastMovementReplication += DeltaTime;
+		if (TimeSinceLastMovementReplication > 0.25f)
+		{
+			OnRep_ReplicatedMovement();
+		}
+		CalculateAO_Pitch();
+	}
 	PollInit();
+}
+
+
+void APlayerCharacter::RotateInPlace(float DeltaTime)
+{
+	if (bDisableGameplay)
+	{
+		bUseControllerRotationYaw = false;
+		TurningInPlace = ETurningInPlace::ETIP_NotTurning;
+		return;
+	}
+	if (GetLocalRole() > ENetRole::ROLE_SimulatedProxy && IsLocallyControlled())
+	{
+		AimOffset(DeltaTime);
+	}
+	else
+	{
+		TimeSinceLastMovementReplication += DeltaTime;
+		if (TimeSinceLastMovementReplication > 0.25f)
+		{
+			OnRep_ReplicatedMovement();
+		}
+		CalculateAO_Pitch();
+	}
 }
 
 void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent)) {
 
+		//EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this, &ACharacter::Jump);
+		//EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Completed, this, &ACharacter::StopJumping);
+
 		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &APlayerCharacter::Move);
-		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &APlayerCharacter::Look);
 		EnhancedInputComponent->BindAction(EquipAction, ETriggerEvent::Triggered, this, &APlayerCharacter::EquipButtonPressed);
 		EnhancedInputComponent->BindAction(CrouchAction, ETriggerEvent::Started, this, &APlayerCharacter::CrouchButtonPressed);
 		EnhancedInputComponent->BindAction(AimAction, ETriggerEvent::Started, this, &APlayerCharacter::AimButtonPressed);
@@ -177,7 +380,10 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 		EnhancedInputComponent->BindAction(FireAction, ETriggerEvent::Started, this, &APlayerCharacter::FireButtonPressed);
 		EnhancedInputComponent->BindAction(FireAction, ETriggerEvent::Completed, this, &APlayerCharacter::FireButtonReleased);
 		EnhancedInputComponent->BindAction(FlashAction, ETriggerEvent::Triggered, this, &APlayerCharacter::FlashButtonPressed);
-		EnhancedInputComponent->BindAction(ReloadAction, ETriggerEvent::Triggered, this, &APlayerCharacter::ReloadButtonPressed);
+		EnhancedInputComponent->BindAction(ReloadAction, ETriggerEvent::Started, this, &APlayerCharacter::ReloadButtonPressed);
+		EnhancedInputComponent->BindAction(ThrowGrenade, ETriggerEvent::Triggered, this, &APlayerCharacter::GrenadeButtonPressed);
+		EnhancedInputComponent->BindAction(SwapWeaponAction, ETriggerEvent::Triggered, this, &APlayerCharacter::SwapWeaponWheel);
+
 	}
 }
 
@@ -189,15 +395,23 @@ void APlayerCharacter::PostInitializeComponents()
 		Combat->PrimaryComponentTick.bCanEverTick = true;
 		Combat->Character = this;
 	}
+	if (LagCompensation)
+	{
+		LagCompensation->Character = this;
+		if (Controller)
+		{
+			LagCompensation->Controller = Cast<ANecroSyntexPlayerController>(Controller);
+		}
+	}
 }
 
 void APlayerCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 	DOREPLIFETIME_CONDITION(APlayerCharacter, OverlappingWeapon,COND_OwnerOnly);
+	DOREPLIFETIME(APlayerCharacter, bDisableGameplay);
 	DOREPLIFETIME(APlayerCharacter, Health);
 	DOREPLIFETIME(APlayerCharacter, Shield);
-	DOREPLIFETIME(APlayerCharacter, bDisableGameplay);
 }
 
 void APlayerCharacter::PlayFireMontage(bool bAiming)
@@ -227,16 +441,26 @@ void APlayerCharacter::PlayElimMontage()
 	}
 }
 
+void APlayerCharacter::PlayThrowGrenadeMontage()
+{
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	if (AnimInstance && ThrowGrenadeMontage)
+	{
+		AnimInstance->Montage_Play(ThrowGrenadeMontage);
+	}
+}
+
 void APlayerCharacter::PlayerHitReactMontage()
 {
 	if (Combat == nullptr || Combat->EquippedWeapon == nullptr) return;
-	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
-	if (AnimInstance && HitReactMontage && !AnimInstance->IsAnyMontagePlaying())
-	{
-		AnimInstance->Montage_Play(FireWeaponMontage);
-		FName SectionName("FromFront");
-		AnimInstance->Montage_JumpToSection(SectionName);
-	}
+    UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+    if (AnimInstance && HitReactMontage 
+        && !AnimInstance->IsAnyMontagePlaying() // 현재 몽타주 재생 중이면 HitReact는 재생하지 않음
+        )
+    {
+        AnimInstance->Montage_Play(HitReactMontage);
+        AnimInstance->Montage_JumpToSection(FName("FromFront"));
+    }
 }
 
 void APlayerCharacter::PlayReloadMontage()
@@ -245,18 +469,44 @@ void APlayerCharacter::PlayReloadMontage()
 	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
 	if (AnimInstance && ReloadMontage)
 	{
-		AnimInstance->Montage_Play(ReloadMontage);
-		FName SectionName;
+		AnimInstance->OnMontageEnded.RemoveDynamic(this, &APlayerCharacter::ReloadMontageEndedHandler);
+		AnimInstance->OnMontageEnded.AddDynamic(this, &APlayerCharacter::ReloadMontageEndedHandler);
 
+		AnimInstance->Montage_Play(ReloadMontage);
+
+		FName SectionName;
 		switch (Combat->EquippedWeapon->GetWeaponType())
 		{
 		case EWeaponType::EWT_AssaultRifle:
+		case EWeaponType::EWT_RocketLauncher:
+		case EWeaponType::EWT_SniperRifle:
+			SectionName = FName("Rifle");
+			break;
+		case EWeaponType::EWT_Pistol:
+		case EWeaponType::EWT_SubmachineGun:
+			SectionName = FName("Pistol");
+			break;
+		case EWeaponType::EWT_Shotgun:
+		case EWeaponType::EWT_GrenadeLauncher:
+			SectionName = FName("Shotgun");
+			break;
+		default:
 			SectionName = FName("Rifle");
 			break;
 		}
-		AnimInstance->Montage_JumpToSection(SectionName);
+
+		AnimInstance->Montage_JumpToSection(SectionName, ReloadMontage);
 	}
 }
+
+void APlayerCharacter::GrenadeButtonPressed()
+{
+	if (Combat)
+	{
+		Combat->ThrowGrenade();
+	}
+}
+
 void APlayerCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, AController* InstigatorController, AActor* DamageCauser)
 {
 	if (bElimed)
@@ -265,6 +515,12 @@ void APlayerCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, const U
 	}
 
 	PlayerHitReactMontage();
+
+	if (Combat && Combat->CombatState == ECombatState::ECS_Reloading)
+	{
+		Combat->CancelReload();
+	}
+
 	if (Shield > 0)
 	{
 		float NewShieldValue = FMath::Clamp(Shield - Damage, 0.f, MaxShield);
@@ -300,12 +556,29 @@ void APlayerCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, const U
 			}
 		}
 	}
+	if (SubComp)
+	{
+		SubComp->OnTakeDamage();
+	}
 }
 
 void APlayerCharacter::Move(const FInputActionValue& Value)
 {
 	if (bDisableGameplay) return;
 	FVector2D MovementVector = Value.Get<FVector2D>();
+
+	if (HasAuthority()) {
+		if (UDC) {
+			if (UDC->CurseofChaos) {
+				if (UDC->CurseofChaos->CheckDeBuff == true)
+				{
+					MovementVector.X *= -1;
+					MovementVector.Y *= -1;
+				}
+			}
+		}
+	}
+
 
 	if (Controller != nullptr)
 	{
@@ -320,31 +593,12 @@ void APlayerCharacter::Move(const FInputActionValue& Value)
 	}
 }
 
-void APlayerCharacter::Look(const FInputActionValue& Value)
-{
-	if (bDisableGameplay) return;
-	FVector2D LookAxisVector = Value.Get<FVector2D>();
-
-	if (Controller != nullptr)
-	{
-		AddControllerYawInput(LookAxisVector.X);
-		AddControllerPitchInput(LookAxisVector.Y);
-	}
-}
-
 void APlayerCharacter::EquipButtonPressed()
 {
 	if (bDisableGameplay) return;
 	if (Combat)
 	{
-		if (HasAuthority())
-		{
-			Combat->EquipWeapon(OverlappingWeapon);
-		}
-		else
-		{
-			ServerEquipButtonPressed();
-		}
+		ServerEquipButtonPressed();
 	}
 }
 
@@ -396,7 +650,12 @@ void APlayerCharacter::SprintStart()
 
 		if (HasAuthority())
 		{
-			GetCharacterMovement()->MaxWalkSpeed = UDC->RunningSpeed;
+			if (UDC) {
+				GetCharacterMovement()->MaxWalkSpeed = UDC->PID->RunningSpeed;
+			}
+			else {
+				GetCharacterMovement()->MaxWalkSpeed = 550.0f;
+			}
 		}
 		else
 		{
@@ -414,7 +673,12 @@ void APlayerCharacter::SprintStop()
 
 		if (HasAuthority())
 		{
-			GetCharacterMovement()->MaxWalkSpeed = UDC->MoveSpeed;
+			if (UDC) {
+				GetCharacterMovement()->MaxWalkSpeed = UDC->PID->MoveSpeed;
+			}
+			else {
+				GetCharacterMovement()->MaxWalkSpeed = 1000.0f;
+			}
 		}
 		else
 		{
@@ -425,12 +689,22 @@ void APlayerCharacter::SprintStop()
 
 void APlayerCharacter::ServerSprintStart_Implementation()
 {
-	GetCharacterMovement()->MaxWalkSpeed = UDC->RunningSpeed;
+	if (UDC) {
+		GetCharacterMovement()->MaxWalkSpeed = UDC->PID->RunningSpeed;
+	}
+	else {
+		GetCharacterMovement()->MaxWalkSpeed = 550.0f;
+	}
 }
 
 void APlayerCharacter::ServerSprintStop_Implementation()
 {
-	GetCharacterMovement()->MaxWalkSpeed = UDC->MoveSpeed;
+	if (UDC) {
+		GetCharacterMovement()->MaxWalkSpeed = GetCharacterMovement()->MaxWalkSpeed = UDC->PID->MoveSpeed;
+	}
+	else {
+		GetCharacterMovement()->MaxWalkSpeed = 1000.0f;
+	}
 }
 
 bool APlayerCharacter::ServerSprintStart_Validate()
@@ -446,9 +720,11 @@ bool APlayerCharacter::ServerSprintStop_Validate()
 
 void APlayerCharacter::FireButtonPressed(const FInputActionValue& Value)
 {
-	if (bDisableGameplay) return;
+	if (bElimed || bDisableGameplay)
+	{
+		return;
+	}
 
-	UE_LOG(LogTemp, Warning, TEXT("Fire"));
 	if (Combat && Combat->EquippedWeapon)
 	{
 		Combat->FireButtonPressed(true);
@@ -457,6 +733,11 @@ void APlayerCharacter::FireButtonPressed(const FInputActionValue& Value)
 
 void APlayerCharacter::FireButtonReleased(const FInputActionValue& Value)
 {
+	if (bElimed || bDisableGameplay)
+	{
+		return;
+	}
+
 	if (Combat && Combat->EquippedWeapon)
 	{
 		Combat->FireButtonPressed(false);
@@ -465,14 +746,72 @@ void APlayerCharacter::FireButtonReleased(const FInputActionValue& Value)
 
 void APlayerCharacter::FlashButtonPressed()
 {
-
 }
 
 void APlayerCharacter::ServerEquipButtonPressed_Implementation()
 {
 	if (Combat)
 	{
-		Combat->EquipWeapon(OverlappingWeapon);
+		if (OverlappingWeapon)
+		{
+			Combat->EquipWeapon(OverlappingWeapon);
+		}
+	}
+}
+
+void APlayerCharacter::SwapWeaponWheel()
+{
+	if (HasAuthority())
+	{
+		if (Combat && Combat->ShouldSwapWeapons())
+		{
+			Combat->SwapWeapons();
+		}
+	}
+	else
+	{
+		ServerSwapWeaponWheel();
+	}
+}
+
+void APlayerCharacter::DropOrDestroyWeapon(AWeapon* Weapon)
+{
+	if (Weapon == nullptr) return;
+	if (Weapon->bDestroyWeapon)
+	{
+		Weapon->Destroy();
+	}
+	else
+	{
+		Weapon->Dropped();
+	}
+}
+
+void APlayerCharacter::DropOrDestroyWeapons()
+{
+	if (Combat)
+	{
+		if (Combat->EquippedWeapon)
+		{
+			DropOrDestroyWeapon(Combat->EquippedWeapon);
+		}
+		if (Combat->SecondaryWeapon)
+		{
+			DropOrDestroyWeapon(Combat->SecondaryWeapon);
+		}
+	}
+}
+
+bool APlayerCharacter::ServerSwapWeaponWheel_Validate()
+{
+	return true;
+}
+
+void APlayerCharacter::ServerSwapWeaponWheel_Implementation()
+{
+	if (Combat && Combat->ShouldSwapWeapons())
+	{
+		Combat->SwapWeapons();
 	}
 }
 
@@ -572,10 +911,13 @@ void APlayerCharacter::SimProxiesTurn()
 	TurningInPlace = ETurningInPlace::ETIP_NotTurning;
 }
 
-void APlayerCharacter::OnRep_Health()
+void APlayerCharacter::OnRep_Health(float LastHealth)
 {
 	UpdateHUDHealth();
-	PlayerHitReactMontage();
+	if (Health < LastHealth)
+	{
+		PlayerHitReactMontage();
+	}
 }
 
 void APlayerCharacter::UpdateHUDHealth()
@@ -587,10 +929,9 @@ void APlayerCharacter::UpdateHUDHealth()
 	}
 }
 
-void APlayerCharacter::OnRep_Shield()
+void APlayerCharacter::OnRep_Shield(float LastShield)
 {
 	UpdateHUDShield();
-	PlayerHitReactMontage();
 }
 
 void APlayerCharacter::UpdateHUDShield()
@@ -599,6 +940,29 @@ void APlayerCharacter::UpdateHUDShield()
 	if (NecroSyntexPlayerController)
 	{
 		NecroSyntexPlayerController->SetHUDShield(Shield, MaxShield);
+	}
+}
+
+void APlayerCharacter::UpdateHUDAmmo()
+{
+	if (!Combat || !Combat->EquippedWeapon) return;
+
+	if (NecroSyntexPlayerController == nullptr)
+	{
+		NecroSyntexPlayerController = Cast<ANecroSyntexPlayerController>(Controller);
+	}
+
+	if (NecroSyntexPlayerController)
+	{
+		NecroSyntexPlayerController->SetHUDCarriedAmmo(Combat->CarriedAmmo);
+		NecroSyntexPlayerController->SetHUDWeaponAmmo(Combat->EquippedWeapon->GetAmmo());
+		bInitializeAmmo = false;
+	}
+	else
+	{
+		InitialCarriedAmmo = Combat->CarriedAmmo;
+		InitialWeaponAmmo = Combat->EquippedWeapon->GetAmmo();
+		bInitializeAmmo = true;
 	}
 }
 
@@ -613,29 +977,7 @@ void APlayerCharacter::PollInit()
 			NecroSyntexPlayerState->AddToDefeats(0);
 		}
 	}
-}
 
-void APlayerCharacter::RotateInPlace(float DeltaTime)
-{
-	if (bDisableGameplay)
-	{
-		bUseControllerRotationYaw = false;
-		TurningInPlace = ETurningInPlace::ETIP_NotTurning;
-		return;
-	}
-	if (GetLocalRole() > ENetRole::ROLE_SimulatedProxy && IsLocallyControlled())
-	{
-		AimOffset(DeltaTime);
-	}
-	else
-	{
-		TimeSinceLastMovementReplication += DeltaTime;
-		if (TimeSinceLastMovementReplication > 0.25f)
-		{
-			OnRep_ReplicatedMovement();
-		}
-		CalculateAO_Pitch();
-	}
 }
 
 void APlayerCharacter::ActivateDissolveEffect()
@@ -716,4 +1058,78 @@ ECombatState APlayerCharacter::GetCombatState() const
 	{
 		return Combat->CombatState;
 	}
+}
+
+bool APlayerCharacter::IsLocallyReloading()
+{
+	if (Combat == nullptr) return false;
+	return Combat->bLocallyReloading;
+}
+
+void APlayerCharacter::ReloadMontageEndedHandler(UAnimMontage* Montage, bool bInterrupted)
+{
+    UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+    if (AnimInstance == nullptr || Combat == nullptr) return;
+
+    if (bInterrupted)
+    {
+        float CurrentPosition = AnimInstance->Montage_GetPosition(ReloadMontage);
+        FName SectionName = AnimInstance->Montage_GetCurrentSection();
+        int32 SectionIndex = ReloadMontage->GetSectionIndex(SectionName);
+
+        float OutStartTime, OutEndTime;
+        ReloadMontage->GetSectionStartAndEndTime(SectionIndex, OutStartTime, OutEndTime);
+        float TimeToWait = FMath::Clamp(OutEndTime - CurrentPosition, 0.f, OutEndTime - OutStartTime);
+
+        if (TimeToWait > 0.f)
+        {
+            GetWorldTimerManager().SetTimer(
+                ReloadTimer,
+                this,
+                &APlayerCharacter::ReloadTimerFinished,
+                TimeToWait
+            );
+        }
+        else if (Combat->EquippedWeapon->GetWeaponType() == EWeaponType::EWT_Shotgun)
+        {
+            Combat->JumpToShotgunEnd();
+        }
+
+        AnimInstance->OnMontageEnded.RemoveDynamic(this, &APlayerCharacter::ReloadMontageEndedHandler);
+    }
+    else
+    {
+        Combat->FinishReloading();
+        AnimInstance->OnMontageEnded.RemoveDynamic(this, &APlayerCharacter::ReloadMontageEndedHandler);
+    }
+}
+
+
+void APlayerCharacter::ReloadTimerFinished()
+{
+	if (Combat)
+	{
+		Combat->FinishReloading();
+	}
+}
+
+
+//Pahu
+float APlayerCharacter::GetTotalDamage()
+{
+	TotalDamage = UDC->TotalDamage;
+
+	return TotalDamage;
+
+}
+
+
+UDopingComponent* APlayerCharacter::GetDopingComponent()
+{
+	return UDC;
+}
+
+void APlayerCharacter::GetDopingFromAlly()
+{
+
 }

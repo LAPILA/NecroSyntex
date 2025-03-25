@@ -21,6 +21,10 @@ public:
 	float DebuffMaxHP;
 	UDPForcedHealing();
 
+	FTimerHandle HealingTimer;
+
+	void HealCharacter(UPlayerInformData* PID);
+
 	void UseDopingItem(UPlayerInformData* PID) override;
 
 	void BuffOn(UPlayerInformData* PID) override;

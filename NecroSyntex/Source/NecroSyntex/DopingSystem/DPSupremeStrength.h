@@ -17,6 +17,11 @@ class NECROSYNTEX_API UDPSupremeStrength : public UDopingParent
 public:
 	UDPSupremeStrength();
 
+	UPROPERTY()
+	float MLAttackBuffNum;
+	UPROPERTY()
+	float BlurredDeBuffNum;
+
 	void UseDopingItem(UPlayerInformData* PID) override;
 
 	void BuffOn(UPlayerInformData* PID) override;

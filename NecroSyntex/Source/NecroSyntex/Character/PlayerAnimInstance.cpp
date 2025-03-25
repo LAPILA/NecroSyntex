@@ -79,7 +79,6 @@ void UPlayerAnimInstance::NativeUpdateAnimation(float DeltaTime)
 		LeftHandTransform.SetLocation(OutPosition);
 		LeftHandTransform.SetRotation(FQuat(OutRotation));
 
-		//if you want to apply it, talk to main programmer
 		/*
 		if (PlayerCharacter->IsLocallyControlled())
 		{
@@ -92,7 +91,11 @@ void UPlayerAnimInstance::NativeUpdateAnimation(float DeltaTime)
 		*/
 	}
 
-	bUseFABRIK = PlayerCharacter->GetCombatState() != ECombatState::ECS_Reloading;
-	bUseAimOffsets = PlayerCharacter->GetCombatState() != ECombatState::ECS_Reloading && !PlayerCharacter->GetDisableGameplay();
-	bTransformRightHand = PlayerCharacter->GetCombatState() != ECombatState::ECS_Reloading && !PlayerCharacter->GetDisableGameplay();
+	bUseFABRIK = PlayerCharacter->GetCombatState() == ECombatState::ECS_Unoccupied;
+	if (PlayerCharacter->IsLocallyControlled() && PlayerCharacter->GetCombatState() != ECombatState::ECS_ThrowingGrenade)
+	{
+		bUseFABRIK = !PlayerCharacter->IsLocallyReloading();
+	}
+	bUseAimOffsets = PlayerCharacter->GetCombatState() == ECombatState::ECS_Unoccupied && !PlayerCharacter->GetDisableGameplay();
+	bTransformRightHand = PlayerCharacter->GetCombatState() == ECombatState::ECS_Unoccupied && !PlayerCharacter->GetDisableGameplay();
 }
