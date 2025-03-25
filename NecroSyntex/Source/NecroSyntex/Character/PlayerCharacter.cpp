@@ -877,6 +877,7 @@ void APlayerCharacter::SimProxiesTurn()
 
 void APlayerCharacter::OnRep_Health(float LastHealth)
 {
+
 	UpdateHUDHealth();
 	if (Health < LastHealth)
 	{
@@ -886,6 +887,8 @@ void APlayerCharacter::OnRep_Health(float LastHealth)
 
 void APlayerCharacter::UpdateHUDHealth()
 {
+	UE_LOG(LogTemp, Warning, TEXT("OnRep_OneAble Call"));
+
 	NecroSyntexPlayerController = NecroSyntexPlayerController == nullptr ? Cast<ANecroSyntexPlayerController>(Controller) : NecroSyntexPlayerController;
 	if (NecroSyntexPlayerController)
 	{

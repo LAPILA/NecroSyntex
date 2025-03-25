@@ -141,10 +141,11 @@ void UDopingComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 
 void UDopingComponent::OnRep_OneAble()
 {
-	UE_LOG(LogTemp, Warning, TEXT("OnRep_OneAble Call"));
-
 
 	APlayerCharacter* OwnerCharacter = Cast<APlayerCharacter>(GetOwner());
+
+	UELOGCall();
+
 	if (!OwnerCharacter) return;
 	
 	if (One_Able) {
@@ -324,6 +325,7 @@ void UDopingComponent::FirstDopingUse() {
 
 	OneKeyDoping->UseDopingItem(OwnerCharacter);
 	OwnerCharacter->PlayDopingEffect();
+	ClientPlayDopingEffect();
 	FirstDopingCoolStart();
 }
 
@@ -339,6 +341,7 @@ void UDopingComponent::SecondDopingUse() {
 
 	TwoKeyDoping->UseDopingItem(OwnerCharacter);
 	OwnerCharacter->PlayDopingEffect();
+	ClientPlayDopingEffect();
 	SecondDopingCoolStart();
 
 }
@@ -402,12 +405,12 @@ void UDopingComponent::FirstDopingForAlly()
 	{
 		//UE_LOG(LogTemp, Warning, TEXT("5"));
 		APlayerCharacter* HitCharacter = Cast<APlayerCharacter>(HitResult.GetActor());
-
-		if (HitCharacter->CurrentDoped >= 2) {
-			return;
-		}
-
 		if (HitCharacter) {
+
+			if (HitCharacter->CurrentDoped >= 2) {
+				return;
+			}
+
 			//UE_LOG(LogTemp, Warning, TEXT("6"));
 			switch (FirstDopingCode)
 			{
@@ -488,8 +491,14 @@ void UDopingComponent::SecondDopingForAlly()
 
 void UDopingComponent::FirstDopingCoolStart()
 {
+	APlayerCharacter* OwnerCharacter = Cast<APlayerCharacter>(GetOwner());
+	if (!OwnerCharacter) return;
+
 	UE_LOG(LogTemp, Warning, TEXT("First Doping CoolTime Start"));
 	One_Able = false;
+
+	OwnerCharacter->SetHUDFirstDopingFalseicon();
+
 	GetWorld()->GetTimerManager().SetTimer(
 		FirstDopingCoolTimehandle,
 		[this]() { FirstDopingCoolEnd(); },
@@ -501,7 +510,14 @@ void UDopingComponent::FirstDopingCoolStart()
 
 void UDopingComponent::SecondDopingCoolStart()
 {
+	APlayerCharacter* OwnerCharacter = Cast<APlayerCharacter>(GetOwner());
+	if (!OwnerCharacter) return;
+
 	Two_Able = false;
+
+
+	OwnerCharacter->SetHUDSecondDopingFalseicon();
+
 	GetWorld()->GetTimerManager().SetTimer(
 		SecondDopingCoolTimehandle,
 		[this]() { SecondDopingCoolEnd(); },
@@ -512,10 +528,33 @@ void UDopingComponent::SecondDopingCoolStart()
 
 void UDopingComponent::FirstDopingCoolEnd()
 {
+	APlayerCharacter* OwnerCharacter = Cast<APlayerCharacter>(GetOwner());
+	if (!OwnerCharacter) return;
+
 	One_Able = true;
+
+	OwnerCharacter->SetHUDFirstDopingTrueicon();
 }
 
 void UDopingComponent::SecondDopingCoolEnd()
 {
+	APlayerCharacter* OwnerCharacter = Cast<APlayerCharacter>(GetOwner());
+	if (!OwnerCharacter) return;
+
 	Two_Able = true;
+
+	OwnerCharacter->SetHUDSecondDopingTrueicon();
+}
+
+void UDopingComponent::UELOGCall()
+{
+	UE_LOG(LogTemp, Warning, TEXT("OnRep_OneAble Call"));
+}
+
+void UDopingComponent::ClientPlayDopingEffect_Implementation()
+{
+	APlayerCharacter* OwnerCharacter = Cast<APlayerCharacter>(GetOwner());
+	if (!OwnerCharacter) return;
+
+	OwnerCharacter->PlayDopingEffect();
 }

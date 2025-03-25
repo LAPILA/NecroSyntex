@@ -360,7 +360,7 @@ public:
 	//PID(Player Inform Data)
 	UPROPERTY(EditAnywhere, Category = "Player Stats")
 	float MaxHealth = 100.f;
-	UPROPERTY(ReplicatedUsing = OnRep_Health, VisibleAnywhere, Category = "Player Stats")
+	UPROPERTY(ReplicatedUsing = OnRep_Health, BlueprintReadOnly ,VisibleAnywhere, Category = "Player Stats")
 	float Health = 100.f;
 
 	UPROPERTY(EditAnywhere, Category = "Player Stats")
