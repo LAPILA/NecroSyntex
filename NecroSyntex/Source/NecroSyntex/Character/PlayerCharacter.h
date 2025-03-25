@@ -90,8 +90,9 @@ public:
 	UFUNCTION(BluePrintImplementableEvent)
 	void ShowSniperScopeWidget(bool bShowScope);
 
+	UFUNCTION(BlueprintCallable)
 	void UpdateHUDHealth();
-
+	UFUNCTION(BlueprintCallable)
 	void UpdateHUDShield();
 
 	bool bInitializeAmmo = false;
@@ -108,6 +109,14 @@ public:
 
 
 	bool bFinishedSwapping = false;
+
+
+	UPROPERTY(ReplicatedUsing = OnRep_Health, VisibleAnywhere, BlueprintReadWrite, Category = "Player Stats")
+	float Health = 100.f;
+
+	UPROPERTY(ReplicatedUsing = OnRep_Shield, VisibleAnywhere, BlueprintReadWrite, Category = "Player Stats")
+	float Shield = 200.f;
+
 protected:
     virtual void BeginPlay() override;
 
@@ -275,8 +284,7 @@ private:
 	*/
 	UPROPERTY(EditAnywhere, Category = "Player Stats")
 	float MaxHealth = 100.f;
-	UPROPERTY(ReplicatedUsing = OnRep_Health, VisibleAnywhere, Category = "Player Stats")
-	float Health = 100.f;
+	
 	UFUNCTION()
 	void OnRep_Health(float LastHealth);
 	/**
@@ -284,8 +292,7 @@ private:
 	*/
 	UPROPERTY(EditAnywhere, Category = "Player Stats")
 	float MaxShield = 200.f;
-	UPROPERTY(ReplicatedUsing = OnRep_Shield, VisibleAnywhere, Category = "Player Stats")
-	float Shield = 200.f;
+	
 	UFUNCTION()
 	void OnRep_Shield(float LastShield);
 
