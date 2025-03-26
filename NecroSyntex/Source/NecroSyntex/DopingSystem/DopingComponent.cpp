@@ -430,7 +430,10 @@ void UDopingComponent::FirstDopingForAlly()
 			}
 
 			HitCharacter->PlayDopingEffect();
+			HitCharacter->UDC->ClientPlayDopingEffect();
 			FirstDopingCoolStart();
+
+			DopingforAllyMode = false;
 		}
 	}
 }
@@ -483,7 +486,10 @@ void UDopingComponent::SecondDopingForAlly()
 			}
 
 			HitCharacter->PlayDopingEffect();
+			HitCharacter->UDC->ClientPlayDopingEffect();
 			SecondDopingCoolStart();
+
+			DopingforAllyMode = false;
 		}
 	}
 }
