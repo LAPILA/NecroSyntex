@@ -355,6 +355,9 @@ public:
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
 	void SetHUDSecondDopingFalseicon();
 
+	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
+	void CallBlueprintBurningFurnaceDamage();
+
 
 
 	//PID(Player Inform Data)

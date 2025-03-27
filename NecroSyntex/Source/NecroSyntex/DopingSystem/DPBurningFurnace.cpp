@@ -35,6 +35,14 @@ void UDPBurningFurnace::BuffOn(APlayerCharacter* DopedPC)
 		DefenseBuffNum = DopedPC->Defense;
 		DopedPC->Defense = DopedPC->Defense + DefenseBuffNum;
 
+		GetWorld()->GetTimerManager().SetTimer(
+			DamageTimer,
+			[this, DopedPC]() { BFDamageApply(DopedPC); },
+			1.0f,
+			true
+		);
+
+
 		CheckBuff = true;
 
 	}
@@ -46,15 +54,23 @@ void UDPBurningFurnace::BuffOn(APlayerCharacter* DopedPC)
 void UDPBurningFurnace::BuffOff(APlayerCharacter* DopedPC)
 {
 	if (CheckBuff == true) {
-		DopedPC->Defense = DopedPC->Defense - DefenseBuffNum;
-
+		GetWorld()->GetTimerManager().ClearTimer(DamageTimer);
 		CheckBuff = false;
+
 	}
 }
 
 void UDPBurningFurnace::DeBuffOn(APlayerCharacter* DopedPC)
 {
 	if (CheckDeBuff == false) {
+
+		GetWorld()->GetTimerManager().SetTimer(
+			PlayerHPMinusTimer,
+			[this, DopedPC]() { PCHPMinus(DopedPC); },
+			1.0f,
+			true
+		);
+
 		CheckDeBuff = true;
 
 		StartDeBuff(DopedPC);
@@ -64,6 +80,21 @@ void UDPBurningFurnace::DeBuffOn(APlayerCharacter* DopedPC)
 void UDPBurningFurnace::DeBuffOff(APlayerCharacter* DopedPC)
 {
 	if (CheckDeBuff == true) {
+		GetWorld()->GetTimerManager().ClearTimer(PlayerHPMinusTimer);
+
 		CheckDeBuff = false;
 	}
+}
+
+
+void UDPBurningFurnace::BFDamageApply(APlayerCharacter* DopedPC)
+{
+	DopedPC->CallBlueprintBurningFurnaceDamage();
+}
+
+void UDPBurningFurnace::PCHPMinus(APlayerCharacter* DopedPC)
+{
+	DopedPC->Health -= DopedPC->MaxHealth * 0.04f;
+
+	DopedPC->UpdateHUDHealth();
 }

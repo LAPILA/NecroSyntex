@@ -19,6 +19,13 @@ public:
 
 	float DefenseBuffNum;
 
+	FTimerHandle DamageTimer;
+	FTimerHandle PlayerHPMinusTimer;
+
+	void BFDamageApply(APlayerCharacter* DopedPC);
+
+	void PCHPMinus(APlayerCharacter* DopedPC);
+
 	void UseDopingItem(APlayerCharacter* DopedPC) override;
 
 	void BuffOn(APlayerCharacter* DopedPC) override;

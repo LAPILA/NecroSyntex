@@ -32,7 +32,7 @@ void UDPForcedHealing::BuffOn(APlayerCharacter* DopedPC)
 	if (CheckBuff == false) {
 		
 		targetRecover = (DopedPC->MaxHealth * 0.3);
-		BuffRecoverAPS = targetRecover / (BuffDuration * 0.2f);
+		BuffRecoverAPS = targetRecover / 10.0f;
 
 		DopedPC->CurrentDoped += 1;
 
