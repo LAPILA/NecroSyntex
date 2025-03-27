@@ -315,13 +315,10 @@ void APlayerCharacter::BeginPlay()
 	{
 		AttachedGrenade->SetVisibility(false);
 	}
-	if (!UDC) {
-		GetCharacterMovement()->MaxWalkSpeed = 550.0f;
-	}
-	else {
-		if (HasAuthority()) {
-			GetCharacterMovement()->MaxWalkSpeed = UDC->PID->MoveSpeed;
-		}
+
+
+	if (HasAuthority()) {
+		GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
 	}
 }
 
@@ -420,6 +417,16 @@ void APlayerCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 	DOREPLIFETIME(APlayerCharacter, Health);
 	DOREPLIFETIME(APlayerCharacter, Shield);
 	DOREPLIFETIME(APlayerCharacter, HealingStationActor);
+
+	DOREPLIFETIME(APlayerCharacter, WalkSpeed);
+	DOREPLIFETIME(APlayerCharacter, RunningSpeed);
+	DOREPLIFETIME(APlayerCharacter, MLAtaackPoint);
+	DOREPLIFETIME(APlayerCharacter, Defense);
+	DOREPLIFETIME(APlayerCharacter, Blurred);
+	DOREPLIFETIME(APlayerCharacter, ROF);
+	DOREPLIFETIME(APlayerCharacter, DopingDamageBuff);
+	DOREPLIFETIME(APlayerCharacter, ReservedMoving);
+
 }
 
 void APlayerCharacter::PlayFireMontage(bool bAiming)
@@ -575,16 +582,9 @@ void APlayerCharacter::Move(const FInputActionValue& Value)
 	if (bDisableGameplay) return;
 	FVector2D MovementVector = Value.Get<FVector2D>();
 
-	if (HasAuthority()) {
-		if (UDC) {
-			if (UDC->CurseofChaos) {
-				if (UDC->CurseofChaos->CheckDeBuff == true)
-				{
-					MovementVector.X *= -1;
-					MovementVector.Y *= -1;
-				}
-			}
-		}
+	if (ReservedMoving) {
+		MovementVector.X *= -1;
+		MovementVector.Y *= -1;
 	}
 
 
@@ -662,12 +662,7 @@ void APlayerCharacter::SprintStart()
 
 		if (HasAuthority())
 		{
-			if (UDC) {
-				GetCharacterMovement()->MaxWalkSpeed = UDC->PID->RunningSpeed;
-			}
-			else {
-				GetCharacterMovement()->MaxWalkSpeed = 550.0f;
-			}
+			GetCharacterMovement()->MaxWalkSpeed = RunningSpeed;
 		}
 		else
 		{
@@ -685,12 +680,8 @@ void APlayerCharacter::SprintStop()
 
 		if (HasAuthority())
 		{
-			if (UDC) {
-				GetCharacterMovement()->MaxWalkSpeed = UDC->PID->MoveSpeed;
-			}
-			else {
-				GetCharacterMovement()->MaxWalkSpeed = 1000.0f;
-			}
+			GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
+
 		}
 		else
 		{
@@ -701,22 +692,12 @@ void APlayerCharacter::SprintStop()
 
 void APlayerCharacter::ServerSprintStart_Implementation()
 {
-	if (UDC) {
-		GetCharacterMovement()->MaxWalkSpeed = UDC->PID->RunningSpeed;
-	}
-	else {
-		GetCharacterMovement()->MaxWalkSpeed = 550.0f;
-	}
+	GetCharacterMovement()->MaxWalkSpeed = RunningSpeed;
 }
 
 void APlayerCharacter::ServerSprintStop_Implementation()
 {
-	if (UDC) {
-		GetCharacterMovement()->MaxWalkSpeed = GetCharacterMovement()->MaxWalkSpeed = UDC->PID->MoveSpeed;
-	}
-	else {
-		GetCharacterMovement()->MaxWalkSpeed = 1000.0f;
-	}
+	GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
 }
 
 bool APlayerCharacter::ServerSprintStart_Validate()
@@ -1149,9 +1130,4 @@ float APlayerCharacter::GetTotalDamage()
 UDopingComponent* APlayerCharacter::GetDopingComponent()
 {
 	return UDC;
-}
-
-void APlayerCharacter::GetDopingFromAlly()
-{
-
 }
