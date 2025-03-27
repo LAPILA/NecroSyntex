@@ -216,6 +216,9 @@ public:
 	UFUNCTION(Server, Reliable)
 	void ServerDopingModeChange();
 
+	UFUNCTION(Client, Reliable)
+	void ClientPlayDopingEffect();
+
 
 	// 3. 아군에게 도핑을 주는 함수
 	UFUNCTION()
@@ -223,6 +226,9 @@ public:
 
 	UFUNCTION()
 	virtual void SecondDopingForAlly();
+
+	UFUNCTION()
+	void UELOGCall();
 
 
 	/*UFUNCTION(BlueprintCallable)

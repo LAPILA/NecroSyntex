@@ -22,6 +22,8 @@ void UDPForcedHealing::HealCharacter(APlayerCharacter* DopedPC)
 			DopedPC->Health += BuffRecoverAPS;
 		}
 	}
+
+	DopedPC->UpdateHUDHealth();
 }
 
 void UDPForcedHealing::BuffOn(APlayerCharacter* DopedPC)
@@ -92,7 +94,7 @@ void UDPForcedHealing::UseDopingItem(APlayerCharacter* DopedPC)
 
 		UE_LOG(LogTemp, Warning, TEXT("ForcedHealing Use"));
 		//효과
-
+		BuffOn(DopedPC);
 
 		//
 		StartCooldown();
