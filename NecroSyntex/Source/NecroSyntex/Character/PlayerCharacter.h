@@ -385,12 +385,12 @@ public:
 	//PID(Player Inform Data)
 	UPROPERTY(EditAnywhere, Category = "Player Stats")
 	float MaxHealth = 100.f;
-	UPROPERTY(ReplicatedUsing = OnRep_Health, BlueprintReadOnly, VisibleAnywhere, Category = "Player Stats")
+	UPROPERTY(ReplicatedUsing = OnRep_Health, BlueprintReadWrite, VisibleAnywhere, Category = "Player Stats")
 	float Health = 100.f;
 
 	UPROPERTY(EditAnywhere, Category = "Player Stats")
 	float MaxShield = 200.f;
-	UPROPERTY(ReplicatedUsing = OnRep_Shield, VisibleAnywhere, Category = "Player Stats")
+	UPROPERTY(ReplicatedUsing = OnRep_Shield, VisibleAnywhere, BlueprintReadWrite, Category = "Player Stats")
 	float Shield = 200.f;
 
 
