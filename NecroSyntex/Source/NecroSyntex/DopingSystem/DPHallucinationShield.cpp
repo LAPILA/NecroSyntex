@@ -12,7 +12,7 @@ UDPHallucinationShield::UDPHallucinationShield()
 	CheckDeBuff = false;
 }
 
-void UDPHallucinationShield::UseDopingItem(UPlayerInformData* PID)
+void UDPHallucinationShield::UseDopingItem(APlayerCharacter* DopedPC)
 {
 	if (Able && DopingItemNum > 0)
 	{
@@ -22,29 +22,29 @@ void UDPHallucinationShield::UseDopingItem(UPlayerInformData* PID)
 
 		UE_LOG(LogTemp, Warning, TEXT("HallucinationShield Use"));
 		//È¿°ú
-		BuffOn(PID);
+		BuffOn(DopedPC);
 
 		//
 		StartCooldown();
 	}
 }
 
-void UDPHallucinationShield::BuffOn(UPlayerInformData* PID)
+void UDPHallucinationShield::BuffOn(APlayerCharacter* DopedPC)
 {
 
-	if (PID->CurrentShield + 50.0f >= PID->MaxShield) {
-		PID->CurrentShield = PID->MaxShield;
+	if (DopedPC->Shield + 50.0f >= DopedPC->MaxShield) {
+		DopedPC->Shield = DopedPC->MaxShield;
 	}
 	else {
-		PID->CurrentShield += 50.0f;
+		DopedPC->Shield += 50.0f;
 	}
 
-	DeBuffOn(PID);
+	DeBuffOn(DopedPC);
 
-	StartBuff(PID);
+	StartBuff(DopedPC);
 }
 
-void UDPHallucinationShield::BuffOff(UPlayerInformData* PID)
+void UDPHallucinationShield::BuffOff(APlayerCharacter* DopedPC)
 {
 	if (CheckBuff == true) {
 
@@ -53,7 +53,7 @@ void UDPHallucinationShield::BuffOff(UPlayerInformData* PID)
 
 }
 
-void UDPHallucinationShield::DeBuffOn(UPlayerInformData* PID)
+void UDPHallucinationShield::DeBuffOn(APlayerCharacter* DopedPC)
 {
 	if (CheckDeBuff == false) {
 
@@ -62,10 +62,10 @@ void UDPHallucinationShield::DeBuffOn(UPlayerInformData* PID)
 		CheckDeBuff = true;
 	}
 
-	StartDeBuff(PID);
+	StartDeBuff(DopedPC);
 }
 
-void UDPHallucinationShield::DeBuffOff(UPlayerInformData* PID)
+void UDPHallucinationShield::DeBuffOff(APlayerCharacter* DopedPC)
 {
 	if (CheckDeBuff == true) {
 
