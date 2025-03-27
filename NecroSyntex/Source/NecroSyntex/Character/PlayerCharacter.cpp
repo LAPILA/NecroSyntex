@@ -29,6 +29,7 @@
 #include "NecroSyntex/PlayerState/NecroSyntexPlayerState.h"
 #include "NecroSyntex/DopingSystem/DopingComponent.h"
 #include "NecroSyntex\NecroSyntaxComponents\LagCompensationComponent.h"
+#include "NecroSyntex\PickUps\HealingStation.h"
 
 // �ִϸ��̼� ���� ���
 #include "PlayerAnimInstance.h"
@@ -163,6 +164,7 @@ APlayerCharacter::APlayerCharacter()
 			Box.Value->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 		}
 	}
+	HealingStationActor = nullptr;
 }
 
 void APlayerCharacter::OnRep_ReplicatedMovement()
@@ -278,6 +280,11 @@ void APlayerCharacter::SpawnDefaultWeapon()
 
 }
 
+void APlayerCharacter::SetHealingStationActor(AHealingStation* Station)
+{
+	HealingStationActor = Station;
+}
+
 void APlayerCharacter::BeginPlay()
 {
 	Super::BeginPlay();
@@ -290,9 +297,16 @@ void APlayerCharacter::BeginPlay()
 			SubSystem->AddMappingContext(DefaultMappingContext, 0);
 	}
 	SpawnDefaultWeapon();
-	UpdateHUDAmmo();
 	UpdateHUDShield();
 	UpdateHUDHealth();
+
+	if (Combat && Combat->EquippedWeapon)
+	{
+		InitialCarriedAmmo = Combat->CarriedAmmo;
+		InitialWeaponAmmo = Combat->EquippedWeapon->GetAmmo();
+		bInitializeAmmo = true;
+	}
+
 	if (HasAuthority())
 	{
 		OnTakeAnyDamage.AddDynamic(this, &APlayerCharacter::ReceiveDamage);
@@ -301,12 +315,14 @@ void APlayerCharacter::BeginPlay()
 	{
 		AttachedGrenade->SetVisibility(false);
 	}
-
-
-	if (HasAuthority()) {
-		GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
+	if (!UDC) {
+		GetCharacterMovement()->MaxWalkSpeed = 550.0f;
 	}
-
+	else {
+		if (HasAuthority()) {
+			GetCharacterMovement()->MaxWalkSpeed = UDC->PID->MoveSpeed;
+		}
+	}
 }
 
 void APlayerCharacter::Tick(float DeltaTime)
@@ -371,7 +387,7 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 		EnhancedInputComponent->BindAction(FireAction, ETriggerEvent::Started, this, &APlayerCharacter::FireButtonPressed);
 		EnhancedInputComponent->BindAction(FireAction, ETriggerEvent::Completed, this, &APlayerCharacter::FireButtonReleased);
 		EnhancedInputComponent->BindAction(FlashAction, ETriggerEvent::Triggered, this, &APlayerCharacter::FlashButtonPressed);
-		EnhancedInputComponent->BindAction(ReloadAction, ETriggerEvent::Triggered, this, &APlayerCharacter::ReloadButtonPressed);
+		EnhancedInputComponent->BindAction(ReloadAction, ETriggerEvent::Started, this, &APlayerCharacter::ReloadButtonPressed);
 		EnhancedInputComponent->BindAction(ThrowGrenade, ETriggerEvent::Triggered, this, &APlayerCharacter::GrenadeButtonPressed);
 		EnhancedInputComponent->BindAction(SwapWeaponAction, ETriggerEvent::Triggered, this, &APlayerCharacter::SwapWeaponWheel);
 
@@ -403,15 +419,7 @@ void APlayerCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 	DOREPLIFETIME(APlayerCharacter, bDisableGameplay);
 	DOREPLIFETIME(APlayerCharacter, Health);
 	DOREPLIFETIME(APlayerCharacter, Shield);
-
-	DOREPLIFETIME(APlayerCharacter, WalkSpeed);
-	DOREPLIFETIME(APlayerCharacter, RunningSpeed);
-	DOREPLIFETIME(APlayerCharacter, MLAtaackPoint);
-	DOREPLIFETIME(APlayerCharacter, Defense);
-	DOREPLIFETIME(APlayerCharacter, Blurred);
-	DOREPLIFETIME(APlayerCharacter, ROF);
-	DOREPLIFETIME(APlayerCharacter, DopingDamageBuff);
-	DOREPLIFETIME(APlayerCharacter, ReservedMoving);
+	DOREPLIFETIME(APlayerCharacter, HealingStationActor);
 }
 
 void APlayerCharacter::PlayFireMontage(bool bAiming)
@@ -469,6 +477,9 @@ void APlayerCharacter::PlayReloadMontage()
 	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
 	if (AnimInstance && ReloadMontage)
 	{
+		AnimInstance->OnMontageEnded.RemoveDynamic(this, &APlayerCharacter::ReloadMontageEndedHandler);
+		AnimInstance->OnMontageEnded.AddDynamic(this, &APlayerCharacter::ReloadMontageEndedHandler);
+
 		AnimInstance->Montage_Play(ReloadMontage);
 
 		FName SectionName;
@@ -493,8 +504,6 @@ void APlayerCharacter::PlayReloadMontage()
 		}
 
 		AnimInstance->Montage_JumpToSection(SectionName, ReloadMontage);
-
-		AnimInstance->OnMontageEnded.AddDynamic(this, &APlayerCharacter::ReloadMontageEndedHandler);
 	}
 }
 
@@ -514,6 +523,12 @@ void APlayerCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, const U
 	}
 
 	PlayerHitReactMontage();
+
+	if (Combat && Combat->CombatState == ECombatState::ECS_Reloading)
+	{
+		Combat->CancelReload();
+	}
+
 	if (Shield > 0)
 	{
 		float NewShieldValue = FMath::Clamp(Shield - Damage, 0.f, MaxShield);
@@ -560,11 +575,16 @@ void APlayerCharacter::Move(const FInputActionValue& Value)
 	if (bDisableGameplay) return;
 	FVector2D MovementVector = Value.Get<FVector2D>();
 
-
-
-	if (ReservedMoving) {
-		MovementVector.X *= -1;
-		MovementVector.Y *= -1;
+	if (HasAuthority()) {
+		if (UDC) {
+			if (UDC->CurseofChaos) {
+				if (UDC->CurseofChaos->CheckDeBuff == true)
+				{
+					MovementVector.X *= -1;
+					MovementVector.Y *= -1;
+				}
+			}
+		}
 	}
 
 
@@ -587,6 +607,10 @@ void APlayerCharacter::EquipButtonPressed()
 	if (Combat)
 	{
 		ServerEquipButtonPressed();
+	}
+	if (HealingStationActor)
+	{
+		ServerRequestHealing();
 	}
 }
 
@@ -638,8 +662,12 @@ void APlayerCharacter::SprintStart()
 
 		if (HasAuthority())
 		{
-
-			GetCharacterMovement()->MaxWalkSpeed = RunningSpeed;
+			if (UDC) {
+				GetCharacterMovement()->MaxWalkSpeed = UDC->PID->RunningSpeed;
+			}
+			else {
+				GetCharacterMovement()->MaxWalkSpeed = 550.0f;
+			}
 		}
 		else
 		{
@@ -657,8 +685,12 @@ void APlayerCharacter::SprintStop()
 
 		if (HasAuthority())
 		{
-			GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
-
+			if (UDC) {
+				GetCharacterMovement()->MaxWalkSpeed = UDC->PID->MoveSpeed;
+			}
+			else {
+				GetCharacterMovement()->MaxWalkSpeed = 1000.0f;
+			}
 		}
 		else
 		{
@@ -669,16 +701,22 @@ void APlayerCharacter::SprintStop()
 
 void APlayerCharacter::ServerSprintStart_Implementation()
 {
-
-	GetCharacterMovement()->MaxWalkSpeed = RunningSpeed;
-
+	if (UDC) {
+		GetCharacterMovement()->MaxWalkSpeed = UDC->PID->RunningSpeed;
+	}
+	else {
+		GetCharacterMovement()->MaxWalkSpeed = 550.0f;
+	}
 }
 
 void APlayerCharacter::ServerSprintStop_Implementation()
 {
-
-	GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
-
+	if (UDC) {
+		GetCharacterMovement()->MaxWalkSpeed = GetCharacterMovement()->MaxWalkSpeed = UDC->PID->MoveSpeed;
+	}
+	else {
+		GetCharacterMovement()->MaxWalkSpeed = 1000.0f;
+	}
 }
 
 bool APlayerCharacter::ServerSprintStart_Validate()
@@ -694,6 +732,11 @@ bool APlayerCharacter::ServerSprintStop_Validate()
 
 void APlayerCharacter::FireButtonPressed(const FInputActionValue& Value)
 {
+	if (bElimed || bDisableGameplay)
+	{
+		return;
+	}
+
 	if (Combat && Combat->EquippedWeapon)
 	{
 		Combat->FireButtonPressed(true);
@@ -702,6 +745,11 @@ void APlayerCharacter::FireButtonPressed(const FInputActionValue& Value)
 
 void APlayerCharacter::FireButtonReleased(const FInputActionValue& Value)
 {
+	if (bElimed || bDisableGameplay)
+	{
+		return;
+	}
+
 	if (Combat && Combat->EquippedWeapon)
 	{
 		Combat->FireButtonPressed(false);
@@ -912,11 +960,24 @@ void APlayerCharacter::UpdateHUDShield()
 
 void APlayerCharacter::UpdateHUDAmmo()
 {
-	NecroSyntexPlayerController = NecroSyntexPlayerController == nullptr ? Cast<ANecroSyntexPlayerController>(Controller) : NecroSyntexPlayerController;
-	if (NecroSyntexPlayerController && Combat && Combat->EquippedWeapon)
+	if (!Combat || !Combat->EquippedWeapon) return;
+
+	if (NecroSyntexPlayerController == nullptr)
+	{
+		NecroSyntexPlayerController = Cast<ANecroSyntexPlayerController>(Controller);
+	}
+
+	if (NecroSyntexPlayerController)
 	{
 		NecroSyntexPlayerController->SetHUDCarriedAmmo(Combat->CarriedAmmo);
-		NecroSyntexPlayerController->SetHUDCarriedAmmo(Combat->EquippedWeapon->GetAmmo());
+		NecroSyntexPlayerController->SetHUDWeaponAmmo(Combat->EquippedWeapon->GetAmmo());
+		bInitializeAmmo = false;
+	}
+	else
+	{
+		InitialCarriedAmmo = Combat->CarriedAmmo;
+		InitialWeaponAmmo = Combat->EquippedWeapon->GetAmmo();
+		bInitializeAmmo = true;
 	}
 }
 
@@ -1022,56 +1083,40 @@ bool APlayerCharacter::IsLocallyReloading()
 
 void APlayerCharacter::ReloadMontageEndedHandler(UAnimMontage* Montage, bool bInterrupted)
 {
-	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
-	if (AnimInstance == nullptr || Combat == nullptr) return;
+    UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+    if (AnimInstance == nullptr || Combat == nullptr) return;
 
-	// Checking if we got an interruption on the montage. I get interruption on high ping even if there is nothing overriding it, so the animation will still play
-	if (bInterrupted)
-	{
-		// The current time on the reload montage
-		float CurrentPosition = AnimInstance->Montage_GetPosition(ReloadMontage);
+    if (bInterrupted)
+    {
+        float CurrentPosition = AnimInstance->Montage_GetPosition(ReloadMontage);
+        FName SectionName = AnimInstance->Montage_GetCurrentSection();
+        int32 SectionIndex = ReloadMontage->GetSectionIndex(SectionName);
 
-		FName SectionName = AnimInstance->Montage_GetCurrentSection();
+        float OutStartTime, OutEndTime;
+        ReloadMontage->GetSectionStartAndEndTime(SectionIndex, OutStartTime, OutEndTime);
+        float TimeToWait = FMath::Clamp(OutEndTime - CurrentPosition, 0.f, OutEndTime - OutStartTime);
 
-		int32 SectionIndex = ReloadMontage->GetSectionIndex(SectionName);
+        if (TimeToWait > 0.f)
+        {
+            GetWorldTimerManager().SetTimer(
+                ReloadTimer,
+                this,
+                &APlayerCharacter::ReloadTimerFinished,
+                TimeToWait
+            );
+        }
+        else if (Combat->EquippedWeapon->GetWeaponType() == EWeaponType::EWT_Shotgun)
+        {
+            Combat->JumpToShotgunEnd();
+        }
 
-		// From OutStart and OutEndTime we can know the length of the section, we do it so it will work with every reload animation runtime, to prevent going into our reload montage and store all durations in a map or similar.
-		float OutStartTime;
-		float OutEndTime;
-		ReloadMontage->GetSectionStartAndEndTime(SectionIndex, OutStartTime, OutEndTime);
-
-		// How long we need to wait depending on where the montage was interrupted
-		float TimeToWait = FMath::Clamp(OutEndTime - CurrentPosition, 0, OutEndTime - OutStartTime);
-
-
-		// If we get interrupted at the end of our reload sequence, there is no need to start a timer if TimeToWait is 0, otherwise we start a wait timer.
-		if (TimeToWait > 0.f)
-		{
-			GetWorldTimerManager().SetTimer(
-				ReloadTimer,
-				this,
-				&APlayerCharacter::ReloadTimerFinished,
-				TimeToWait);
-		}
-		// We need special case if we are on a shotgun, we want to be able to shoot during reload
-		// Then 
-		else if (Combat->EquippedWeapon->GetWeaponType() == EWeaponType::EWT_Shotgun)
-		{
-			// JumpToShotgunEnd got an update too to set state Unoccupied if we are on server (posted below)
-			Combat->JumpToShotgunEnd();
-		}
-
-		// Unbind ReloadMontageEndedHandler
-		AnimInstance->OnMontageEnded.RemoveDynamic(this, &APlayerCharacter::ReloadMontageEndedHandler);
-
-	}
-	else
-	{
-		// If we didn't get an interruption, then everything is fine and we just call finish reloading directly
-		Combat->FinishReloading();
-		// Unbind ReloadMontageEndedHandler
-		AnimInstance->OnMontageEnded.RemoveDynamic(this, &APlayerCharacter::ReloadMontageEndedHandler);
-	}
+        AnimInstance->OnMontageEnded.RemoveDynamic(this, &APlayerCharacter::ReloadMontageEndedHandler);
+    }
+    else
+    {
+        Combat->FinishReloading();
+        AnimInstance->OnMontageEnded.RemoveDynamic(this, &APlayerCharacter::ReloadMontageEndedHandler);
+    }
 }
 
 
@@ -1083,6 +1128,13 @@ void APlayerCharacter::ReloadTimerFinished()
 	}
 }
 
+void APlayerCharacter::ServerRequestHealing_Implementation()
+{
+	if (HealingStationActor)
+	{
+		HealingStationActor->Interact(this);
+	}
+}
 
 //Pahu
 float APlayerCharacter::GetTotalDamage()
@@ -1097,4 +1149,9 @@ float APlayerCharacter::GetTotalDamage()
 UDopingComponent* APlayerCharacter::GetDopingComponent()
 {
 	return UDC;
+}
+
+void APlayerCharacter::GetDopingFromAlly()
+{
+
 }

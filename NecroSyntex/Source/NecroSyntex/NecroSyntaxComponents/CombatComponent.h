@@ -62,6 +62,8 @@ protected:
 	void FireProjectileWeapon();
 	void FireHitScanWeapon();
 	void FireShotgun();
+	UFUNCTION(BlueprintCallable)
+	void CancelReload();
 	void LocalFire(const FVector_NetQuantize& TraceHitTarget);
 	void ShotgunLocalFire(const TArray<FVector_NetQuantize>& TraceHitTargets);
 
@@ -127,6 +129,12 @@ private:
 	UFUNCTION()
 	void OnRep_Aiming();
 
+	UFUNCTION(Server, Reliable)
+	void ServerCancelReload();
+
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastCancelReload();
+
 	UPROPERTY(EditAnywhere)
 	float BaseWalkSpeed;
 
@@ -173,6 +181,7 @@ private:
 	int32 CarriedAmmo;
 	UFUNCTION()
 	void OnRep_CarriedAmmo();
+
 	TMap<EWeaponType, int32> CarriedAmmoMap;
 
 	UPROPERTY(EditAnywhere)

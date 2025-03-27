@@ -102,15 +102,29 @@ void AHitScanWeapon::WeaponTraceHit(const FVector& TraceStart, const FVector& Hi
 	UWorld* World = GetWorld();
 	if (World)
 	{
+		// 1) 라인 트레이스 범위 계산
 		FVector End = TraceStart + (HitTarget - TraceStart) * 1.25f;
 
+		// 2) 자기 자신 또는 Owner를 무시하기 위한 QueryParams 생성
+		FCollisionQueryParams QueryParams;
+		QueryParams.bReturnPhysicalMaterial = false; // 필요에 따라 사용
+		// 무조건 자신(Weapon 액터)과 Owner(플레이어 Pawn)를 Ignore
+		QueryParams.AddIgnoredActor(this);
+		if (AActor* MyOwner = GetOwner())
+		{
+			QueryParams.AddIgnoredActor(MyOwner);
+		}
+
+		// 3) 라인 트레이스 실행
 		World->LineTraceSingleByChannel(
 			OutHit,
 			TraceStart,
 			End,
-			ECollisionChannel::ECC_Pawn
-			//ECollisionChannel::ECC_Visibility
+			ECollisionChannel::ECC_Pawn,
+			QueryParams
 		);
+
+		// 4) 맞은 위치/이펙트 처리
 		FVector BeamEnd = End;
 		if (OutHit.bBlockingHit)
 		{
@@ -120,7 +134,8 @@ void AHitScanWeapon::WeaponTraceHit(const FVector& TraceStart, const FVector& Hi
 		{
 			OutHit.ImpactPoint = End;
 		}
-		DrawDebugSphere(GetWorld(), BeamEnd, 16.f, 12, FColor::Orange, true);
+
+		// 빔 이펙트 처리
 		if (BeamParticles)
 		{
 			UParticleSystemComponent* Beam = UGameplayStatics::SpawnEmitterAtLocation(

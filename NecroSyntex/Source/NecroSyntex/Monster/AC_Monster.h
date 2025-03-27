@@ -13,5 +13,12 @@ UCLASS()
 class NECROSYNTEX_API AAC_Monster : public AAIController
 {
 	GENERATED_BODY()
+
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	bool isSight;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	bool isSound;
 	
 };

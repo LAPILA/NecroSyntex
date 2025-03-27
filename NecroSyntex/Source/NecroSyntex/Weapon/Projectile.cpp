@@ -28,6 +28,11 @@ void AProjectile::BeginPlay()
 {
 	Super::BeginPlay();
 
+	AActor* MyOwner = GetOwner();
+	if (MyOwner)
+	{
+		CollisionBox->IgnoreActorWhenMoving(MyOwner, true);
+	}
 	if (TrailSystem)
 	{
 		TrailSystemComponent = UNiagaraFunctionLibrary::SpawnSystemAttached(

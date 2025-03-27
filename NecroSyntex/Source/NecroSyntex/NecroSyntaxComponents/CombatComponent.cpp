@@ -422,6 +422,44 @@ void UCombatComponent::ReloadEmptyWeapon()
 	}
 }
 
+void UCombatComponent::CancelReload()
+{
+	if (CombatState == ECombatState::ECS_Reloading)
+	{
+		if (Character && Character->HasAuthority())
+		{
+			ServerCancelReload();
+		}
+		else
+		{
+			ServerCancelReload();
+		}
+	}
+}
+
+void UCombatComponent::ServerCancelReload_Implementation()
+{
+	MulticastCancelReload();
+}
+
+void UCombatComponent::MulticastCancelReload_Implementation()
+{
+	if (CombatState == ECombatState::ECS_Reloading)
+	{
+		CombatState = ECombatState::ECS_Unoccupied;
+		bLocallyReloading = false;
+		if (Character)
+		{
+			UAnimInstance* AnimInstance = Character->GetMesh()->GetAnimInstance();
+			if (AnimInstance && Character->GetReloadMontage())
+			{
+				AnimInstance->Montage_Stop(0.1f, Character->GetReloadMontage());
+			}
+		}
+	}
+}
+
+
 void UCombatComponent::ShowAttachedGrenade(bool bShowGrenade)
 {
 	if (Character && Character->GetAttachedGrenade())
@@ -676,9 +714,15 @@ void UCombatComponent::ServerFire_Implementation(const FVector_NetQuantize& Trac
 	const float CurrentTime = GetWorld()->GetTimeSeconds();
 	const float FireDelaySec = EquippedWeapon->FireDelay;
 
-	if (CurrentTime - LastServerFireTime < FireDelaySec)
+	const float Tolerance = 0.02f;
+
+	if ((CurrentTime - LastServerFireTime + Tolerance) < FireDelaySec)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("[CHEAT DETECTED] %s fired too quickly (%.3f s < %.3f s)"), *Character->GetName(), CurrentTime - LastServerFireTime, FireDelaySec);
+		// 로그는 남기되, 너무 자주 뜨지 않도록 하거나 완전히 지워도 됨
+		UE_LOG(LogTemp, Warning, TEXT("[CHEAT DETECTED?] %s fired quickly (%.3f s < %.3f s)"),
+			*Character->GetName(),
+			CurrentTime - LastServerFireTime,
+			FireDelaySec);
 		return;
 	}
 
@@ -701,6 +745,7 @@ void UCombatComponent::MulticastFire_Implementation(const FVector_NetQuantize& T
 	if (Character && Character->IsLocallyControlled() && !Character->HasAuthority()) return;
 	LocalFire(TraceHitTarget);
 }
+
 void UCombatComponent::ServerShotgunFire_Implementation(const TArray<FVector_NetQuantize>& TraceHitTargets, float FireDelay)
 {
 	if (!EquippedWeapon || !Character) return;
@@ -708,9 +753,14 @@ void UCombatComponent::ServerShotgunFire_Implementation(const TArray<FVector_Net
 	const float CurrentTime = GetWorld()->GetTimeSeconds();
 	const float FireDelaySec = EquippedWeapon->FireDelay;
 
-	if (CurrentTime - LastServerShotgunFireTime < FireDelaySec)
+	const float Tolerance = 0.02f;
+
+	if ((CurrentTime - LastServerShotgunFireTime + Tolerance) < FireDelaySec)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("[CHEAT DETECTED] %s fired shotgun too quickly (%.3f s < %.3f s)"), *Character->GetName(), CurrentTime - LastServerShotgunFireTime, FireDelaySec);
+		UE_LOG(LogTemp, Warning, TEXT("[CHEAT DETECTED?] %s fired shotgun quickly (%.3f s < %.3f s)"),
+			*Character->GetName(),
+			CurrentTime - LastServerShotgunFireTime,
+			FireDelaySec);
 		return;
 	}
 
@@ -750,12 +800,18 @@ void UCombatComponent::ShotgunLocalFire(const TArray<FVector_NetQuantize>& Trace
 
 void UCombatComponent::TraceUnderCrosshairs(FHitResult& TraceHitResult)
 {
+	if (!Character) return; // Character가 nullptr면 바로 리턴
+
 	FVector2D ViewportSize;
 	if (GEngine && GEngine->GameViewport)
 	{
 		GEngine->GameViewport->GetViewportSize(ViewportSize);
 	}
+
+	// 화면 정중앙의 2D 좌표(크로스헤어 위치)
 	FVector2D CrosshairLocation(ViewportSize.X / 2.f, ViewportSize.Y / 2.f);
+
+	// 2D 화면 좌표 → 3D 월드 좌표/방향
 	FVector CrosshairWorldPosition;
 	FVector CrosshairWorldDirection;
 	bool bScreenToWorld = UGameplayStatics::DeprojectScreenToWorld(
@@ -764,18 +820,37 @@ void UCombatComponent::TraceUnderCrosshairs(FHitResult& TraceHitResult)
 		CrosshairWorldPosition,
 		CrosshairWorldDirection
 	);
-	
+
 	if (bScreenToWorld)
 	{
-		FVector Start = CrosshairWorldPosition;
-		FVector End = Start + CrosshairWorldDirection * TRACE_LENGTH;
+		// 자기 자신 캐릭터나 무기 등을 트레이스에서 무시하기 위한 파라미터
+		FCollisionQueryParams QueryParams;
+		QueryParams.AddIgnoredActor(Character); // 플레이어 캐릭터 무시
+		// 만약 현재 무기도 트레이스에서 제외하고 싶다면
+		if (Character->GetEquippedWeapon())
+		{
+			QueryParams.AddIgnoredActor(Character->GetEquippedWeapon());
+		}
+
+		const FVector Start = CrosshairWorldPosition;
+		const FVector End = Start + CrosshairWorldDirection * TRACE_LENGTH;
+
+		// 자기 자신, 무기 등을 제외한 상태로 라인 트레이스
 		GetWorld()->LineTraceSingleByChannel(
 			TraceHitResult,
 			Start,
 			End,
-			ECollisionChannel::ECC_Visibility
+			ECollisionChannel::ECC_Visibility,
+			QueryParams
 		);
-		if (!TraceHitResult.bBlockingHit) TraceHitResult.ImpactPoint = End;
+
+		// 충돌이 없으면 ImpactPoint는 End로 설정
+		if (!TraceHitResult.bBlockingHit)
+		{
+			TraceHitResult.ImpactPoint = End;
+		}
+
+		// 적/맞출 대상 색깔 표시 로직 등
 		if (TraceHitResult.GetActor() && TraceHitResult.GetActor()->Implements<UInteractWithCrossHairsInterface>())
 		{
 			HUDPackage.CrosshairsColor = FLinearColor::Red;
@@ -786,6 +861,7 @@ void UCombatComponent::TraceUnderCrosshairs(FHitResult& TraceHitResult)
 		}
 	}
 }
+
 
 void UCombatComponent::SetHUDCrosshairs(float DeltaTime)
 {

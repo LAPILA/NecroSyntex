@@ -427,6 +427,10 @@ void ANecroSyntexPlayerController::PollInit()
 				if (PlayerCharacter && PlayerCharacter->GetCombat())
 				{
 					if (bInitializeGrenades) SetHUDGrenades(PlayerCharacter->GetCombat()->GetGrenades());
+					SetHUDCarriedAmmo(PlayerCharacter->InitialCarriedAmmo);
+					SetHUDWeaponAmmo(PlayerCharacter->InitialWeaponAmmo);
+
+					PlayerCharacter->bInitializeAmmo = false;
 				}
 			}
 		}

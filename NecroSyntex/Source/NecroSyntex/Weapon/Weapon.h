@@ -93,6 +93,9 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Weapon Scatter")
 	bool bUseScatter = false;
 
+	UFUNCTION(BlueprintImplementableEvent)
+	void PlayFireSound();
+
 protected:
 	virtual void BeginPlay() override;
 	virtual void OnWeaponStateSet();
