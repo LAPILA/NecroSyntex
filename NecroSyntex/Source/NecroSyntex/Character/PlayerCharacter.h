@@ -110,6 +110,19 @@ public:
 
 	bool bFinishedSwapping = false;
 
+	UPROPERTY(Replicated)
+	class AHealingStation* HealingStationActor;
+
+	UFUNCTION(BlueprintCallable)
+	void SetHealingStationActor(AHealingStation* Station);
+
+
+
+	UFUNCTION(Server, Reliable)
+	void ServerRequestHealing();
+	void ServerRequestHealing_Implementation();
+	bool ServerRequestHealing_Validate() { return true; }
+
 protected:
     virtual void BeginPlay() override;
 
