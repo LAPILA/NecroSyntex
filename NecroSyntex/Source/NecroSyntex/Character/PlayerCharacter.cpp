@@ -247,38 +247,43 @@ void APlayerCharacter::Destroyed()
 
 void APlayerCharacter::SpawnDefaultWeapon()
 {
-	// GameMode�� World ��ȿ�� �˻�
-	ANecroSyntexGameMode* NecroSyntexGameMode = Cast<ANecroSyntexGameMode>(UGameplayStatics::GetGameMode(this));
+	if (!HasAuthority() || bElimed) return;
+	ANecroSyntexGameMode* GameMode = Cast<ANecroSyntexGameMode>(UGameplayStatics::GetGameMode(this));
 	UWorld* World = GetWorld();
-	if (!NecroSyntexGameMode || !World || bElimed) return;
+	if (!GameMode || !World || bElimed) return;
 
-	// 1) �ֹ���(Primary) ����
+	// 1) Primary
 	if (DefaultWeaponClass && Combat)
 	{
-		AWeapon* PrimaryWeapon = World->SpawnActor<AWeapon>(DefaultWeaponClass);
-		if (PrimaryWeapon)
+		AWeapon* PrimaryWep = World->SpawnActor<AWeapon>(DefaultWeaponClass);
+		if (PrimaryWep)
 		{
-			// bDestroyWeapon = true �� ��� �� �ı��Ǵ� ����
-			PrimaryWeapon->bDestroyWeapon = true;
-			Combat->EquipWeapon(PrimaryWeapon);
-			// -> Combat->EquipWeapon() ���ο��� 
-			//    '���� �̹� ���Ⱑ ������ SecondaryWeapon���� ����' ���� ó��
+			PrimaryWep->bDestroyWeapon = true;
+			Combat->EquipWeapon(PrimaryWep);
 		}
 	}
-
-	// 2) ���� ����(Secondary) ����
+	// 2) Secondary
 	if (SubWeaponClass && Combat)
 	{
-		AWeapon* SecondaryWeapon = World->SpawnActor<AWeapon>(SubWeaponClass);
-		if (SecondaryWeapon)
+		AWeapon* SecondaryWep = World->SpawnActor<AWeapon>(SubWeaponClass);
+		if (SecondaryWep)
 		{
-			SecondaryWeapon->bDestroyWeapon = true;
-			Combat->EquipWeapon(SecondaryWeapon);
-			// -> ù ��° ���Ⱑ �ֹ��Ⱑ �Ǿ����Ƿ�, �� ��°�� ���� ����� �ڵ� Equip
+			SecondaryWep->bDestroyWeapon = true;
+			Combat->EquipWeapon(SecondaryWep);
 		}
 	}
-
+	// 3) Third
+	if (ThirdWeaponClass && Combat)
+	{
+		AWeapon* ThirdWep = World->SpawnActor<AWeapon>(ThirdWeaponClass);
+		if (ThirdWep)
+		{
+			ThirdWep->bDestroyWeapon = true;
+			Combat->EquipThirdWeapon(ThirdWep);
+		}
+	}
 }
+
 
 void APlayerCharacter::SetHealingStationActor(AHealingStation* Station)
 {
@@ -756,9 +761,9 @@ void APlayerCharacter::SwapWeaponWheel()
 {
 	if (HasAuthority())
 	{
-		if (Combat && Combat->ShouldSwapWeapons())
+		if (Combat)
 		{
-			Combat->SwapWeapons();
+			Combat->CycleWeapons();
 		}
 	}
 	else
@@ -792,8 +797,13 @@ void APlayerCharacter::DropOrDestroyWeapons()
 		{
 			DropOrDestroyWeapon(Combat->SecondaryWeapon);
 		}
+		if (Combat->ThirdWeapon)
+		{
+			DropOrDestroyWeapon(Combat->ThirdWeapon);
+		}
 	}
 }
+
 
 bool APlayerCharacter::ServerSwapWeaponWheel_Validate()
 {
@@ -802,9 +812,9 @@ bool APlayerCharacter::ServerSwapWeaponWheel_Validate()
 
 void APlayerCharacter::ServerSwapWeaponWheel_Implementation()
 {
-	if (Combat && Combat->ShouldSwapWeapons())
+	if (Combat)
 	{
-		Combat->SwapWeapons();
+		Combat->CycleWeapons();
 	}
 }
 

@@ -102,6 +102,7 @@ public:
 
 	void UpdateHUDAmmo();
 
+	UFUNCTION(BlueprintCallable)
 	void SpawnDefaultWeapon();
 
 	UPROPERTY()
@@ -337,6 +338,8 @@ private:
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<AWeapon> SubWeaponClass;
 
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<AWeapon> ThirdWeaponClass;
 	UFUNCTION()
 	void ReloadMontageEndedHandler(UAnimMontage* Montage, bool bInterrupted);
 
