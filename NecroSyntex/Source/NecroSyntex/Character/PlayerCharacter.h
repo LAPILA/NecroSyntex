@@ -77,6 +77,7 @@ public:
 	void PlayReloadMontage();
 	void PlayElimMontage();
 	void PlayThrowGrenadeMontage();
+	void PlaySwapMontage();
 	virtual void OnRep_ReplicatedMovement() override;
 
 	void Elim();
@@ -397,10 +398,29 @@ public:
 	float Shield = 200.f;
 
 
-	UPROPERTY(Replicated, EditAnywhere)
-	float WalkSpeed; // 이동속도
-	UPROPERTY(Replicated, EditAnywhere)
-	float RunningSpeed; // 달리기속도
+	//Speed
+	UPROPERTY(Replicated, EditDefaultsOnly, Category = "Movement")
+	float WalkSpeed = 600.f;
+
+	UPROPERTY(Replicated, EditDefaultsOnly, Category = "Movement")
+	float RunningSpeed = 1200.f;
+
+	UPROPERTY(Replicated, EditDefaultsOnly, Category = "Movement")
+	float AimWalkSpeed = 400.f;
+
+	UPROPERTY(Replicated, EditDefaultsOnly, Category = "Movement")
+	float CrouchSpeed = 300.f;
+
+	UPROPERTY(Replicated, EditDefaultsOnly, Category = "Movement")
+	float ReloadSpeedMultiplier = 0.5f;
+
+	UPROPERTY(Replicated, EditDefaultsOnly, Category = "Movement")
+	float GrenadeThrowSpeedMultiplier = 0.5f;
+
+	UPROPERTY(Replicated, EditDefaultsOnly, Category = "Movement")
+	float MaxCharacterSpeed = 10000.f;
+
+
 
 	float Rebound; // 반동
 

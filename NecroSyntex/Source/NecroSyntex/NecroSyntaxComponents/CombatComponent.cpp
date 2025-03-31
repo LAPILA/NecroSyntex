@@ -340,6 +340,7 @@ void UCombatComponent::ThrowGrenade()
 		Character->PlayThrowGrenadeMontage();
 		AttachActorToLeftHand(EquippedWeapon);
 		ShowAttachedGrenade(true);
+		Character->GetCharacterMovement()->MaxWalkSpeed = Character->WalkSpeed * Character->GrenadeThrowSpeedMultiplier;
 	}
 
 	if (Character && !Character->HasAuthority())
@@ -553,16 +554,33 @@ void UCombatComponent::OnRep_ThirdWeapon()
 
 void UCombatComponent::CycleWeapons()
 {
-	if (CombatState != ECombatState::ECS_Unoccupied || !EquippedWeapon) return;
+	if (CombatState != ECombatState::ECS_Unoccupied || !EquippedWeapon || !Character) return;
 
-	if (!Character) return;
+	// 로컬에서 즉시 몽타주 재생
+	Character->PlaySwapMontage();
 
+	// 즉시 상태 변경
+	CombatState = ECombatState::ECS_SwappingWeapons;
+	Character->bFinishedSwapping = false;
+
+	// 서버에서 실제 무기 교체 처리만 진행
 	if (!Character->HasAuthority())
 	{
 		ServerCycleWeapons();
-		return;
 	}
+	else
+	{
+		CycleWeaponsLogic();
+	}
+}
 
+void UCombatComponent::ServerCycleWeapons_Implementation()
+{
+	CycleWeapons();
+}
+
+void UCombatComponent::CycleWeaponsLogic()
+{
 	if (EquippedWeapon == PrimaryWeapon && SecondaryWeapon)
 	{
 		PrimaryWeapon->SetWeaponState(EWeaponState::EWS_EquippedSecondary);
@@ -621,12 +639,9 @@ void UCombatComponent::CycleWeapons()
 	PlayEquipWeaponSound(EquippedWeapon);
 	UpdateCarriedAmmo();
 	ReloadEmptyWeapon();
-}
 
-
-void UCombatComponent::ServerCycleWeapons_Implementation()
-{
-	CycleWeapons();
+	// 무기 스왑 상태 해제
+	CombatState = ECombatState::ECS_Unoccupied;
 }
 
 void UCombatComponent::Reload()
@@ -649,16 +664,107 @@ void UCombatComponent::FinishReloading()
 
 	bLocallyReloading = false;
 
+	if (Character->bIsCrouched)
+	{
+		Character->GetCharacterMovement()->MaxWalkSpeed = Character->CrouchSpeed;
+	}
+	else if (bAiming)
+	{
+		Character->GetCharacterMovement()->MaxWalkSpeed = Character->AimWalkSpeed;
+	}
+	else
+	{
+		Character->GetCharacterMovement()->MaxWalkSpeed = Character->WalkSpeed;
+	}
+
 	if (Character->HasAuthority())
 	{
 		CombatState = ECombatState::ECS_Unoccupied;
 		UpdateAmmoValues();
 	}
-	if (bFireButtonPressed)
-	{
-		Fire();
-	}
 }
+
+
+void UCombatComponent::FinishSwap()
+{
+	if (Character && Character->HasAuthority())
+	{
+		CombatState = ECombatState::ECS_Unoccupied;
+	}
+	if (Character) Character->bFinishedSwapping = true;
+}
+
+void UCombatComponent::FinishSwapAttachWeapons()
+{
+	if (!EquippedWeapon || !Character) return;
+
+	// EquippedWeapon 기준으로 무기 순환 처리
+	if (EquippedWeapon == PrimaryWeapon && SecondaryWeapon)
+	{
+		// Primary → BackPack
+		PrimaryWeapon->SetWeaponState(EWeaponState::EWS_EquippedSecondary);
+		AttachActorToBackPack(PrimaryWeapon);
+
+		// Secondary → Equipped (RightHand)
+		EquippedWeapon = SecondaryWeapon;
+		EquippedWeapon->SetWeaponState(EWeaponState::EWS_Equipped);
+		AttachActorToRightHand(EquippedWeapon);
+
+		// Third → BackPack2
+		if (ThirdWeapon)
+		{
+			ThirdWeapon->SetWeaponState(EWeaponState::EWS_EquippedThird);
+			AttachActorToBackPack2(ThirdWeapon);
+		}
+	}
+	else if (EquippedWeapon == SecondaryWeapon && ThirdWeapon)
+	{
+		// Secondary → BackPack
+		SecondaryWeapon->SetWeaponState(EWeaponState::EWS_EquippedSecondary);
+		AttachActorToBackPack(SecondaryWeapon);
+
+		// Third → Equipped (RightHand)
+		EquippedWeapon = ThirdWeapon;
+		EquippedWeapon->SetWeaponState(EWeaponState::EWS_Equipped);
+		AttachActorToRightHand(EquippedWeapon);
+
+		// Primary → BackPack2
+		if (PrimaryWeapon)
+		{
+			PrimaryWeapon->SetWeaponState(EWeaponState::EWS_EquippedThird);
+			AttachActorToBackPack2(PrimaryWeapon);
+		}
+	}
+	else if (EquippedWeapon == ThirdWeapon && PrimaryWeapon)
+	{
+		// Third → BackPack2
+		ThirdWeapon->SetWeaponState(EWeaponState::EWS_EquippedThird);
+		AttachActorToBackPack2(ThirdWeapon);
+
+		// Primary → Equipped (RightHand)
+		EquippedWeapon = PrimaryWeapon;
+		EquippedWeapon->SetWeaponState(EWeaponState::EWS_Equipped);
+		AttachActorToRightHand(EquippedWeapon);
+
+		// Secondary → BackPack
+		if (SecondaryWeapon)
+		{
+			SecondaryWeapon->SetWeaponState(EWeaponState::EWS_EquippedSecondary);
+			AttachActorToBackPack(SecondaryWeapon);
+		}
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("FinishSwapAttachWeapons() failed: invalid weapons state."));
+		return;
+	}
+
+	// 부가적인 후속 처리
+	EquippedWeapon->SetHUDAmmo();
+	UpdateCarriedAmmo();
+	PlayEquipWeaponSound(EquippedWeapon);
+}
+
 
 void UCombatComponent::ServerReload_Implementation()
 {
@@ -671,11 +777,15 @@ void UCombatComponent::ServerReload_Implementation()
 	}
 }
 
+
 void UCombatComponent::HandleReload()
 {
-	if (Character)
+	if (Character && EquippedWeapon && !EquippedWeapon->IsFull())
 	{
 		Character->PlayReloadMontage();
+		bLocallyReloading = true;
+
+		Character->GetCharacterMovement()->MaxWalkSpeed = Character->WalkSpeed * Character->ReloadSpeedMultiplier;
 	}
 }
 
@@ -760,6 +870,18 @@ void UCombatComponent::ThrowGrenadeFinished()
 void UCombatComponent::LaunchGrenade()
 {
 	ShowAttachedGrenade(false);
+	if (Character->bIsCrouched)
+	{
+		Character->GetCharacterMovement()->MaxWalkSpeed = Character->CrouchSpeed;
+	}
+	else if (bAiming)
+	{
+		Character->GetCharacterMovement()->MaxWalkSpeed = Character->AimWalkSpeed;
+	}
+	else
+	{
+		Character->GetCharacterMovement()->MaxWalkSpeed = Character->WalkSpeed;
+	}
 	if (Character && Character->IsLocallyControlled())
 	{
 		ServerLaunchGrenade(HitTarget);
@@ -811,6 +933,12 @@ void UCombatComponent::OnRep_CombatState()
 			Character->PlayThrowGrenadeMontage();
 			AttachActorToLeftHand(EquippedWeapon);
 			ShowAttachedGrenade(true);
+		}
+		break;
+	case ECombatState::ECS_SwappingWeapons:
+		if (Character && !Character->IsLocallyControlled())
+		{
+			Character->PlaySwapMontage();
 		}
 		break;
 	}
@@ -1067,18 +1195,23 @@ void UCombatComponent::SetAiming(bool bIsAiming)
 	bAiming = bIsAiming;
 	ServerSetAiming(bIsAiming);
 
-	if (Character)
+	if (bAiming)
 	{
-		Character->GetCharacterMovement()->MaxWalkSpeed =
-			bIsAiming ? AimWalkSpeed : BaseWalkSpeed;
+		Character->GetCharacterMovement()->MaxWalkSpeed = Character->AimWalkSpeed;
 	}
-	if (Character->IsLocallyControlled() &&
-		EquippedWeapon->GetWeaponType() == EWeaponType::EWT_SniperRifle)
+	else
 	{
-		Character->ShowSniperScopeWidget(bIsAiming);
+		if (Character->bIsCrouched)
+		{
+			Character->GetCharacterMovement()->MaxWalkSpeed = Character->CrouchSpeed;
+		}
+		else
+		{
+			Character->GetCharacterMovement()->MaxWalkSpeed = Character->WalkSpeed;
+		}
 	}
-	if (Character->IsLocallyControlled()) bAimButtonPressed = bIsAiming;
 }
+
 
 void UCombatComponent::ServerSetAiming_Implementation(bool bIsAiming)
 {

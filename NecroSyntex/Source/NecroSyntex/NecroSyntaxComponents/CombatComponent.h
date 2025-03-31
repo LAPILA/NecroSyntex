@@ -26,6 +26,12 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void FinishReloading();
 
+	UFUNCTION(BlueprintCallable)
+	void FinishSwap();
+
+	UFUNCTION(BlueprintCallable)
+	void FinishSwapAttachWeapons();
+
 	void FireButtonPressed(bool bPressed);
 
 	UFUNCTION(BlueprintCallable)
@@ -46,6 +52,8 @@ public:
 	bool bLocallyReloading = false;
 
 	void CycleWeapons();
+
+	void CycleWeaponsLogic();
 protected:
 	virtual void BeginPlay() override;
 	void SetAiming(bool bIsAiming);

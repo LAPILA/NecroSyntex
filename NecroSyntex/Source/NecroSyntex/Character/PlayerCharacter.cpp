@@ -165,6 +165,17 @@ APlayerCharacter::APlayerCharacter()
 		}
 	}
 	HealingStationActor = nullptr;
+
+	// 기본 이동속도 설정
+	GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
+	GetCharacterMovement()->MaxWalkSpeedCrouched = CrouchSpeed;
+	GetCharacterMovement()->NavAgentProps.bCanCrouch = true;
+	GetCharacterMovement()->BrakingDecelerationWalking = 2048.f;
+	GetCharacterMovement()->bOrientRotationToMovement = true;
+	GetCharacterMovement()->RotationRate = FRotator(0.f, 720.f, 0.f);
+	GetCharacterMovement()->AirControl = 0.3f; // 공중에서 제어 가능성
+	GetCharacterMovement()->MaxAcceleration = 4096.f;
+	GetCharacterMovement()->BrakingFrictionFactor = 1.f;
 }
 
 void APlayerCharacter::OnRep_ReplicatedMovement()
@@ -331,6 +342,11 @@ void APlayerCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	FVector CurrentVelocity = GetCharacterMovement()->Velocity;
+	if (CurrentVelocity.Size() > MaxCharacterSpeed)
+	{
+		GetCharacterMovement()->Velocity = CurrentVelocity.GetClampedToMaxSize(MaxCharacterSpeed);
+	}
 	RotateInPlace(DeltaTime);
 	if (GetLocalRole() > ENetRole::ROLE_SimulatedProxy && IsLocallyControlled())
 	{
@@ -467,6 +483,15 @@ void APlayerCharacter::PlayThrowGrenadeMontage()
 	if (AnimInstance && ThrowGrenadeMontage)
 	{
 		AnimInstance->Montage_Play(ThrowGrenadeMontage);
+	}
+}
+
+void APlayerCharacter::PlaySwapMontage()
+{
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	if (AnimInstance && SwapMontage)
+	{
+		AnimInstance->Montage_Play(SwapMontage);
 	}
 }
 
@@ -622,22 +647,16 @@ void APlayerCharacter::EquipButtonPressed()
 void APlayerCharacter::CrouchButtonPressed()
 {
 	if (bDisableGameplay) return;
+
 	if (bIsCrouched)
 	{
 		UnCrouch();
+		GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
 	}
 	else
 	{
 		Crouch();
-	}
-}
-
-void APlayerCharacter::ReloadButtonPressed()
-{
-	if (bDisableGameplay) return;
-	if (Combat)
-	{
-		Combat->Reload();
+		GetCharacterMovement()->MaxWalkSpeed = CrouchSpeed;
 	}
 }
 
@@ -744,6 +763,15 @@ void APlayerCharacter::FireButtonReleased(const FInputActionValue& Value)
 
 void APlayerCharacter::FlashButtonPressed()
 {
+}
+
+void APlayerCharacter::ReloadButtonPressed()
+{
+	if (bDisableGameplay) return;
+	if (Combat)
+	{
+		Combat->Reload();
+	}
 }
 
 void APlayerCharacter::ServerEquipButtonPressed_Implementation()
