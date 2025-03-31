@@ -42,6 +42,12 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float MonsterHP;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float MonsterAD; //attack damage
+
+	UFUNCTION(BlueprintCallable)
+	void MoveToPlayer();
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -65,7 +71,7 @@ protected:
 	//Timer Function
 	void DelayedFunction(float DelayTime);
 
-	void MoveToPlayer();
+	
 
 	
 

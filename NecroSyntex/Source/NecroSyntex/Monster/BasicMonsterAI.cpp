@@ -25,6 +25,7 @@ ABasicMonsterAI::ABasicMonsterAI()
 	AttackPoint->OnComponentBeginOverlap.AddDynamic(this, &ABasicMonsterAI::OnAttackAreaOverlap);
 
 	MonsterHP = 100.0f;
+	MonsterAD = 20.0f;
 }
 
 // Called when the game starts or when spawned
@@ -61,14 +62,9 @@ float ABasicMonsterAI::TakeDamage_Implementation(float DamageAmount, FDamageEven
 	if (MonsterHP <= 0.0f) {
 		if (GEngine)
 		{
-			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, (TEXT("0000000000")));
+			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, (TEXT("Death")));
 		}
 		return 0.0f; 
-	}
-
-	if (GEngine)
-	{
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("Damage Received: %.2f"), DamageAmount));
 	}
 
 	MonsterHP -= DamageAmount; 
@@ -150,7 +146,7 @@ void ABasicMonsterAI::MoveToPlayer()
 		{
 			UE_LOG(LogTemp, Warning, TEXT("Moving to Player"));
 
-			AIController->MoveToActor(Player, 5.0f, true, true, true, 0, true);
+			AIController->MoveToActor(Player, 150.0f, true, true, true, 0, true);
 		}
 	}
 }
@@ -183,8 +179,6 @@ void ABasicMonsterAI::OnAttackAreaOverlap(UPrimitiveComponent* OverlappedCompone
 			if (Player)
 			{
 				UE_LOG(LogTemp, Warning, TEXT("Monster Attacked Player!"));
-
-				GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red, TEXT("attack!"));
 			}
 		}
 	}
