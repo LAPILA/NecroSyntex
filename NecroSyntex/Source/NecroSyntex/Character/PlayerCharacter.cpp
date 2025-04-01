@@ -348,6 +348,10 @@ void APlayerCharacter::Tick(float DeltaTime)
 		GetCharacterMovement()->Velocity = CurrentVelocity.GetClampedToMaxSize(MaxCharacterSpeed);
 	}
 	RotateInPlace(DeltaTime);
+	if (IsLocallyControlled())
+	{
+		HandleHeadBob(DeltaTime);
+	}
 	if (GetLocalRole() > ENetRole::ROLE_SimulatedProxy && IsLocallyControlled())
 	{
 		AimOffset(DeltaTime);
@@ -408,7 +412,8 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 		EnhancedInputComponent->BindAction(ReloadAction, ETriggerEvent::Started, this, &APlayerCharacter::ReloadButtonPressed);
 		EnhancedInputComponent->BindAction(ThrowGrenade, ETriggerEvent::Triggered, this, &APlayerCharacter::GrenadeButtonPressed);
 		EnhancedInputComponent->BindAction(SwapWeaponAction, ETriggerEvent::Triggered, this, &APlayerCharacter::SwapWeaponWheel);
-
+		EnhancedInputComponent->BindAction(UDCskill1, ETriggerEvent::Triggered, this, &APlayerCharacter::FirstDoping);
+		EnhancedInputComponent->BindAction(UDCskill2, ETriggerEvent::Triggered, this, &APlayerCharacter::SecondDoping);
 	}
 }
 
@@ -434,6 +439,7 @@ void APlayerCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 	DOREPLIFETIME_CONDITION(APlayerCharacter, OverlappingWeapon,COND_OwnerOnly);
+	DOREPLIFETIME_CONDITION(APlayerCharacter, bIsSprinting, COND_SkipOwner);
 	DOREPLIFETIME(APlayerCharacter, bDisableGameplay);
 	DOREPLIFETIME(APlayerCharacter, Health);
 	DOREPLIFETIME(APlayerCharacter, Shield);
@@ -492,6 +498,15 @@ void APlayerCharacter::PlaySwapMontage()
 	if (AnimInstance && SwapMontage)
 	{
 		AnimInstance->Montage_Play(SwapMontage);
+	}
+}
+
+void APlayerCharacter::PlayDopingMontage()
+{
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	if (AnimInstance && DopingMontage)
+	{
+		AnimInstance->Montage_Play(DopingMontage);
 	}
 }
 
@@ -680,10 +695,10 @@ void APlayerCharacter::AimButtonReleased()
 void APlayerCharacter::SprintStart()
 {
 	if (bDisableGameplay) return;
+
 	if (!bIsSprinting)
 	{
 		bIsSprinting = true;
-
 		if (HasAuthority())
 		{
 			GetCharacterMovement()->MaxWalkSpeed = RunningSpeed;
@@ -692,6 +707,8 @@ void APlayerCharacter::SprintStart()
 		{
 			ServerSprintStart();
 		}
+
+		GetCharacterMovement()->Velocity = GetVelocity().GetClampedToMaxSize(RunningSpeed);
 	}
 }
 
@@ -800,6 +817,24 @@ void APlayerCharacter::SwapWeaponWheel()
 	}
 }
 
+void APlayerCharacter::FirstDoping()
+{
+	if (UDC)
+	{
+		PlayDopingMontage();
+		UDC->PressedFirstDopingKey();
+	}
+}
+
+void APlayerCharacter::SecondDoping()
+{
+	if (UDC)
+	{
+		PlayDopingMontage();
+		UDC->PressedSecondDopingKey();
+	}
+}
+
 void APlayerCharacter::DropOrDestroyWeapon(AWeapon* Weapon)
 {
 	if (Weapon == nullptr) return;
@@ -843,6 +878,15 @@ void APlayerCharacter::ServerSwapWeaponWheel_Implementation()
 	if (Combat)
 	{
 		Combat->CycleWeapons();
+	}
+}
+
+void APlayerCharacter::OnRep_bIsSprinting()
+{
+	if (!IsLocallyControlled())
+	{
+		GetCharacterMovement()->MaxWalkSpeed =
+			bIsSprinting ? RunningSpeed : WalkSpeed;
 	}
 }
 
@@ -1161,6 +1205,58 @@ float APlayerCharacter::GetTotalDamage()
 	TotalDamage = UDC->TotalDamage;
 
 	return TotalDamage;
+
+}
+
+void APlayerCharacter::HandleHeadBob(float DeltaTime)
+{
+	if (!IsLocallyControlled() || !FollowCamera) return;
+
+	APlayerController* PC = Cast<APlayerController>(Controller);
+	if (!PC || !PC->PlayerCameraManager) return;
+
+	const FVector HorizontalVelocity(GetVelocity().X, GetVelocity().Y, 0.f);
+	const float Speed = HorizontalVelocity.Size();
+
+	TSubclassOf<UCameraShakeBase> NewShake = nullptr;
+
+	if (Speed > SprintThreshold && bIsSprinting)
+	{
+		NewShake = SprintHeadBob;
+	}
+	else if (Speed > WalkThreshold)
+	{
+		NewShake = WalkHeadBob;
+	}
+	else
+	{
+		NewShake = IdleHeadBob;
+	}
+
+	// HeadBob이 다르거나 ShakeInstance가 사라졌다면 다시 실행
+	if (NewShake != CurrentHeadBobClass || !IsValid(CurrentHeadBobInstance))
+	{
+		// 기존 Shake 제거
+		if (CurrentHeadBobInstance)
+		{
+			PC->PlayerCameraManager->StopCameraShake(CurrentHeadBobInstance, true);
+			CurrentHeadBobInstance = nullptr;
+		}
+
+		if (NewShake)
+		{
+			CurrentHeadBobInstance = PC->PlayerCameraManager->StartCameraShake(
+				NewShake,
+				1.0f,
+				ECameraShakePlaySpace::CameraLocal,
+				FRotator::ZeroRotator
+			);
+		}
+
+		CurrentHeadBobClass = NewShake;
+
+	}
+	UE_LOG(LogTemp, Warning, TEXT("Trying to Shake: %s"), *GetNameSafe(NewShake));
 
 }
 
