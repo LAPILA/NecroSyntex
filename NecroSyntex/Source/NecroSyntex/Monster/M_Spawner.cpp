@@ -39,7 +39,16 @@ void AM_Spawner::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 	CurrentTime = CurrentTime + 1 * DeltaTime;
 
-	if (CurrentTime >= MonsterSpawnSpeed && isSpawn && MaxMonster >= CurrentMonsterCount) {
+	if (!isSpawn) {
+		return;
+	}
+
+	if (MaxMonster == CurrentMonsterCount) {
+		StopSpawnMonster();
+		//MonsterAI->OnMonsterDestroyed.AddDynamic(this, &AM_S)
+	}
+
+	if (CurrentTime >= MonsterSpawnSpeed && isSpawn && MaxMonster > CurrentMonsterCount) {
 		FActorSpawnParameters SpawnParameters;
 		SpawnParameters.Owner = this;
 		SpawnParameters.Instigator = GetInstigator();
@@ -50,7 +59,14 @@ void AM_Spawner::Tick(float DeltaTime)
 		FRotator Rotation = GetActorRotation();
 
 		ABasicMonsterAI* PlayMonster = WRLD->SpawnActor<ABasicMonsterAI>(MyMonster[0], Location, Rotation);
-		CurrentMonsterCount++;
+
+		if (PlayMonster) {
+			/*UE_LOG(LogTemp, Warning, TEXT("if(PlayMonster)"));
+			PlayMonster->OnMonsterDestroyed.AddDynamic(this, &AM_Spawner::ReduceMonster);*/
+			//PlayMonster->OnMonsterDestroyed.AddDynamic(this, &AM_Spawner::OnMonsterDestroyed);
+			CurrentMonsterCount++;
+		}
+		UE_LOG(LogTemp, Warning, TEXT("00"));
 		CurrentTime = 0.0f;
 	}
 }
@@ -58,6 +74,7 @@ void AM_Spawner::Tick(float DeltaTime)
 void AM_Spawner::StartSpawnMonster(float SpawnSpeed)
 {
 	isSpawn = true;
+	MonsterSpawnSpeed = SpawnSpeed;
 }
 
 void AM_Spawner::StopSpawnMonster()
@@ -65,3 +82,9 @@ void AM_Spawner::StopSpawnMonster()
 	isSpawn = false;
 }
 
+void AM_Spawner::ReduceMonster()
+{
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, (TEXT("OnMonsterDestroyed")));
+	UE_LOG(LogTemp, Warning, TEXT("OnMonsterDestroyed"));
+	CurrentMonsterCount--;
+}

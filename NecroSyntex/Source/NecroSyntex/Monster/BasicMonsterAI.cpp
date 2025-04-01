@@ -11,6 +11,7 @@
 #include "AIController.h"
 #include "NecroSyntex/Monster/MonsterAnimInstance.h"
 #include "NecroSyntex/Character/PlayerCharacter.h"
+#include "M_Spawner.h"
 #include <Kismet/GameplayStatics.h>
 
 // Sets default values
@@ -116,7 +117,17 @@ void ABasicMonsterAI::DelayedFunction(float DelayTime)
 
 void ABasicMonsterAI::DestroyMonster()
 {
-	Destroy(); 
+	UE_LOG(LogTemp, Warning, TEXT("DestroyMonster() called"));
+
+	if (OnMonsterDestroyed.IsBound())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Broadcasting OnMonsterDestroyed event"));
+		
+		OnMonsterDestroyed.Broadcast();  // 이벤트가 바인딩 되었는지 확인 후 브로드캐스트
+	}
+	//OnMonsterDestroyed.Broadcast();
+	//Spawner->ReduceMonster();
+	Destroy();
 }
 
 void ABasicMonsterAI::Attack_Player()

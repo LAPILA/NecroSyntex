@@ -7,6 +7,8 @@
 #include "Animation/AnimMontage.h"
 #include "BasicMonsterAI.generated.h"
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnMonsterDestroyed);
+
 UCLASS()
 class NECROSYNTEX_API ABasicMonsterAI : public ACharacter
 {
@@ -45,6 +47,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float MonsterAD; //attack damage
 
+	UPROPERTY(BlueprintAssignable, VisibleAnywhere, BlueprintCallable, Category = "Monster Event")
+	FOnMonsterDestroyed OnMonsterDestroyed;
+
 	UFUNCTION(BlueprintCallable)
 	void MoveToPlayer();
 
@@ -70,10 +75,6 @@ protected:
 	FTimerHandle DeathDelayTimerHandle;
 	//Timer Function
 	void DelayedFunction(float DelayTime);
-
-	
-
-	
 
 public:
 	// Called every frame

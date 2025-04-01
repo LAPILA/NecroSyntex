@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "BasicMonsterAI.h"
 #include "M_Spawner.generated.h"
 
 UCLASS()
@@ -27,8 +28,8 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	bool isWave;
 
-	UPROPERTY(EditAnywhere, Category = "Monster")
-	UStaticMeshComponent* MonsterStaticMesh;
+	/*UPROPERTY(EditAnywhere, Category = "Monster")
+	UStaticMeshComponent* MonsterStaticMesh;*/
 
 	UPROPERTY(EditAnywhere, Category = "Monster")
 	class UBoxComponent* Spawner;
@@ -39,10 +40,19 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Monster")
 	TArray<TSubclassOf<AActor>>MyMonster;
 
+	UPROPERTY(EditAnywhere, Category = "Monster")
+	TArray<ABasicMonsterAI*> SpawnMonster;
+
 	UFUNCTION(BluePrintCallable)
 	void StartSpawnMonster(float SpawnSpeed);
 
 	void StopSpawnMonster();
+
+	//UFUNCTION()
+	void ReduceMonster();
+
+	UPROPERTY(EditAnywhere)
+	class ABasicMonsterAI* MonsterAI;
 
 protected:
 	// Called when the game starts or when spawned
