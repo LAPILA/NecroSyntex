@@ -23,6 +23,10 @@ AM_Spawner::AM_Spawner()
 	CurrentMonsterCount = 0;
 	MaxMonster = 10;
 	MonsterSpawnSpeed = 5.0f;
+	WaveIntervalTime = 5.0f;
+
+	isSpawn = false;
+	isWave = false;
 }
 
 // Called when the game starts or when spawned
@@ -45,7 +49,11 @@ void AM_Spawner::Tick(float DeltaTime)
 
 	if (MaxMonster == CurrentMonsterCount) {
 		StopSpawnMonster();
-		//MonsterAI->OnMonsterDestroyed.AddDynamic(this, &AM_S)
+		if (isWave) { //if Wave is true. Wait WaveIntervalTime and Monster count reset. 
+			StartSpawnMonster(MonsterSpawnSpeed);
+			DelayedFunction(WaveIntervalTime);
+			ResetMonsterCount();
+		}
 	}
 
 	if (CurrentTime >= MonsterSpawnSpeed && isSpawn && MaxMonster > CurrentMonsterCount) {
@@ -61,12 +69,9 @@ void AM_Spawner::Tick(float DeltaTime)
 		ABasicMonsterAI* PlayMonster = WRLD->SpawnActor<ABasicMonsterAI>(MyMonster[0], Location, Rotation);
 
 		if (PlayMonster) {
-			/*UE_LOG(LogTemp, Warning, TEXT("if(PlayMonster)"));
-			PlayMonster->OnMonsterDestroyed.AddDynamic(this, &AM_Spawner::ReduceMonster);*/
-			//PlayMonster->OnMonsterDestroyed.AddDynamic(this, &AM_Spawner::OnMonsterDestroyed);
 			CurrentMonsterCount++;
 		}
-		UE_LOG(LogTemp, Warning, TEXT("00"));
+
 		CurrentTime = 0.0f;
 	}
 }
@@ -82,9 +87,14 @@ void AM_Spawner::StopSpawnMonster()
 	isSpawn = false;
 }
 
-void AM_Spawner::ReduceMonster()
+void AM_Spawner::DelayedFunction(float DelayTime)
 {
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, (TEXT("OnMonsterDestroyed")));
-	UE_LOG(LogTemp, Warning, TEXT("OnMonsterDestroyed"));
-	CurrentMonsterCount--;
+	WaveIntervalTime = DelayTime;
+	FTimerHandle handle;
+	GetWorld()->GetTimerManager().SetTimer(handle, this, &AM_Spawner::ResetMonsterCount, WaveIntervalTime, false);
+}
+
+void AM_Spawner::ResetMonsterCount()
+{
+	CurrentMonsterCount = 0;
 }

@@ -7,8 +7,6 @@
 #include "Animation/AnimMontage.h"
 #include "BasicMonsterAI.generated.h"
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnMonsterDestroyed);
-
 UCLASS()
 class NECROSYNTEX_API ABasicMonsterAI : public ACharacter
 {
@@ -27,16 +25,20 @@ public:
 	UFUNCTION()
 	void OnAttackAreaOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 
+	UFUNCTION(BlueprintCallable)
+	void TakeDopingDamage(float DopingDamageAmount);
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Components")
 	class USphereComponent* AttackPoint;
 
 	UPROPERTY(EditAnywhere, Category = "AI")
 	float ChaseSpeed = 600.0f;
 
-	UFUNCTION(BlueprintNativeEvent, Category = "Damage")
-	float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser);
+	/*UFUNCTION(BlueprintNativeEvent, Category = "Damage")
+	float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser);*/
 	
 	virtual float TakeDamage_Implementation(float DamageAmount, struct FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser);
+
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	class USkeletalMeshComponent* HandMesh;
@@ -46,9 +48,6 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float MonsterAD; //attack damage
-
-	UPROPERTY(BlueprintAssignable, VisibleAnywhere, BlueprintCallable, Category = "Monster Event")
-	FOnMonsterDestroyed OnMonsterDestroyed;
 
 	UFUNCTION(BlueprintCallable)
 	void MoveToPlayer();

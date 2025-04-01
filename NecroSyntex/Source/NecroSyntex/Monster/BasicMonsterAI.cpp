@@ -58,6 +58,7 @@ void ABasicMonsterAI::UpdateWalkSpeed(float NewWalkSpeed)
 	}
 }
 
+//Weapon Damage
 float ABasicMonsterAI::TakeDamage_Implementation(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
 {
 	if (MonsterHP <= 0.0f) {
@@ -91,6 +92,18 @@ float ABasicMonsterAI::TakeDamage_Implementation(float DamageAmount, FDamageEven
 	return DamageAmount;
 }
 
+//Doping Damage
+void ABasicMonsterAI::TakeDopingDamage(float DopingDamageAmount)
+{
+	if (MonsterHP <= 0) {
+		PlayDeathAnimation();
+	}
+
+	MonsterHP -= DopingDamageAmount;
+	PlayHitAnimation();
+	DelayedFunction(3.0f);
+}
+
 void ABasicMonsterAI::PlayHitAnimation()
 {
 	if (HitReactionMontage && GetMesh() && GetMesh()->GetAnimInstance())
@@ -117,16 +130,6 @@ void ABasicMonsterAI::DelayedFunction(float DelayTime)
 
 void ABasicMonsterAI::DestroyMonster()
 {
-	UE_LOG(LogTemp, Warning, TEXT("DestroyMonster() called"));
-
-	if (OnMonsterDestroyed.IsBound())
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Broadcasting OnMonsterDestroyed event"));
-		
-		OnMonsterDestroyed.Broadcast();  // 이벤트가 바인딩 되었는지 확인 후 브로드캐스트
-	}
-	//OnMonsterDestroyed.Broadcast();
-	//Spawner->ReduceMonster();
 	Destroy();
 }
 

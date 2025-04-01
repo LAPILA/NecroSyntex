@@ -28,9 +28,6 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	bool isWave;
 
-	/*UPROPERTY(EditAnywhere, Category = "Monster")
-	UStaticMeshComponent* MonsterStaticMesh;*/
-
 	UPROPERTY(EditAnywhere, Category = "Monster")
 	class UBoxComponent* Spawner;
 
@@ -43,16 +40,20 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Monster")
 	TArray<ABasicMonsterAI*> SpawnMonster;
 
+	UPROPERTY(EditAnywhere, Category = "Monster")
+	float WaveIntervalTime;
+
+	UPROPERTY(EditAnywhere, Category = "Monster")
+	bool isSpawn;
+
 	UFUNCTION(BluePrintCallable)
 	void StartSpawnMonster(float SpawnSpeed);
 
 	void StopSpawnMonster();
 
-	//UFUNCTION()
-	void ReduceMonster();
+	void ResetMonsterCount();
 
-	UPROPERTY(EditAnywhere)
-	class ABasicMonsterAI* MonsterAI;
+	void DelayedFunction(float DelayTime);
 
 protected:
 	// Called when the game starts or when spawned
@@ -65,6 +66,5 @@ public:
 
 private:
 	float CurrentTime;
-	
-	bool isSpawn;
+
 };
