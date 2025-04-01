@@ -62,6 +62,12 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* SwapWeaponAction;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UInputAction* UDCskill1;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UInputAction* UDCskill2;
+
 public:
     APlayerCharacter();
 
@@ -77,6 +83,8 @@ public:
 	void PlayReloadMontage();
 	void PlayElimMontage();
 	void PlayThrowGrenadeMontage();
+	void PlaySwapMontage();
+	void PlayDopingMontage();
 	virtual void OnRep_ReplicatedMovement() override;
 
 	void Elim();
@@ -102,6 +110,7 @@ public:
 
 	void UpdateHUDAmmo();
 
+	UFUNCTION(BlueprintCallable)
 	void SpawnDefaultWeapon();
 
 	UPROPERTY()
@@ -144,6 +153,8 @@ protected:
 	void PlayerHitReactMontage();
 	void GrenadeButtonPressed();
 	void SwapWeaponWheel();
+	void FirstDoping();
+	void SecondDoping();
 
 	void DropOrDestroyWeapon(AWeapon* Weapon);
 	void DropOrDestroyWeapons();
@@ -215,6 +226,11 @@ protected:
 	UPROPERTY(EditAnywhere)
 	UBoxComponent* foot_r;
 
+	UPROPERTY(ReplicatedUsing = OnRep_bIsSprinting)
+	bool bIsSprinting;
+
+	UFUNCTION()
+	void OnRep_bIsSprinting();
 private:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera", meta = (AllowPrivateAccess = "true"))
     class USpringArmComponent* CameraBoom;
@@ -250,7 +266,6 @@ private:
 	UFUNCTION(Server, Reliable, WithValidation)
 	void ServerSwapWeaponWheel();
 
-	bool bIsSprinting;
 	float AO_Yaw;
 	float AO_Pitch;
 	float InterpAO_Yaw;
@@ -276,6 +291,9 @@ private:
 
 	UPROPERTY(EditAnywhere, Category = Combat)
 	UAnimMontage* SwapMontage;
+
+	UPROPERTY(EditAnywhere, Category = Combat)
+	UAnimMontage* DopingMontage;
 
 	bool bRotateRootBone;
 	float TurnThreshold = 0.5f;
@@ -337,6 +355,8 @@ private:
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<AWeapon> SubWeaponClass;
 
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<AWeapon> ThirdWeaponClass;
 	UFUNCTION()
 	void ReloadMontageEndedHandler(UAnimMontage* Montage, bool bInterrupted);
 
@@ -344,6 +364,29 @@ private:
 
 	UFUNCTION()
 	void ReloadTimerFinished();
+
+	// Headbob 관련 속성
+	UPROPERTY(EditAnywhere, Category = "HeadBob")
+	TSubclassOf<UCameraShakeBase> IdleHeadBob;
+
+	UPROPERTY(EditAnywhere, Category = "HeadBob")
+	TSubclassOf<UCameraShakeBase> WalkHeadBob;
+
+	UPROPERTY(EditAnywhere, Category = "HeadBob")
+	TSubclassOf<UCameraShakeBase> SprintHeadBob;
+
+	// 이동 임계값 변수
+	UPROPERTY(EditAnywhere, Category = "Movement")
+	float SprintThreshold = 350.f;
+
+	UPROPERTY(EditAnywhere, Category = "Movement")
+	float WalkThreshold = 150.f;
+
+	UCameraShakeBase* CurrentHeadBobInstance = nullptr;
+	TSubclassOf<UCameraShakeBase> CurrentHeadBobClass = nullptr;
+
+	void HandleHeadBob(float DeltaTime);
+
 public:
 	//Pahu
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
@@ -394,10 +437,29 @@ public:
 	float Shield = 200.f;
 
 
-	UPROPERTY(Replicated, EditAnywhere)
-	float WalkSpeed; // 이동속도
-	UPROPERTY(Replicated, EditAnywhere)
-	float RunningSpeed; // 달리기속도
+	//Speed
+	UPROPERTY(Replicated, EditDefaultsOnly, Category = "Movement")
+	float WalkSpeed = 600.f;
+
+	UPROPERTY(Replicated, EditDefaultsOnly, Category = "Movement")
+	float RunningSpeed = 1200.f;
+
+	UPROPERTY(Replicated, EditDefaultsOnly, Category = "Movement")
+	float AimWalkSpeed = 400.f;
+
+	UPROPERTY(Replicated, EditDefaultsOnly, Category = "Movement")
+	float CrouchSpeed = 300.f;
+
+	UPROPERTY(Replicated, EditDefaultsOnly, Category = "Movement")
+	float ReloadSpeedMultiplier = 0.5f;
+
+	UPROPERTY(Replicated, EditDefaultsOnly, Category = "Movement")
+	float GrenadeThrowSpeedMultiplier = 0.5f;
+
+	UPROPERTY(Replicated, EditDefaultsOnly, Category = "Movement")
+	float MaxCharacterSpeed = 10000.f;
+
+
 
 	float Rebound; // 반동
 
