@@ -28,6 +28,7 @@
 #include "NecroSyntex/PlayerController/NecroSyntexPlayerController.h"
 #include "NecroSyntex/PlayerState/NecroSyntexPlayerState.h"
 #include "NecroSyntex/DopingSystem/DopingComponent.h"
+#include "NecroSyntex/DopingSystem/DeBuffCameraShake.h"
 #include "NecroSyntex\NecroSyntaxComponents\LagCompensationComponent.h"
 #include "NecroSyntex\PickUps\HealingStation.h"
 
@@ -1130,4 +1131,29 @@ float APlayerCharacter::GetTotalDamage()
 UDopingComponent* APlayerCharacter::GetDopingComponent()
 {
 	return UDC;
+}
+
+void APlayerCharacter::SPStrengthDeBuffON()
+{
+
+	// 블러 효과 추가
+	FollowCamera->PostProcessSettings.bOverride_MotionBlurAmount = true;
+	FollowCamera->PostProcessSettings.MotionBlurAmount = 1.0f; // 블러 강도 (0.0 ~ 1.0)
+
+	// 색수차(번짐) 효과 추가
+	FollowCamera->PostProcessSettings.bOverride_SceneFringeIntensity = true;
+	FollowCamera->PostProcessSettings.SceneFringeIntensity = 8.0f; // 색수차 강도
+
+	// 디버프 활성화 (BlendWeight 조절)
+	FollowCamera->PostProcessBlendWeight = 1.0f;
+}
+
+void APlayerCharacter::SPStrengthDeBuffOFF()
+{
+	FollowCamera->PostProcessBlendWeight = 0.0f;
+}
+
+void APlayerCharacter::HSDeBuffON()
+{
+	GetWorld()->GetFirstPlayerController()->ClientStartCameraShake(UDeBuffCameraShake::StaticClass());
 }

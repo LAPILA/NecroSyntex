@@ -380,6 +380,14 @@ public:
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
 	void CallBlueprintBurningFurnaceDamage();
 
+	UFUNCTION()
+	void SPStrengthDeBuffON();
+
+	UFUNCTION()
+	void SPStrengthDeBuffOFF();
+
+	UFUNCTION()
+	void HSDeBuffON();
 
 
 	//PID(Player Inform Data)

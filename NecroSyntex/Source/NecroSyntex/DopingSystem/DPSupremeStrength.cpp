@@ -61,6 +61,8 @@ void UDPSupremeStrength::DeBuffOn(APlayerCharacter* DopedPC)
 		BlurredDeBuffNum = 1;
 		DopedPC->Blurred = DopedPC->Blurred - BlurredDeBuffNum;
 
+		DopedPC->SPStrengthDeBuffON();
+
 		CheckDeBuff = true;
 	}
 	StartDeBuff(DopedPC);
@@ -70,6 +72,8 @@ void UDPSupremeStrength::DeBuffOff(APlayerCharacter* DopedPC)
 {
 	if (CheckDeBuff == true) {
 		DopedPC->Blurred = DopedPC->Blurred + BlurredDeBuffNum;
+
+		DopedPC->SPStrengthDeBuffOFF();
 
 		DopedPC->CurrentDoped -= 1;
 

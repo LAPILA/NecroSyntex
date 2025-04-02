@@ -32,8 +32,6 @@ void UDPBurningFurnace::UseDopingItem(APlayerCharacter* DopedPC)
 void UDPBurningFurnace::BuffOn(APlayerCharacter* DopedPC)
 {
 	if (CheckBuff == false) {
-		DefenseBuffNum = DopedPC->Defense;
-		DopedPC->Defense = DopedPC->Defense + DefenseBuffNum;
 
 		GetWorld()->GetTimerManager().SetTimer(
 			DamageTimer,

@@ -59,6 +59,8 @@ void UDPHallucinationShield::DeBuffOn(APlayerCharacter* DopedPC)
 
 		CallCameraShake();
 
+		DopedPC->HSDeBuffON();
+
 		CheckDeBuff = true;
 	}
 
