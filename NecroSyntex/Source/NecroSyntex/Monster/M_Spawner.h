@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "BasicMonsterAI.h"
 #include "M_Spawner.generated.h"
 
 UCLASS()
@@ -15,8 +16,44 @@ public:
 	// Sets default values for this actor's properties
 	AM_Spawner();
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spawn")
-	class UBoxComponent* SpawnPoint;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	int MaxMonster;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	int CurrentMonsterCount;
+    
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float MonsterSpawnSpeed;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	bool isWave;
+
+	UPROPERTY(EditAnywhere, Category = "Monster")
+	class UBoxComponent* Spawner;
+
+	UPROPERTY(EditAnywhere, Category = "Monster")
+	TSubclassOf<AActor>ActorToSpawn;
+
+	UPROPERTY(EditAnywhere, Category = "Monster")
+	TArray<TSubclassOf<AActor>>MyMonster;
+
+	UPROPERTY(EditAnywhere, Category = "Monster")
+	TArray<ABasicMonsterAI*> SpawnMonster;
+
+	UPROPERTY(EditAnywhere, Category = "Monster")
+	float WaveIntervalTime;
+
+	UPROPERTY(EditAnywhere, Category = "Monster")
+	bool isSpawn;
+
+	UFUNCTION(BluePrintCallable)
+	void StartSpawnMonster(float SpawnSpeed);
+
+	void StopSpawnMonster();
+
+	void ResetMonsterCount();
+
+	void DelayedFunction(float DelayTime);
 
 protected:
 	// Called when the game starts or when spawned
@@ -25,5 +62,9 @@ protected:
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
+
+
+private:
+	float CurrentTime;
 
 };

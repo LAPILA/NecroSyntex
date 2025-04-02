@@ -166,6 +166,17 @@ APlayerCharacter::APlayerCharacter()
 		}
 	}
 	HealingStationActor = nullptr;
+
+	// 기본 이동속도 설정
+	GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
+	GetCharacterMovement()->MaxWalkSpeedCrouched = CrouchSpeed;
+	GetCharacterMovement()->NavAgentProps.bCanCrouch = true;
+	GetCharacterMovement()->BrakingDecelerationWalking = 2048.f;
+	GetCharacterMovement()->bOrientRotationToMovement = true;
+	GetCharacterMovement()->RotationRate = FRotator(0.f, 720.f, 0.f);
+	GetCharacterMovement()->AirControl = 0.3f; // 공중에서 제어 가능성
+	GetCharacterMovement()->MaxAcceleration = 4096.f;
+	GetCharacterMovement()->BrakingFrictionFactor = 1.f;
 }
 
 void APlayerCharacter::OnRep_ReplicatedMovement()
@@ -248,38 +259,43 @@ void APlayerCharacter::Destroyed()
 
 void APlayerCharacter::SpawnDefaultWeapon()
 {
-	// GameMode�� World ��ȿ�� �˻�
-	ANecroSyntexGameMode* NecroSyntexGameMode = Cast<ANecroSyntexGameMode>(UGameplayStatics::GetGameMode(this));
+	if (!HasAuthority() || bElimed) return;
+	ANecroSyntexGameMode* GameMode = Cast<ANecroSyntexGameMode>(UGameplayStatics::GetGameMode(this));
 	UWorld* World = GetWorld();
-	if (!NecroSyntexGameMode || !World || bElimed) return;
+	if (!GameMode || !World || bElimed) return;
 
-	// 1) �ֹ���(Primary) ����
+	// 1) Primary
 	if (DefaultWeaponClass && Combat)
 	{
-		AWeapon* PrimaryWeapon = World->SpawnActor<AWeapon>(DefaultWeaponClass);
-		if (PrimaryWeapon)
+		AWeapon* PrimaryWep = World->SpawnActor<AWeapon>(DefaultWeaponClass);
+		if (PrimaryWep)
 		{
-			// bDestroyWeapon = true �� ��� �� �ı��Ǵ� ����
-			PrimaryWeapon->bDestroyWeapon = true;
-			Combat->EquipWeapon(PrimaryWeapon);
-			// -> Combat->EquipWeapon() ���ο��� 
-			//    '���� �̹� ���Ⱑ ������ SecondaryWeapon���� ����' ���� ó��
+			PrimaryWep->bDestroyWeapon = true;
+			Combat->EquipWeapon(PrimaryWep);
 		}
 	}
-
-	// 2) ���� ����(Secondary) ����
+	// 2) Secondary
 	if (SubWeaponClass && Combat)
 	{
-		AWeapon* SecondaryWeapon = World->SpawnActor<AWeapon>(SubWeaponClass);
-		if (SecondaryWeapon)
+		AWeapon* SecondaryWep = World->SpawnActor<AWeapon>(SubWeaponClass);
+		if (SecondaryWep)
 		{
-			SecondaryWeapon->bDestroyWeapon = true;
-			Combat->EquipWeapon(SecondaryWeapon);
-			// -> ù ��° ���Ⱑ �ֹ��Ⱑ �Ǿ����Ƿ�, �� ��°�� ���� ����� �ڵ� Equip
+			SecondaryWep->bDestroyWeapon = true;
+			Combat->EquipWeapon(SecondaryWep);
 		}
 	}
-
+	// 3) Third
+	if (ThirdWeaponClass && Combat)
+	{
+		AWeapon* ThirdWep = World->SpawnActor<AWeapon>(ThirdWeaponClass);
+		if (ThirdWep)
+		{
+			ThirdWep->bDestroyWeapon = true;
+			Combat->EquipThirdWeapon(ThirdWep);
+		}
+	}
 }
+
 
 void APlayerCharacter::SetHealingStationActor(AHealingStation* Station)
 {
@@ -327,7 +343,16 @@ void APlayerCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	FVector CurrentVelocity = GetCharacterMovement()->Velocity;
+	if (CurrentVelocity.Size() > MaxCharacterSpeed)
+	{
+		GetCharacterMovement()->Velocity = CurrentVelocity.GetClampedToMaxSize(MaxCharacterSpeed);
+	}
 	RotateInPlace(DeltaTime);
+	if (IsLocallyControlled())
+	{
+		HandleHeadBob(DeltaTime);
+	}
 	if (GetLocalRole() > ENetRole::ROLE_SimulatedProxy && IsLocallyControlled())
 	{
 		AimOffset(DeltaTime);
@@ -388,7 +413,8 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 		EnhancedInputComponent->BindAction(ReloadAction, ETriggerEvent::Started, this, &APlayerCharacter::ReloadButtonPressed);
 		EnhancedInputComponent->BindAction(ThrowGrenade, ETriggerEvent::Triggered, this, &APlayerCharacter::GrenadeButtonPressed);
 		EnhancedInputComponent->BindAction(SwapWeaponAction, ETriggerEvent::Triggered, this, &APlayerCharacter::SwapWeaponWheel);
-
+		EnhancedInputComponent->BindAction(UDCskill1, ETriggerEvent::Triggered, this, &APlayerCharacter::FirstDoping);
+		EnhancedInputComponent->BindAction(UDCskill2, ETriggerEvent::Triggered, this, &APlayerCharacter::SecondDoping);
 	}
 }
 
@@ -414,6 +440,7 @@ void APlayerCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 	DOREPLIFETIME_CONDITION(APlayerCharacter, OverlappingWeapon,COND_OwnerOnly);
+	DOREPLIFETIME_CONDITION(APlayerCharacter, bIsSprinting, COND_SkipOwner);
 	DOREPLIFETIME(APlayerCharacter, bDisableGameplay);
 	DOREPLIFETIME(APlayerCharacter, Health);
 	DOREPLIFETIME(APlayerCharacter, Shield);
@@ -463,6 +490,24 @@ void APlayerCharacter::PlayThrowGrenadeMontage()
 	if (AnimInstance && ThrowGrenadeMontage)
 	{
 		AnimInstance->Montage_Play(ThrowGrenadeMontage);
+	}
+}
+
+void APlayerCharacter::PlaySwapMontage()
+{
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	if (AnimInstance && SwapMontage)
+	{
+		AnimInstance->Montage_Play(SwapMontage);
+	}
+}
+
+void APlayerCharacter::PlayDopingMontage()
+{
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	if (AnimInstance && DopingMontage)
+	{
+		AnimInstance->Montage_Play(DopingMontage);
 	}
 }
 
@@ -618,22 +663,16 @@ void APlayerCharacter::EquipButtonPressed()
 void APlayerCharacter::CrouchButtonPressed()
 {
 	if (bDisableGameplay) return;
+
 	if (bIsCrouched)
 	{
 		UnCrouch();
+		GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
 	}
 	else
 	{
 		Crouch();
-	}
-}
-
-void APlayerCharacter::ReloadButtonPressed()
-{
-	if (bDisableGameplay) return;
-	if (Combat)
-	{
-		Combat->Reload();
+		GetCharacterMovement()->MaxWalkSpeed = CrouchSpeed;
 	}
 }
 
@@ -657,10 +696,10 @@ void APlayerCharacter::AimButtonReleased()
 void APlayerCharacter::SprintStart()
 {
 	if (bDisableGameplay) return;
+
 	if (!bIsSprinting)
 	{
 		bIsSprinting = true;
-
 		if (HasAuthority())
 		{
 			GetCharacterMovement()->MaxWalkSpeed = RunningSpeed;
@@ -669,6 +708,8 @@ void APlayerCharacter::SprintStart()
 		{
 			ServerSprintStart();
 		}
+
+		GetCharacterMovement()->Velocity = GetVelocity().GetClampedToMaxSize(RunningSpeed);
 	}
 }
 
@@ -742,6 +783,15 @@ void APlayerCharacter::FlashButtonPressed()
 {
 }
 
+void APlayerCharacter::ReloadButtonPressed()
+{
+	if (bDisableGameplay) return;
+	if (Combat)
+	{
+		Combat->Reload();
+	}
+}
+
 void APlayerCharacter::ServerEquipButtonPressed_Implementation()
 {
 	if (Combat)
@@ -757,14 +807,32 @@ void APlayerCharacter::SwapWeaponWheel()
 {
 	if (HasAuthority())
 	{
-		if (Combat && Combat->ShouldSwapWeapons())
+		if (Combat)
 		{
-			Combat->SwapWeapons();
+			Combat->CycleWeapons();
 		}
 	}
 	else
 	{
 		ServerSwapWeaponWheel();
+	}
+}
+
+void APlayerCharacter::FirstDoping()
+{
+	if (UDC)
+	{
+		PlayDopingMontage();
+		UDC->PressedFirstDopingKey();
+	}
+}
+
+void APlayerCharacter::SecondDoping()
+{
+	if (UDC)
+	{
+		PlayDopingMontage();
+		UDC->PressedSecondDopingKey();
 	}
 }
 
@@ -793,8 +861,13 @@ void APlayerCharacter::DropOrDestroyWeapons()
 		{
 			DropOrDestroyWeapon(Combat->SecondaryWeapon);
 		}
+		if (Combat->ThirdWeapon)
+		{
+			DropOrDestroyWeapon(Combat->ThirdWeapon);
+		}
 	}
 }
+
 
 bool APlayerCharacter::ServerSwapWeaponWheel_Validate()
 {
@@ -803,9 +876,18 @@ bool APlayerCharacter::ServerSwapWeaponWheel_Validate()
 
 void APlayerCharacter::ServerSwapWeaponWheel_Implementation()
 {
-	if (Combat && Combat->ShouldSwapWeapons())
+	if (Combat)
 	{
-		Combat->SwapWeapons();
+		Combat->CycleWeapons();
+	}
+}
+
+void APlayerCharacter::OnRep_bIsSprinting()
+{
+	if (!IsLocallyControlled())
+	{
+		GetCharacterMovement()->MaxWalkSpeed =
+			bIsSprinting ? RunningSpeed : WalkSpeed;
 	}
 }
 
@@ -1124,6 +1206,58 @@ float APlayerCharacter::GetTotalDamage()
 	TotalDamage = UDC->TotalDamage;
 
 	return TotalDamage;
+
+}
+
+void APlayerCharacter::HandleHeadBob(float DeltaTime)
+{
+	if (!IsLocallyControlled() || !FollowCamera) return;
+
+	APlayerController* PC = Cast<APlayerController>(Controller);
+	if (!PC || !PC->PlayerCameraManager) return;
+
+	const FVector HorizontalVelocity(GetVelocity().X, GetVelocity().Y, 0.f);
+	const float Speed = HorizontalVelocity.Size();
+
+	TSubclassOf<UCameraShakeBase> NewShake = nullptr;
+
+	if (Speed > SprintThreshold && bIsSprinting)
+	{
+		NewShake = SprintHeadBob;
+	}
+	else if (Speed > WalkThreshold)
+	{
+		NewShake = WalkHeadBob;
+	}
+	else
+	{
+		NewShake = IdleHeadBob;
+	}
+
+	// HeadBob이 다르거나 ShakeInstance가 사라졌다면 다시 실행
+	if (NewShake != CurrentHeadBobClass || !IsValid(CurrentHeadBobInstance))
+	{
+		// 기존 Shake 제거
+		if (CurrentHeadBobInstance)
+		{
+			PC->PlayerCameraManager->StopCameraShake(CurrentHeadBobInstance, true);
+			CurrentHeadBobInstance = nullptr;
+		}
+
+		if (NewShake)
+		{
+			CurrentHeadBobInstance = PC->PlayerCameraManager->StartCameraShake(
+				NewShake,
+				1.0f,
+				ECameraShakePlaySpace::CameraLocal,
+				FRotator::ZeroRotator
+			);
+		}
+
+		CurrentHeadBobClass = NewShake;
+
+	}
+	UE_LOG(LogTemp, Warning, TEXT("Trying to Shake: %s"), *GetNameSafe(NewShake));
 
 }
 

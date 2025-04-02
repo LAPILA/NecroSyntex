@@ -25,22 +25,32 @@ public:
 	UFUNCTION()
 	void OnAttackAreaOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 
+	UFUNCTION(BlueprintCallable)
+	void TakeDopingDamage(float DopingDamageAmount);
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Components")
 	class USphereComponent* AttackPoint;
 
 	UPROPERTY(EditAnywhere, Category = "AI")
 	float ChaseSpeed = 600.0f;
 
-	UFUNCTION(BlueprintNativeEvent, Category = "Damage")
-	float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser);
+	/*UFUNCTION(BlueprintNativeEvent, Category = "Damage")
+	float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser);*/
 	
 	virtual float TakeDamage_Implementation(float DamageAmount, struct FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser);
+
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	class USkeletalMeshComponent* HandMesh;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float MonsterHP;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float MonsterAD; //attack damage
+
+	UFUNCTION(BlueprintCallable)
+	void MoveToPlayer();
 
 protected:
 	// Called when the game starts or when spawned
@@ -64,10 +74,6 @@ protected:
 	FTimerHandle DeathDelayTimerHandle;
 	//Timer Function
 	void DelayedFunction(float DelayTime);
-
-	void MoveToPlayer();
-
-	
 
 public:
 	// Called every frame

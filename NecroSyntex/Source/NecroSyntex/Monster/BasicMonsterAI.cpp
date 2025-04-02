@@ -11,6 +11,7 @@
 #include "AIController.h"
 #include "NecroSyntex/Monster/MonsterAnimInstance.h"
 #include "NecroSyntex/Character/PlayerCharacter.h"
+#include "M_Spawner.h"
 #include <Kismet/GameplayStatics.h>
 
 // Sets default values
@@ -25,6 +26,7 @@ ABasicMonsterAI::ABasicMonsterAI()
 	AttackPoint->OnComponentBeginOverlap.AddDynamic(this, &ABasicMonsterAI::OnAttackAreaOverlap);
 
 	MonsterHP = 100.0f;
+	MonsterAD = 20.0f;
 }
 
 // Called when the game starts or when spawned
@@ -56,19 +58,15 @@ void ABasicMonsterAI::UpdateWalkSpeed(float NewWalkSpeed)
 	}
 }
 
+//Weapon Damage
 float ABasicMonsterAI::TakeDamage_Implementation(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
 {
 	if (MonsterHP <= 0.0f) {
 		if (GEngine)
 		{
-			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, (TEXT("0000000000")));
+			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, (TEXT("Death")));
 		}
 		return 0.0f; 
-	}
-
-	if (GEngine)
-	{
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("Damage Received: %.2f"), DamageAmount));
 	}
 
 	MonsterHP -= DamageAmount; 
@@ -92,6 +90,18 @@ float ABasicMonsterAI::TakeDamage_Implementation(float DamageAmount, FDamageEven
 	}
 
 	return DamageAmount;
+}
+
+//Doping Damage
+void ABasicMonsterAI::TakeDopingDamage(float DopingDamageAmount)
+{
+	if (MonsterHP <= 0) {
+		PlayDeathAnimation();
+	}
+
+	MonsterHP -= DopingDamageAmount;
+	PlayHitAnimation();
+	DelayedFunction(3.0f);
 }
 
 void ABasicMonsterAI::PlayHitAnimation()
@@ -120,7 +130,7 @@ void ABasicMonsterAI::DelayedFunction(float DelayTime)
 
 void ABasicMonsterAI::DestroyMonster()
 {
-	Destroy(); 
+	Destroy();
 }
 
 void ABasicMonsterAI::Attack_Player()
@@ -150,7 +160,7 @@ void ABasicMonsterAI::MoveToPlayer()
 		{
 			UE_LOG(LogTemp, Warning, TEXT("Moving to Player"));
 
-			AIController->MoveToActor(Player, 5.0f, true, true, true, 0, true);
+			AIController->MoveToActor(Player, 150.0f, true, true, true, 0, true);
 		}
 	}
 }
@@ -183,8 +193,6 @@ void ABasicMonsterAI::OnAttackAreaOverlap(UPrimitiveComponent* OverlappedCompone
 			if (Player)
 			{
 				UE_LOG(LogTemp, Warning, TEXT("Monster Attacked Player!"));
-
-				GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red, TEXT("attack!"));
 			}
 		}
 	}

@@ -32,6 +32,7 @@ AWeapon::AWeapon()
 	EnableCustomDepth(true);
 	WeaponMesh->SetCustomDepthStencilValue(CUSTOM_DEPTH_BLUE);
 	WeaponMesh->MarkRenderStateDirty();
+	WeaponMesh->SetIsReplicated(true);
 
 	AreaSphere = CreateDefaultSubobject<USphereComponent>(TEXT("AreaSphere"));
 	AreaSphere->SetupAttachment(RootComponent);
@@ -72,8 +73,14 @@ void AWeapon::OnWeaponStateSet()
 	case EWeaponState::EWS_Equipped:
 		OnEquipped();
 		break;
+	case EWeaponState::EWS_EquippedPrimary:
+		OnEquippedPrimary();
+		break;
 	case EWeaponState::EWS_EquippedSecondary:
 		OnEquippedSecondary();
+		break;
+	case EWeaponState::EWS_EquippedThird:
+		OnEquippedThird();
 		break;
 	case EWeaponState::EWS_Dropped:
 		OnDropped();
@@ -117,12 +124,13 @@ void AWeapon::OnEquipped()
 	}
 }
 
-void AWeapon::OnEquippedSecondary()
+
+void AWeapon::OnEquippedPrimary()
 {
 	ShowPickupWidget(false);
 	AreaSphere->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-	WeaponMesh->SetSimulatePhysics(false);
-	WeaponMesh->SetEnableGravity(false);
+	WeaponMesh->SetSimulatePhysics(true);
+	WeaponMesh->SetEnableGravity(true);
 	WeaponMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	if (WeaponType == EWeaponType::EWT_SubmachineGun)
 	{
@@ -146,6 +154,77 @@ void AWeapon::OnEquippedSecondary()
 		}
 	}
 }
+
+
+void AWeapon::OnEquippedSecondary()
+{
+	ShowPickupWidget(false);
+	AreaSphere->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	WeaponMesh->SetSimulatePhysics(true);
+	WeaponMesh->SetEnableGravity(true);
+	WeaponMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	if (WeaponType == EWeaponType::EWT_SubmachineGun)
+	{
+		WeaponMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+		WeaponMesh->SetEnableGravity(true);
+		WeaponMesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
+	}
+
+	if (WeaponMesh)
+	{
+		WeaponMesh->SetCustomDepthStencilValue(CUSTOM_DEPTH_TAN);
+		WeaponMesh->MarkRenderStateDirty();
+	}
+	PlayerOwnerCharacter = PlayerOwnerCharacter == nullptr ? Cast<APlayerCharacter>(GetOwner()) : PlayerOwnerCharacter;
+	if (PlayerOwnerCharacter)
+	{
+		NecroSyntexPlayerOwnerController = NecroSyntexPlayerOwnerController == nullptr ? Cast<ANecroSyntexPlayerController>(PlayerOwnerCharacter->Controller) : NecroSyntexPlayerOwnerController;
+		if (NecroSyntexPlayerOwnerController && HasAuthority() && NecroSyntexPlayerOwnerController->HighPingDelegate.IsBound())
+		{
+			NecroSyntexPlayerOwnerController->HighPingDelegate.RemoveDynamic(this, &AWeapon::OnPingTooHigh);
+		}
+	}
+}
+
+void AWeapon::OnEquippedThird()
+{
+	ShowPickupWidget(false);
+
+	AreaSphere->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+	WeaponMesh->SetSimulatePhysics(true);
+	WeaponMesh->SetEnableGravity(true);
+	WeaponMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+	if (WeaponType == EWeaponType::EWT_SubmachineGun)
+	{
+		WeaponMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+		WeaponMesh->SetEnableGravity(true);
+		WeaponMesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
+	}
+
+	if (WeaponMesh)
+	{
+		WeaponMesh->SetCustomDepthStencilValue(CUSTOM_DEPTH_TAN);
+		WeaponMesh->MarkRenderStateDirty();
+	}
+
+	PlayerOwnerCharacter = PlayerOwnerCharacter == nullptr
+		? Cast<APlayerCharacter>(GetOwner())
+		: PlayerOwnerCharacter;
+	if (PlayerOwnerCharacter)
+	{
+		NecroSyntexPlayerOwnerController = NecroSyntexPlayerOwnerController == nullptr
+			? Cast<ANecroSyntexPlayerController>(PlayerOwnerCharacter->Controller)
+			: NecroSyntexPlayerOwnerController;
+
+		if (NecroSyntexPlayerOwnerController && HasAuthority() && NecroSyntexPlayerOwnerController->HighPingDelegate.IsBound())
+		{
+			NecroSyntexPlayerOwnerController->HighPingDelegate.RemoveDynamic(this, &AWeapon::OnPingTooHigh);
+		}
+	}
+}
+
 
 void AWeapon::OnDropped()
 {
