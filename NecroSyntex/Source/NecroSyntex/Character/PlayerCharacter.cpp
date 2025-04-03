@@ -348,10 +348,6 @@ void APlayerCharacter::Tick(float DeltaTime)
 		GetCharacterMovement()->Velocity = CurrentVelocity.GetClampedToMaxSize(MaxCharacterSpeed);
 	}
 	RotateInPlace(DeltaTime);
-	if (IsLocallyControlled())
-	{
-		HandleHeadBob(DeltaTime);
-	}
 	if (GetLocalRole() > ENetRole::ROLE_SimulatedProxy && IsLocallyControlled())
 	{
 		AimOffset(DeltaTime);
@@ -365,6 +361,11 @@ void APlayerCharacter::Tick(float DeltaTime)
 		}
 		CalculateAO_Pitch();
 	}
+	if (!bIsCrouched)
+	{
+		HandleHeadBob(DeltaTime);
+	}
+
 	PollInit();
 }
 
@@ -395,9 +396,6 @@ void APlayerCharacter::RotateInPlace(float DeltaTime)
 void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent)) {
-
-		//EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this, &ACharacter::Jump);
-		//EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Completed, this, &ACharacter::StopJumping);
 
 		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &APlayerCharacter::Move);
 		EnhancedInputComponent->BindAction(EquipAction, ETriggerEvent::Triggered, this, &APlayerCharacter::EquipButtonPressed);
@@ -804,14 +802,12 @@ void APlayerCharacter::ServerEquipButtonPressed_Implementation()
 
 void APlayerCharacter::SwapWeaponWheel()
 {
-	if (HasAuthority())
+	if (Combat)
 	{
-		if (Combat)
-		{
-			Combat->CycleWeapons();
-		}
+		Combat->CycleWeapons();
 	}
-	else
+
+	if (!HasAuthority())
 	{
 		ServerSwapWeaponWheel();
 	}
@@ -1210,56 +1206,41 @@ float APlayerCharacter::GetTotalDamage()
 
 void APlayerCharacter::HandleHeadBob(float DeltaTime)
 {
-	if (!IsLocallyControlled() || !FollowCamera) return;
+	if (!IsLocallyControlled()) return;
 
-	APlayerController* PC = Cast<APlayerController>(Controller);
-	if (!PC || !PC->PlayerCameraManager) return;
+	if (!NecroSyntexPlayerController || !NecroSyntexPlayerController->PlayerCameraManager)
+	{
+		NecroSyntexPlayerController = Cast<ANecroSyntexPlayerController>(Controller);
+		if (!NecroSyntexPlayerController || !NecroSyntexPlayerController->PlayerCameraManager) return;
+	}
 
 	const FVector HorizontalVelocity(GetVelocity().X, GetVelocity().Y, 0.f);
 	const float Speed = HorizontalVelocity.Size();
 
-	TSubclassOf<UCameraShakeBase> NewShake = nullptr;
-
-	if (Speed > SprintThreshold && bIsSprinting)
+	TSubclassOf<UCameraShakeBase> DesiredShake = nullptr;
+	if (Speed > WalkSpeed && bIsSprinting)
 	{
-		NewShake = SprintHeadBob;
+		DesiredShake = SprintHeadBob;
 	}
-	else if (Speed > WalkThreshold)
+	else if (Speed > 0.1f)
 	{
-		NewShake = WalkHeadBob;
+		DesiredShake = WalkHeadBob;
 	}
 	else
 	{
-		NewShake = IdleHeadBob;
+		DesiredShake = IdleHeadBob;
 	}
 
-	// HeadBob이 다르거나 ShakeInstance가 사라졌다면 다시 실행
-	if (NewShake != CurrentHeadBobClass || !IsValid(CurrentHeadBobInstance))
+	if (DesiredShake)
 	{
-		// 기존 Shake 제거
-		if (CurrentHeadBobInstance)
-		{
-			PC->PlayerCameraManager->StopCameraShake(CurrentHeadBobInstance, true);
-			CurrentHeadBobInstance = nullptr;
-		}
-
-		if (NewShake)
-		{
-			CurrentHeadBobInstance = PC->PlayerCameraManager->StartCameraShake(
-				NewShake,
-				1.0f,
-				ECameraShakePlaySpace::CameraLocal,
-				FRotator::ZeroRotator
-			);
-		}
-
-		CurrentHeadBobClass = NewShake;
-
+		NecroSyntexPlayerController->PlayerCameraManager->StartCameraShake(
+			DesiredShake,
+			1.0f,
+			ECameraShakePlaySpace::CameraLocal,
+			FRotator::ZeroRotator
+		);
 	}
-	UE_LOG(LogTemp, Warning, TEXT("Trying to Shake: %s"), *GetNameSafe(NewShake));
-
 }
-
 
 UDopingComponent* APlayerCharacter::GetDopingComponent()
 {

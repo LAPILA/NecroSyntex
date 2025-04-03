@@ -29,6 +29,9 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void FinishSwap();
 
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastPlaySwapMontage();
+
 	UFUNCTION(BlueprintCallable)
 	void FinishSwapAttachWeapons();
 
