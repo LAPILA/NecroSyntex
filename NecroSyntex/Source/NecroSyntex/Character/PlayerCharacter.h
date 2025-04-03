@@ -375,16 +375,6 @@ private:
 	UPROPERTY(EditAnywhere, Category = "HeadBob")
 	TSubclassOf<UCameraShakeBase> SprintHeadBob;
 
-	// 이동 임계값 변수
-	UPROPERTY(EditAnywhere, Category = "Movement")
-	float SprintThreshold = 350.f;
-
-	UPROPERTY(EditAnywhere, Category = "Movement")
-	float WalkThreshold = 150.f;
-
-	UCameraShakeBase* CurrentHeadBobInstance = nullptr;
-	TSubclassOf<UCameraShakeBase> CurrentHeadBobClass = nullptr;
-
 	void HandleHeadBob(float DeltaTime);
 
 public:

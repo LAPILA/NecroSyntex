@@ -303,9 +303,14 @@ void UCombatComponent::EquipThirdWeapon(AWeapon* WeaponToEquip)
 
 bool UCombatComponent::ShouldSwapWeapons()
 {
-	return (EquippedWeapon != nullptr &&
-		(PrimaryWeapon != nullptr || SecondaryWeapon != nullptr || ThirdWeapon != nullptr));
+	if (CombatState != ECombatState::ECS_Unoccupied) return false;
+
+	return (
+		EquippedWeapon != nullptr &&
+		(PrimaryWeapon != nullptr || SecondaryWeapon != nullptr || ThirdWeapon != nullptr)
+		);
 }
+
 
 void UCombatComponent::OnRep_Aiming()
 {
@@ -554,25 +559,37 @@ void UCombatComponent::OnRep_ThirdWeapon()
 
 void UCombatComponent::CycleWeapons()
 {
-	if (CombatState != ECombatState::ECS_Unoccupied || !EquippedWeapon || !Character) return;
+	if (!Character || !EquippedWeapon) return;
 
-	// 로컬에서 즉시 몽타주 재생
-	Character->PlaySwapMontage();
+	if (CombatState != ECombatState::ECS_Unoccupied) return;
+	if (!ShouldSwapWeapons()) return;
 
-	// 즉시 상태 변경
 	CombatState = ECombatState::ECS_SwappingWeapons;
 	Character->bFinishedSwapping = false;
 
-	// 서버에서 실제 무기 교체 처리만 진행
-	if (!Character->HasAuthority())
+	if (Character->IsLocallyControlled())
 	{
-		ServerCycleWeapons();
+		Character->PlaySwapMontage();
 	}
-	else
+
+	MulticastPlaySwapMontage();
+
+	if (Character->HasAuthority())
 	{
 		CycleWeaponsLogic();
 	}
 }
+
+void UCombatComponent::MulticastPlaySwapMontage_Implementation()
+{
+	if (!Character) return;
+
+	if (!Character->IsLocallyControlled() || Character->HasAuthority())
+	{
+		Character->PlaySwapMontage();
+	}
+}
+
 
 void UCombatComponent::ServerCycleWeapons_Implementation()
 {
