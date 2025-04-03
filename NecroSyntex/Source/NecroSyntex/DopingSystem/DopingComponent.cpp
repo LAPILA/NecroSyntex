@@ -94,13 +94,15 @@ void UDopingComponent::BeginPlay()
 		TwoKeyBool = false;
 
 		//임시로 도핑키 셋팅
-		OneKeyDoping = NewObject<UDPLegEnforce>(this);
+		OneKeyDoping = HallucinationShield;
 		FirstDopingCode = 1;
 		OneKeyBool = true;
+		One_Able = true;
 
-		TwoKeyDoping = NewObject<UDPReducePain>(this);
+		TwoKeyDoping = BurningFurnace;
 		SecondDopingCode = 2;
 		TwoKeyBool = true;
+		Two_Able = true;
 	}
 
 }
