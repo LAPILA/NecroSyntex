@@ -13,7 +13,6 @@ UDopingComponent::UDopingComponent()
 	PrimaryComponentTick.bCanEverTick = true;
 	SetIsReplicatedByDefault(true);
 	// ...
-	UE_LOG(LogTemp, Warning, TEXT("333333333333333333333333333333333333333333333333333333"));
 }
 
 void UDopingComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const

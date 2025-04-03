@@ -68,6 +68,8 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* UDCskill2;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UInputAction* UDCModeChange;
 public:
     APlayerCharacter();
 
@@ -155,6 +157,7 @@ protected:
 	void SwapWeaponWheel();
 	void FirstDoping();
 	void SecondDoping();
+	void DopingModeChange();
 
 	void DropOrDestroyWeapon(AWeapon* Weapon);
 	void DropOrDestroyWeapons();

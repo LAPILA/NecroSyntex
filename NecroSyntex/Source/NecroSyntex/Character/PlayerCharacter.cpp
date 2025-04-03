@@ -333,6 +333,12 @@ void APlayerCharacter::BeginPlay()
 		AttachedGrenade->SetVisibility(false);
 	}
 
+	if (!UDC) {
+		UDC = NewObject<UDopingComponent>(this);
+		UDC->RegisterComponent();
+		AddInstanceComponent(UDC);
+	}
+
 
 	if (HasAuthority()) {
 		GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
@@ -413,6 +419,7 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 		EnhancedInputComponent->BindAction(SwapWeaponAction, ETriggerEvent::Triggered, this, &APlayerCharacter::SwapWeaponWheel);
 		EnhancedInputComponent->BindAction(UDCskill1, ETriggerEvent::Triggered, this, &APlayerCharacter::FirstDoping);
 		EnhancedInputComponent->BindAction(UDCskill2, ETriggerEvent::Triggered, this, &APlayerCharacter::SecondDoping);
+		EnhancedInputComponent->BindAction(UDCModeChange, ETriggerEvent::Triggered, this, &APlayerCharacter::DopingModeChange);
 	}
 }
 
@@ -829,6 +836,14 @@ void APlayerCharacter::SecondDoping()
 	{
 		PlayDopingMontage();
 		UDC->PressedSecondDopingKey();
+	}
+}
+
+void APlayerCharacter::DopingModeChange()
+{
+	if (UDC)
+	{
+		UDC->DopingModeChange();
 	}
 }
 
