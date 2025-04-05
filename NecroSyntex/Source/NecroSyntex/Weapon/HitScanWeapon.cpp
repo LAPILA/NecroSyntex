@@ -31,6 +31,30 @@ void AHitScanWeapon::Fire(const FVector& HitTarget)
 		WeaponTraceHit(Start, HitTarget, FireHit);
 
 		APlayerCharacter* PlayerCharacter = Cast<APlayerCharacter>(FireHit.GetActor());
+
+		ABasicMonsterAI* MonsterCharacter = Cast<ABasicMonsterAI>(FireHit.GetActor());
+
+		if (MonsterCharacter && InstigatorController && OwnerPawn->IsLocallyControlled())
+		{
+			bool bCauseAuthDamage = !bUseServerSideRewind || OwnerPawn->IsLocallyControlled();
+			if (HasAuthority() && bCauseAuthDamage)
+			{
+				const float DamageToCause = FireHit.BoneName.ToString() == FString("head") ? HeadShotDamage : Damage;
+				UGameplayStatics::ApplyDamage(
+					MonsterCharacter,
+					DamageToCause,
+					InstigatorController,
+					this,
+					UDamageType::StaticClass()
+				);
+			}
+			else if (!HasAuthority())
+			{
+				const float DamageToCause = FireHit.BoneName.ToString() == FString("head") ? HeadShotDamage : Damage;
+				Server_ApplyMonsterDamage(MonsterCharacter, DamageToCause, InstigatorController);
+			}
+		}
+
 		if (PlayerCharacter && InstigatorController && OwnerPawn->IsLocallyControlled())
 		{
 			bool bCauseAuthDamage = !bUseServerSideRewind || OwnerPawn->IsLocallyControlled();

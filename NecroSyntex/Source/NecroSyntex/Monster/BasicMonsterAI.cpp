@@ -61,42 +61,39 @@ void ABasicMonsterAI::UpdateWalkSpeed(float NewWalkSpeed)
 //Weapon Damage
 float ABasicMonsterAI::TakeDamage_Implementation(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
 {
+	// 이미 죽은 상태면 처리하지 않음
 	if (MonsterHP <= 0.0f) {
 		if (GEngine)
 		{
-			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, (TEXT("Death")));
+			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Already Dead"));
 		}
-		return 0.0f; 
+		return 0.0f;
 	}
 
-	/*if (GEngine)
-	{
-		FString DamageMessage = FString::Printf(TEXT("Monster Damage: %f"), DamageAmount);
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, DamageMessage);
-	}*/
+	MonsterHP -= DamageAmount;
 
-	MonsterHP -= DamageAmount; 
-
+	// 피격 애니메이션
 	PlayHitAnimation();
 
+	// 디버그 메시지
 	if (GEngine)
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Hit!!!"));
+		FString DamageMsg = FString::Printf(TEXT("Hit! Damage: %.1f | HP: %.1f"), DamageAmount, MonsterHP);
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, DamageMsg);
 	}
 
-	//UE_LOG(LogTemp, Warning, TEXT("Monster Hit! Remaining Health: %f"), MonsterHP);
-
-	
+	// 사망 처리
 	if (MonsterHP <= 0.0f)
 	{
 		PlayDeathAnimation();
 		UE_LOG(LogTemp, Warning, TEXT("Monster is Dead!"));
-		DelayedFunction(3.0f);
-		//Destroy();
+
+		DelayedFunction(3.0f); // 일정 시간 후 제거 또는 리스폰
 	}
 
 	return DamageAmount;
 }
+
 
 //Doping Damage
 void ABasicMonsterAI::TakeDopingDamage(float DopingDamageAmount)

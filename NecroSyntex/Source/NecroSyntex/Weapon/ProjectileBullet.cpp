@@ -42,15 +42,15 @@ void AProjectileBullet::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, 
 		ANecroSyntexPlayerController* OwnerController = Cast<ANecroSyntexPlayerController>(OwnerCharacter->Controller);
 		if (OwnerController)
 		{
+			const float DamageToCause = Hit.BoneName.ToString() == FString("head") ? HeadShotDamage : Damage;
+
 			if (OwnerCharacter->HasAuthority() && !bUseServerSideRewind)
 			{
-
-				const float DamageToCause = Hit.BoneName.ToString() == FString("head") ? HeadShotDamage : Damage;
-
 				UGameplayStatics::ApplyDamage(OtherActor, DamageToCause, OwnerController, this, UDamageType::StaticClass());
 				Super::OnHit(HitComp, OtherActor, OtherComp, NormalImpulse, Hit);
 				return;
 			}
+
 			APlayerCharacter* HitCharacter = Cast<APlayerCharacter>(OtherActor);
 			if (bUseServerSideRewind && OwnerCharacter->GetLagCompensation() && OwnerCharacter->IsLocallyControlled() && HitCharacter)
 			{
@@ -61,11 +61,21 @@ void AProjectileBullet::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, 
 					OwnerController->GetServerTime() - OwnerController->SingleTripTime
 				);
 			}
+
+			ABasicMonsterAI* MonsterCharacter = Cast<ABasicMonsterAI>(OtherActor);
+			if (MonsterCharacter && !OwnerCharacter->HasAuthority() && OwnerCharacter->IsLocallyControlled())
+			{
+				AWeapon* Weapon = OwnerCharacter->GetEquippedWeapon();
+				if (Weapon)
+				{
+					Weapon->Server_ApplyMonsterDamage(MonsterCharacter, DamageToCause, OwnerController);
+				}
+			}
 		}
 	}
-
 	Super::OnHit(HitComp, OtherActor, OtherComp, NormalImpulse, Hit);
 }
+
 
 void AProjectileBullet::BeginPlay()
 {
