@@ -125,6 +125,8 @@ protected:
 		int32 OtherBoxIndex
 	);
 
+	void PerformLineTrace(const FVector& Start, const FVector& End, FHitResult& OutHit);
+
 	/**
 	* Trace end with scatter
 	*/

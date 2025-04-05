@@ -6,6 +6,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "Particles/ParticleSystemComponent.h"
 #include "Sound/SoundCue.h"
+#include "NecroSyntex\Monster\BasicMonsterAI.h"
 #include "Kismet/KismetMathLibrary.h"
 
 void AShotgun::FireShotgun(const TArray<FVector_NetQuantize>& HitTargets)
@@ -29,9 +30,12 @@ void AShotgun::FireShotgun(const TArray<FVector_NetQuantize>& HitTargets)
 			FHitResult FireHit;
 			WeaponTraceHit(Start, HitTarget, FireHit);
 
+
 			APlayerCharacter* PlayerCharacter = Cast<APlayerCharacter>(FireHit.GetActor());
 			if (PlayerCharacter)
 			{
+				PlayerCharacter->OnWeaponHitEvent(FireHit);
+
 				const bool bHeadShot = FireHit.BoneName.ToString() == FString("head");
 
 				if (bHeadShot)
@@ -65,6 +69,10 @@ void AShotgun::FireShotgun(const TArray<FVector_NetQuantize>& HitTargets)
 						FMath::FRandRange(-.5f, .5f)
 					);
 				}
+			}
+			else if (ABasicMonsterAI* HitMonster = Cast<ABasicMonsterAI>(FireHit.GetActor()))
+			{
+				HitMonster->OnWeaponHitEvent(FireHit);
 			}
 		}
 		TArray<APlayerCharacter*> HitCharacters;

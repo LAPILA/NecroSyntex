@@ -128,11 +128,13 @@ public:
 	void SetHealingStationActor(AHealingStation* Station);
 
 
-
 	UFUNCTION(Server, Reliable)
 	void ServerRequestHealing();
 	void ServerRequestHealing_Implementation();
 	bool ServerRequestHealing_Validate() { return true; }
+
+	UFUNCTION(BlueprintImplementableEvent, Category = "Combat")
+	void OnWeaponHitEvent(const FHitResult& HitResult);
 
 protected:
     virtual void BeginPlay() override;

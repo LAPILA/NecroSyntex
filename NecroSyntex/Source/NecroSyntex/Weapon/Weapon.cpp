@@ -359,6 +359,24 @@ void AWeapon::OnShpereEndOverlap(UPrimitiveComponent* OverlappedComponent, AActo
 	}
 }
 
+void AWeapon::PerformLineTrace(const FVector& Start, const FVector& End, FHitResult& OutHit)
+{
+	FCollisionQueryParams Params;
+	Params.AddIgnoredActor(this);
+	if (AActor* OwnerActor = GetOwner())
+	{
+		Params.AddIgnoredActor(OwnerActor);
+	}
+
+	GetWorld()->LineTraceSingleByChannel(
+		OutHit,
+		Start,
+		End,
+		ECC_Visibility,
+		Params
+	);
+}
+
 void AWeapon::ShowPickupWidget(bool bShoWidget)
 {
 	if (PickupWidget)

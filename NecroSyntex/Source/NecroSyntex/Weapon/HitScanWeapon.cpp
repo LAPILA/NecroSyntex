@@ -10,6 +10,7 @@
 #include "Sound/SoundCue.h"
 #include "WeaponTypes.h"
 #include "NecroSyntex\NecroSyntaxComponents\LagCompensationComponent.h"
+#include "NecroSyntex\Monster\BasicMonsterAI.h"
 
 #include "DrawDebugHelpers.h"
 
@@ -94,6 +95,7 @@ void AHitScanWeapon::Fire(const FVector& HitTarget)
 				GetActorLocation()
 			);
 		}
+
 	}
 }
 
@@ -123,6 +125,20 @@ void AHitScanWeapon::WeaponTraceHit(const FVector& TraceStart, const FVector& Hi
 			ECollisionChannel::ECC_Pawn,
 			QueryParams
 		);
+
+		if (OutHit.bBlockingHit && OutHit.GetActor())
+		{
+			APlayerCharacter* HitCharacter = Cast<APlayerCharacter>(OutHit.GetActor());
+			if (HitCharacter)
+			{
+				// 여기서 호출해야 BP에서도 제대로 작동함
+				HitCharacter->OnWeaponHitEvent(OutHit);
+			}
+			else if (ABasicMonsterAI* HitMonster = Cast<ABasicMonsterAI>(OutHit.GetActor()))
+			{
+				HitMonster->OnWeaponHitEvent(OutHit);
+			}
+		}
 
 		// 4) 맞은 위치/이펙트 처리
 		FVector BeamEnd = End;

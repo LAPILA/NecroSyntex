@@ -3,11 +3,14 @@
 
 #include "ProjectileWeapon.h"
 #include "Engine/SkeletalMeshSocket.h"
+#include "NecroSyntex\Character\PlayerCharacter.h"
+#include "NecroSyntex\Monster\BasicMonsterAI.h"
 #include "Projectile.h"
 
 void AProjectileWeapon::Fire(const FVector& HitTarget)
 {
 	Super::Fire(HitTarget);
+
 
 	APawn* InstigatorPawn = Cast<APawn>(GetOwner());
 	const USkeletalMeshSocket* MuzzleFlashSocket = GetWeaponMesh()->GetSocketByName(FName("MuzzleFlash"));
@@ -20,11 +23,37 @@ void AProjectileWeapon::Fire(const FVector& HitTarget)
 		FVector ToTarget = HitTarget - SocketTransform.GetLocation();
 		FRotator TargetRotation = ToTarget.Rotation();
 
+		FVector TraceStart = SocketTransform.GetLocation();
+		FVector TraceDirection = (HitTarget - TraceStart).GetSafeNormal();
+		FVector TraceEnd = TraceStart + TraceDirection * 8000.f;
+		FHitResult FireHit;
+		FCollisionQueryParams Params;
+		Params.AddIgnoredActor(this);
+		if (InstigatorPawn)
+		{
+			Params.AddIgnoredActor(InstigatorPawn);
+		}
+		World->LineTraceSingleByChannel(FireHit, TraceStart, TraceEnd, ECC_Visibility, Params);
+
+		if (FireHit.bBlockingHit && FireHit.GetActor())
+		{
+			APlayerCharacter* HitCharacter = Cast<APlayerCharacter>(FireHit.GetActor());
+			if (HitCharacter)
+			{
+				HitCharacter->OnWeaponHitEvent(FireHit);
+			}
+			else if (ABasicMonsterAI* HitMonster = Cast<ABasicMonsterAI>(FireHit.GetActor()))
+			{
+				HitMonster->OnWeaponHitEvent(FireHit);
+			}
+		}
+
 		FActorSpawnParameters SpawnParams;
 		SpawnParams.Owner = GetOwner();
 		SpawnParams.Instigator = InstigatorPawn;
 
 		AProjectile* SpawnedProjectile = nullptr;
+
 		if (bUseServerSideRewind)
 		{
 			if (InstigatorPawn->HasAuthority()) // server

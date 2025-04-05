@@ -52,6 +52,8 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void MoveToPlayer();
 
+	UFUNCTION(BlueprintImplementableEvent, Category = "Combat")
+	void OnWeaponHitEvent(const FHitResult& HitResult);
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
