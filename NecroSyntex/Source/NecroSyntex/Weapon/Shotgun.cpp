@@ -74,6 +74,52 @@ void AShotgun::FireShotgun(const TArray<FVector_NetQuantize>& HitTargets)
 			{
 				HitMonster->OnWeaponHitEvent(FireHit);
 			}
+
+			ABasicMonsterAI* MonsterCharacter = Cast<ABasicMonsterAI>(FireHit.GetActor());
+			if (MonsterCharacter)
+			{
+				const bool bHeadShot = FireHit.BoneName.ToString() == FString("head"); // 없어도 문제 없음
+
+				const float DamageToCause = bHeadShot ? HeadShotDamage : Damage;
+
+				if (ImpactParticles)
+				{
+					UGameplayStatics::SpawnEmitterAtLocation(
+						GetWorld(),
+						ImpactParticles,
+						FireHit.ImpactPoint,
+						FireHit.ImpactNormal.Rotation()
+					);
+				}
+				if (HitSound)
+				{
+					UGameplayStatics::PlaySoundAtLocation(
+						this,
+						HitSound,
+						FireHit.ImpactPoint,
+						.5f,
+						FMath::FRandRange(-.5f, .5f)
+					);
+				}
+
+				if (InstigatorController && OwnerPawn->IsLocallyControlled())
+				{
+					bool bCauseAuthDamage = !bUseServerSideRewind || OwnerPawn->IsLocallyControlled();
+					if (HasAuthority() && bCauseAuthDamage)
+					{
+						UGameplayStatics::ApplyDamage(
+							MonsterCharacter,
+							DamageToCause,
+							InstigatorController,
+							this,
+							UDamageType::StaticClass()
+						);
+					}
+					else if (InstigatorController) {
+						Server_ApplyMonsterDamage(MonsterCharacter, DamageToCause, InstigatorController);
+					}
+				}
+			}
 		}
 		TArray<APlayerCharacter*> HitCharacters;
 

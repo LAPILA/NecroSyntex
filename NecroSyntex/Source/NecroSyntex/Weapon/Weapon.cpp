@@ -10,6 +10,7 @@
 #include "Components/SkeletalMeshComponent.h"
 #include "Casing.h"
 #include "Engine/SkeletalMeshSocket.h"
+#include "Kismet/GameplayStatics.h"
 #include "NecroSyntex\PlayerController\NecroSyntexPlayerController.h"
 #include "NecroSyntex\NecroSyntaxComponents\CombatComponent.h"
 #include "Kismet\KismetMathLibrary.h"
@@ -463,4 +464,26 @@ void AWeapon::Dropped()
 	SetOwner(nullptr);
 	PlayerOwnerCharacter = nullptr;
 	NecroSyntexPlayerOwnerController = nullptr;
+}
+
+void AWeapon::Server_ApplyMonsterDamage_Implementation(ABasicMonsterAI* Monster, float DamageMonster, AController* InstigatorController)
+{
+	if (GEngine)
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("server applydamage"));
+	}
+	if (HasAuthority() && Monster && InstigatorController)
+	{
+		if (GEngine)
+		{
+			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("hasauthority"));
+		}
+		UGameplayStatics::ApplyDamage(
+			Monster,
+			DamageMonster,
+			InstigatorController,
+			this,
+			UDamageType::StaticClass()
+		);
+	}
 }

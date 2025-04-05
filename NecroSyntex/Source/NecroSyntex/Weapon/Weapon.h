@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "WeaponTypes.h"
+#include "NecroSyntex\Monster\BasicMonsterAI.h"
 #include "Weapon.generated.h"
 
 UENUM(BlueprintType)
@@ -97,6 +98,9 @@ public:
 
 	UFUNCTION(BlueprintImplementableEvent)
 	void PlayFireSound();
+
+	UFUNCTION(Server, Reliable)
+	void Server_ApplyMonsterDamage(ABasicMonsterAI* Monster, float DamageMonster, AController* InstigatorController);
 
 protected:
 	virtual void BeginPlay() override;

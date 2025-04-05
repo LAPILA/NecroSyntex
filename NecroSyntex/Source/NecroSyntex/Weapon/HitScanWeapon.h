@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Weapon.h"
+#include "NecroSyntex\Monster\BasicMonsterAI.h"
 #include "HitScanWeapon.generated.h"
 
 /**
