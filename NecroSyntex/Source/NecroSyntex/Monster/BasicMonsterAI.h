@@ -34,8 +34,8 @@ public:
 	UPROPERTY(EditAnywhere, Category = "AI")
 	float ChaseSpeed = 600.0f;
 
-	/*UFUNCTION(BlueprintNativeEvent, Category = "Damage")
-	float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser);*/
+	UFUNCTION(BlueprintNativeEvent, Category = "Damage")
+	float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser);
 	
 	virtual float TakeDamage_Implementation(float DamageAmount, struct FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser);
 

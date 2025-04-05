@@ -69,6 +69,12 @@ float ABasicMonsterAI::TakeDamage_Implementation(float DamageAmount, FDamageEven
 		return 0.0f; 
 	}
 
+	/*if (GEngine)
+	{
+		FString DamageMessage = FString::Printf(TEXT("Monster Damage: %f"), DamageAmount);
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, DamageMessage);
+	}*/
+
 	MonsterHP -= DamageAmount; 
 
 	PlayHitAnimation();
