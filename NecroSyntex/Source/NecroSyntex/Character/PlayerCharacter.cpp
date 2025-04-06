@@ -310,6 +310,9 @@ void APlayerCharacter::BeginPlay()
 	}
 	if (!UDC) {
 		GetCharacterMovement()->MaxWalkSpeed = 550.0f;
+		UDC = NewObject<UDopingComponent>(this);
+		UDC->RegisterComponent();
+		AddInstanceComponent(UDC);
 	}
 	else {
 		if (HasAuthority()) {

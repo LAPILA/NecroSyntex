@@ -191,13 +191,13 @@ void ANecroSyntexGameMode::PostLogin(APlayerController* NewPlayer)
 {
 	Super::PostLogin(NewPlayer);
 
-	UE_LOG(LogTemp, Warning, TEXT("111111"));
-	ANecroSyntexPlayerController* PC = Cast<ANecroSyntexPlayerController>(NewPlayer);
-	if (PC)
-	{
-		TotalPlayers++;
-		PC->ShowCharacterSelectUI(); // 클라이언트에서 UI 띄우기
-	}
+	//UE_LOG(LogTemp, Warning, TEXT("111111"));
+	//ANecroSyntexPlayerController* PC = Cast<ANecroSyntexPlayerController>(NewPlayer);
+	//if (PC)
+	//{
+	//	TotalPlayers++;
+	//	PC->ShowCharacterSelectUI(); // 클라이언트에서 UI 띄우기
+	//}
 }
 
 void ANecroSyntexGameMode::SelectAndReadyComplete_Implementation()
