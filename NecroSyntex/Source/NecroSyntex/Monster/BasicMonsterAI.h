@@ -17,7 +17,7 @@ public:
 	ABasicMonsterAI();
 
 	UFUNCTION(BlueprintCallable)
-	void UpdateWalkSpeed(float NewWalkSpeed);
+	void UpdateWalkSpeed(); //float NewWalkSpeed
 
 	UFUNCTION(BlueprintCallable)
 	void Attack_Player();
@@ -32,7 +32,15 @@ public:
 	class USphereComponent* AttackPoint;
 
 	UPROPERTY(EditAnywhere, Category = "AI")
-	float ChaseSpeed = 600.0f;
+	float ChaseSpeed;
+
+	UPROPERTY(EditAnywhere, Category = "AI")
+	float SlowChaseSpeed;
+
+	FTimerHandle SpeedRestoreTimerHandle;
+
+	UPROPERTY(EditAnywhere, Category = "AI")
+	float SlowTime;
 
 	UFUNCTION(BlueprintNativeEvent, Category = "Damage")
 	float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser);
@@ -61,10 +69,16 @@ protected:
 	UAnimMontage* HitReactionMontage;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
+	UAnimMontage* HitHighDamageReactionMontage;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
 	UAnimMontage* DeathReactionMontage;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
 	class UAnimMontage* AttackMontage;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI")
+	bool CanAttack;
 
 	void PlayHitAnimation();
 
