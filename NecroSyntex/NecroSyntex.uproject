@@ -35,6 +35,18 @@
 		{
 			"Name": "SteamShared",
 			"Enabled": true
+		},
+		{
+			"Name": "PCG",
+			"Enabled": true
+		},
+		{
+			"Name": "PCGExternalDataInterop",
+			"Enabled": true
+		},
+		{
+			"Name": "PCGGeometryScriptInterop",
+			"Enabled": true
 		}
 	],
 	"TargetPlatforms": [
