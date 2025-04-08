@@ -40,10 +40,10 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Monster")
 	TArray<ABasicMonsterAI*> SpawnMonster;
 
-	UPROPERTY(EditAnywhere, Category = "Monster")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float WaveIntervalTime;
 
-	UPROPERTY(EditAnywhere, Category = "Monster")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	bool isSpawn;
 
 	UFUNCTION(BluePrintCallable)

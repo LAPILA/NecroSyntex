@@ -22,8 +22,8 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void Attack_Player();
 
-	UFUNCTION()
-	void OnAttackAreaOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+	/*UFUNCTION()
+	void OnAttackAreaOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);*/
 
 	UFUNCTION(BlueprintCallable)
 	void TakeDopingDamage(float DopingDamageAmount);
@@ -56,6 +56,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float MonsterAD; //attack damage
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI")
+	bool MeleeAttack;
+
 	UFUNCTION(BlueprintCallable)
 	void MoveToPlayer();
 
@@ -81,6 +84,8 @@ protected:
 	bool CanAttack;
 
 	void PlayHitAnimation();
+
+	void PlayHitHighDamageAnimation();
 
 	void PlayDeathAnimation();
 
