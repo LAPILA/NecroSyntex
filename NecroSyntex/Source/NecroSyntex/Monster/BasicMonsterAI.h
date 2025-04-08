@@ -17,13 +17,13 @@ public:
 	ABasicMonsterAI();
 
 	UFUNCTION(BlueprintCallable)
-	void UpdateWalkSpeed(float NewWalkSpeed);
+	void UpdateWalkSpeed(); //float NewWalkSpeed
 
 	UFUNCTION(BlueprintCallable)
 	void Attack_Player();
 
-	UFUNCTION()
-	void OnAttackAreaOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+	/*UFUNCTION()
+	void OnAttackAreaOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);*/
 
 	UFUNCTION(BlueprintCallable)
 	void TakeDopingDamage(float DopingDamageAmount);
@@ -32,7 +32,15 @@ public:
 	class USphereComponent* AttackPoint;
 
 	UPROPERTY(EditAnywhere, Category = "AI")
-	float ChaseSpeed = 600.0f;
+	float ChaseSpeed;
+
+	UPROPERTY(EditAnywhere, Category = "AI")
+	float SlowChaseSpeed;
+
+	FTimerHandle SpeedRestoreTimerHandle;
+
+	UPROPERTY(EditAnywhere, Category = "AI")
+	float SlowTime;
 
 	UFUNCTION(BlueprintNativeEvent, Category = "Damage")
 	float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser);
@@ -48,6 +56,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float MonsterAD; //attack damage
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI")
+	bool MeleeAttack;
+
 	UFUNCTION(BlueprintCallable)
 	void MoveToPlayer();
 
@@ -61,12 +72,20 @@ protected:
 	UAnimMontage* HitReactionMontage;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
+	UAnimMontage* HitHighDamageReactionMontage;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
 	UAnimMontage* DeathReactionMontage;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
 	class UAnimMontage* AttackMontage;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI")
+	bool CanAttack;
+
 	void PlayHitAnimation();
+
+	void PlayHitHighDamageAnimation();
 
 	void PlayDeathAnimation();
 

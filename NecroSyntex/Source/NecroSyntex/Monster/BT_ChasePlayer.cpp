@@ -24,7 +24,7 @@ EBTNodeResult::Type UBT_ChasePlayer::ExecuteTask(UBehaviorTreeComponent& OwnerCo
     if (!MonsterAI) return EBTNodeResult::Failed;
 
     // 몬스터 이동 속도 업데이트 (C++ 함수 호출)
-    MonsterAI->UpdateWalkSpeed(MonsterAI->ChaseSpeed);
+    MonsterAI->UpdateWalkSpeed();
 
     // 태스크 성공 반환
     return EBTNodeResult::Succeeded;
