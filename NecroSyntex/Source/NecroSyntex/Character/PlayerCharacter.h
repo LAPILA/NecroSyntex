@@ -243,9 +243,6 @@ private:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera", meta = (AllowPrivateAccess = "true"))
     class UCameraComponent* FollowCamera;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-	class UWidgetComponent* OverheadWidget;
-
 	UPROPERTY(ReplicatedUsing = OnRep_OverlappingWeapon)
 	class AWeapon* OverlappingWeapon;
 
@@ -417,6 +414,8 @@ public:
 
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
 	void CallBlueprintBurningFurnaceDamage();
+	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
+	void MissionUIUpdate();
 
 	UFUNCTION()
 	void SPStrengthDeBuffON();

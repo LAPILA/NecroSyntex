@@ -21,12 +21,14 @@ AM_Spawner::AM_Spawner()
 	RootComponent = Spawner;
 
 	CurrentMonsterCount = 0;
-	MaxMonster = 10;
+	MaxMonster = 50;
 	MonsterSpawnSpeed = 5.0f;
 	WaveIntervalTime = 5.0f;
 
 	isSpawn = false;
 	isWave = false;
+
+	RegionTag = "Survival";
 }
 
 // Called when the game starts or when spawned
@@ -34,7 +36,7 @@ void AM_Spawner::BeginPlay()
 {
 	Super::BeginPlay();
 
-	StartSpawnMonster(MonsterSpawnSpeed);
+	//StartSpawnMonster(MonsterSpawnSpeed);
 }
 
 // Called every frame
