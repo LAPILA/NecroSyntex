@@ -22,6 +22,8 @@ public:
 
 	void ActivateSpawners(FName Region);
 
+	void PlayerMissionUIUpdate(FString MissionName);
+
 
 
 private:

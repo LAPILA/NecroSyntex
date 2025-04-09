@@ -5,6 +5,7 @@
 #include "NecroSyntex/Character/PlayerCharacter.h"
 #include "Kismet/GameplayStatics.h"
 #include "NecroSyntex/GameMode/NecroSyntexGameMode.h"
+#include "NecroSyntex/NecroSyntexGameState.h"
 
 ATestMissionTrigger::ATestMissionTrigger()
 {

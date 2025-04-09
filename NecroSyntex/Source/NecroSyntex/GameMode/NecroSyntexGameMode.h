@@ -24,7 +24,7 @@ public:
 	virtual void RequestRespawn(ACharacter* ElimmedCharacter, AController* ElimmedController);
 
 	UPROPERTY(EditDefaultsOnly)
-	float WarmUpTime = 10.f;
+	float WarmUpTime = 1.0f;
 	
 	UPROPERTY(EditDefaultsOnly)
 	float MatchTime = 120.f;
