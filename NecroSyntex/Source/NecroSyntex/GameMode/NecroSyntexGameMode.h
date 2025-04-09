@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/GameMode.h"
+#include "NecroSyntex/Mission/MissionManager.h"
 #include "NecroSyntexGameMode.generated.h"
 
 namespace MatchState
@@ -69,6 +70,12 @@ public:
 	UPROPERTY()
 	FVector SpawnLocation;
 	FVector SpawnRotation;
+
+
+	// Mission
+	UPROPERTY()
+	UMissionManager* MissionManager;
+
 
 protected:
 	virtual void PostLogin(APlayerController* NewPlayer) override;

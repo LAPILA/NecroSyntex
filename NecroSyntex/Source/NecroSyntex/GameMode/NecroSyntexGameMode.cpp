@@ -26,6 +26,10 @@ void ANecroSyntexGameMode::BeginPlay()
 {
 	Super::BeginPlay();
 
+	MissionManager = NewObject<UMissionManager>(this, UMissionManager::StaticClass());
+	MissionManager->Init(this);
+
+
 	LevelStartingTime = GetWorld()->GetTimeSeconds();
 	UE_LOG(LogTemp, Warning, TEXT("LevelStartingTime: %f"), LevelStartingTime);
 	UE_LOG(LogTemp, Warning, TEXT("WarmUpTime: %f"), WarmUpTime);
