@@ -6,6 +6,8 @@
 #include "NecroSyntex/HUD/Announcement.h"
 #include "Kismet/GameplayStatics.h"
 #include "CharacterOverlay.h"
+#include "NecroSyntex\HUD\BuffDebuffContainerWidget.h"
+#include "NecroSyntex\HUD\BuffDebuffWidget.h"
 #include "Announcement.h"
 
 void ANecroSyntexHud::BeginPlay()
@@ -20,6 +22,43 @@ void ANecroSyntexHud::AddCharacterOverlay()
 	{
 		CharacterOverlay = CreateWidget<UCharacterOverlay>(PlayerController, CharacterOverlayClass);
 		CharacterOverlay->AddToViewport(-1);
+	}
+	//TEST CODE
+	if (CharacterOverlay && CharacterOverlay->BuffDebuffContainer)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("BuffDebuffContainer is valid. Running test buffs."));
+
+		// Buff 1 - Speed
+		FBuffDebuffInfo SpeedBuff;
+		SpeedBuff.Icon = LoadObject<UTexture2D>(nullptr, TEXT("/Game/icons/icon_accuracy/2_accuracy"));
+		SpeedBuff.Duration = 30.f;
+		SpeedBuff.bIsBuff = true;
+		CharacterOverlay->BuffDebuffContainer->CreateEntryWidget("SpeedBuff", SpeedBuff);
+
+		// Buff 2 - Regen
+		FBuffDebuffInfo RegenBuff;
+		RegenBuff.Icon = LoadObject<UTexture2D>(nullptr, TEXT("/Game/icons/icon_power/9_power"));
+		RegenBuff.Duration = 20.f;
+		RegenBuff.bIsBuff = true;
+		CharacterOverlay->BuffDebuffContainer->CreateEntryWidget("RegenBuff", RegenBuff);
+
+		// Debuff 1 - Poison
+		FBuffDebuffInfo PoisonDebuff;
+		PoisonDebuff.Icon = LoadObject<UTexture2D>(nullptr, TEXT("/Game/icons/icon_potion/7_potion"));
+		PoisonDebuff.Duration = 30.f;
+		PoisonDebuff.bIsBuff = false;
+		CharacterOverlay->BuffDebuffContainer->CreateEntryWidget("Poison", PoisonDebuff);
+
+		// Debuff 2 - Slow
+		FBuffDebuffInfo SlowDebuff;
+		SlowDebuff.Icon = LoadObject<UTexture2D>(nullptr, TEXT("/Game/icons/icon_accuracy/11_accuracy"));
+		SlowDebuff.Duration = 15.f;
+		SlowDebuff.bIsBuff = false;
+		CharacterOverlay->BuffDebuffContainer->CreateEntryWidget("Slow", SlowDebuff);
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("BuffDebuffContainer is null, cannot run test."));
 	}
 }
 
