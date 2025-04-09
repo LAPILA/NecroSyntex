@@ -55,6 +55,11 @@ public:
 
 	void DelayedFunction(float DelayTime);
 
+	//Pahu Mission
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Mission")
+	FName RegionTag;
+
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;

@@ -87,7 +87,7 @@ float ABasicMonsterAI::TakeDamage_Implementation(float DamageAmount, FDamageEven
 
 	if (GEngine)
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("MonsterHP--"));
+		//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("MonsterHP--"));
 	}
 	
 	if (DamageAmount < 50) {//Refactoring Need..
@@ -101,7 +101,7 @@ float ABasicMonsterAI::TakeDamage_Implementation(float DamageAmount, FDamageEven
 	if (GEngine)
 	{
 		FString DamageMsg = FString::Printf(TEXT("Hit! Damage: %.1f | HP: %.1f"), DamageAmount, MonsterHP);
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, DamageMsg);
+		//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, DamageMsg);
 	}
 
 	// »ç¸Á Ã³¸®

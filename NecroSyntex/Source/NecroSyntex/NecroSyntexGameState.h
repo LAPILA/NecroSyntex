@@ -20,6 +20,9 @@ public:
 
 	UPROPERTY(Replicated)
 	TArray<ANecroSyntexPlayerState*> TopScoringPlayers;
+
+	UPROPERTY(Replicated, BlueprintReadOnly)
+	FString CurrentMission;
 private:
 
 	float TopScore = 0.f;
