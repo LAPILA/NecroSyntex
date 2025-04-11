@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+ï»¿// Fill out your copyright notice in the Description page of Project Settings.
 
 
 #include "NecroSyntexGameMode.h"
@@ -80,14 +80,14 @@ void ANecroSyntexGameMode::Tick(float DeltaTime)
 }
 
 
-//ÇÃ·¹ÀÌ¾î Á¦°Å °ü·Ã ÇÔ¼ö
+//í”Œë ˆì´ì–´ ì œê±° ê´€ë ¨ í•¨ìˆ˜
 void ANecroSyntexGameMode::PlayerEliminated(APlayerCharacter* ElimmedCharacter, ANecroSyntexPlayerController* VictimController, ANecroSyntexPlayerController* AttackController)
 {
-	// °ø°İÀÚ, Èñ»ıÀÚ State Á¸Àç È®ÀÎ
+	// ê³µê²©ì, í¬ìƒì State ì¡´ì¬ í™•ì¸
 	ANecroSyntexPlayerState* AttackerPlayerState = AttackController ? Cast<ANecroSyntexPlayerState>(AttackController->PlayerState) : nullptr;
 	ANecroSyntexPlayerState* VictimPlayerState = VictimController ? Cast<ANecroSyntexPlayerState>(VictimController->PlayerState) : nullptr;
 
-	// Á¡¼ö Ãß°¡
+	// ì ìˆ˜ ì¶”ê°€
 	ANecroSyntexGameState* NecroSyntexGameState = GetGameState<ANecroSyntexGameState>();
 
 	if (AttackerPlayerState && AttackerPlayerState != VictimPlayerState && NecroSyntexGameState)
@@ -127,7 +127,6 @@ void ANecroSyntexGameMode::SetupPlayers()
 {
 	UE_LOG(LogTemp, Warning, TEXT("22222"));
 
-	// ¸ğµç PlayerController ¼øÈ¸
 	for (FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
 	{
 		ANecroSyntexPlayerController* MyPC = Cast<ANecroSyntexPlayerController>(*It);
@@ -136,59 +135,67 @@ void ANecroSyntexGameMode::SetupPlayers()
 		UE_LOG(LogTemp, Warning, TEXT("33333"));
 		MyPC->CheckPSSetTimer();
 
-		// PlayerState °¡Á®¿À±â
 		ANecroSyntexPlayerState* PS = MyPC->GetPlayerState<ANecroSyntexPlayerState>();
 
-		// ±âÁ¸ Pawn(ÀÓ½Ã Ä³¸¯ÅÍ)À» Áö¿ì±â
 		if (APawn* OldPawn = MyPC->GetPawn())
 		{
 			OldPawn->Destroy();
 		}
 
 		UE_LOG(LogTemp, Warning, TEXT("4444"));
-		if (PS)
+
+		if (PS && PS->SelectedCharacterClass)
 		{
-			UE_LOG(LogTemp, Warning, TEXT("555555"));
+			UE_LOG(LogTemp, Warning, TEXT("55555 / 66666"));
 
-			// ÇÃ·¹ÀÌ¾î°¡ ¼±ÅÃÇÑ Ä³¸¯ÅÍ Å¬·¡½º°¡ ÀÖÀ¸¸é ½ºÆù ÁøÇà
-			if (PS->SelectedCharacterClass)
+			// DefaultPawnClassë¥¼ ë³€ê²½
+			TSubclassOf<APawn> OldDefault = DefaultPawnClass;
+			DefaultPawnClass = PS->SelectedCharacterClass;
+
+			// PlayerStart ì§ì ‘ ì„ íƒ (ì•ˆì „í•˜ê²Œ ì²˜ë¦¬)
+			TArray<AActor*> PlayerStarts;
+			UGameplayStatics::GetAllActorsOfClass(this, APlayerStart::StaticClass(), PlayerStarts);
+
+			if (PlayerStarts.Num() > 0)
 			{
-				UE_LOG(LogTemp, Warning, TEXT("66666"));
-
-				// 1) ±âÁ¸ DefaultPawnClass ÀúÀå
-				TSubclassOf<APawn> OldDefault = DefaultPawnClass;
-
-				// 2) DefaultPawnClass¸¦ ÇÃ·¹ÀÌ¾î°¡ ¼±ÅÃÇÑ Å¬·¡½º·Î ÀÓ½Ã º¯°æ
-				DefaultPawnClass = PS->SelectedCharacterClass;
-
-				// 3) RestartPlayer() ¡æ ³»ºÎÀûÀ¸·Î PlayerStart¸¦ Ã£¾Æ Spawn & Possess
-				RestartPlayer(MyPC);
-
-				// ´Ù½Ã ¿ø»ó º¹±Í
-				DefaultPawnClass = OldDefault;
-
-				// SpawnµÈ »õ Ä³¸¯ÅÍ(= MyPC->GetPawn())¿¡¼­ DopingComponent µîÀ» ¼³Á¤
-				if (APlayerCharacter* NewCharacter = Cast<APlayerCharacter>(MyPC->GetPawn()))
-				{
-					UE_LOG(LogTemp, Warning, TEXT("777777"));
-
-					if (NewCharacter->UDC)
-					{
-						NewCharacter->UDC->SetFirstDopingKey(PS->FirstDopingCode);
-						NewCharacter->UDC->SetSecondDopingKey(PS->SecondDopingCode);
-					}
-
-					UE_LOG(LogTemp, Warning, TEXT("88888"));
-					// ¾Æ·¡ ClientRestart È£ÃâÀº ÇÊ¼ö°¡ ¾Æ´ÏÁö¸¸,
-					// º°µµ ÀÌÀ¯·Î UI/State Àçµ¿±âÈ­°¡ ÇÊ¿äÇÏ´Ù¸é À¯Áö
-					MyPC->ClientRestart(NewCharacter);
-
-					UE_LOG(LogTemp, Warning, TEXT("99999"));
-				}
+				AActor* ChosenStart = PlayerStarts[FMath::RandRange(0, PlayerStarts.Num() - 1)];
+				RestartPlayerAtPlayerStart(MyPC, ChosenStart);
 			}
+			else
+			{
+				UE_LOG(LogTemp, Error, TEXT("âŒ PlayerStart ì—†ìŒ!"));
+				continue;
+			}
+
+			// DefaultPawnClass ì›ë³µ
+			DefaultPawnClass = OldDefault;
+
+			// GetPawn() null ì²´í¬ í›„ ì•ˆì „í•˜ê²Œ ì²˜ë¦¬
+			if (APlayerCharacter* NewCharacter = Cast<APlayerCharacter>(MyPC->GetPawn()))
+			{
+				UE_LOG(LogTemp, Warning, TEXT("777777 - ìºë¦­í„° ìƒì„± ì„±ê³µ"));
+
+				if (NewCharacter->UDC)
+				{
+					NewCharacter->UDC->SetFirstDopingKey(PS->FirstDopingCode);
+					NewCharacter->UDC->SetSecondDopingKey(PS->SecondDopingCode);
+				}
+
+				MyPC->ClientRestart(NewCharacter);
+				UE_LOG(LogTemp, Warning, TEXT("99999 - ClientRestart í˜¸ì¶œ"));
+			}
+			else
+			{
+				UE_LOG(LogTemp, Error, TEXT("âŒ ìºë¦­í„° ìŠ¤í° ì‹¤íŒ¨! GetPawn() == nullptr"));
+			}
+		}
+		else
+		{
+			UE_LOG(LogTemp, Error, TEXT("âŒ PlayerState ë˜ëŠ” SelectedCharacterClassê°€ ìœ íš¨í•˜ì§€ ì•ŠìŒ"));
 		}
 	}
 }
+
 
 
 void ANecroSyntexGameMode::PostLogin(APlayerController* NewPlayer)
@@ -200,7 +207,7 @@ void ANecroSyntexGameMode::PostLogin(APlayerController* NewPlayer)
 	//if (PC)
 	//{
 	//	TotalPlayers++;
-	//	PC->ShowCharacterSelectUI(); // Å¬¶óÀÌ¾ğÆ®¿¡¼­ UI ¶ç¿ì±â
+	//	PC->ShowCharacterSelectUI(); // í´ë¼ì´ì–¸íŠ¸ì—ì„œ UI ë„ìš°ê¸°
 	//}
 }
 
@@ -215,13 +222,13 @@ void ANecroSyntexGameMode::SelectAndReadyComplete_Implementation()
 
 void ANecroSyntexGameMode::ShowCharacterSelectionUI()
 {
-	// ÇöÀç Á¢¼ÓÇÑ ¸ğµç ÇÃ·¹ÀÌ¾î ÄÁÆ®·Ñ·¯ °¡Á®¿À±â
+	// í˜„ì¬ ì ‘ì†í•œ ëª¨ë“  í”Œë ˆì´ì–´ ì»¨íŠ¸ë¡¤ëŸ¬ ê°€ì ¸ì˜¤ê¸°
 	for (FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
 	{
 		ANecroSyntexPlayerController* PC = Cast<ANecroSyntexPlayerController>(*It);
 		if (PC)
 		{
-			PC->ShowCharacterSelectUI(); // Å¬¶óÀÌ¾ğÆ®¿¡¼­ UI ¶ç¿ì±â
+			PC->ShowCharacterSelectUI(); // í´ë¼ì´ì–¸íŠ¸ì—ì„œ UI ë„ìš°ê¸°
 		}
 	}
 }
