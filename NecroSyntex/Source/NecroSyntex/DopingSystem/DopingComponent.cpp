@@ -95,11 +95,23 @@ void UDopingComponent::BeginPlay()
 		//임시로 도핑키 셋팅
 		OneKeyDoping = HallucinationShield;
 		FirstDopingCode = 1;
+		One_DopingCoolTime = OneKeyDoping->DopingCoolTime;
+		One_DopingItemNum = OneKeyDoping->DopingItemNum;
+		One_BuffDuration = OneKeyDoping->BuffDuration;
+		One_DeBuffDuration = OneKeyDoping->DeBuffDuration;
+		One_CheckBuff = OneKeyDoping->CheckBuff;
+		One_CheckDeBuff = OneKeyDoping->CheckDeBuff;
 		OneKeyBool = true;
 		One_Able = true;
 
 		TwoKeyDoping = BurningFurnace;
 		SecondDopingCode = 2;
+		Two_DopingCoolTime = TwoKeyDoping->DopingCoolTime;
+		Two_DopingItemNum = TwoKeyDoping->DopingItemNum;
+		Two_BuffDuration = TwoKeyDoping->BuffDuration;
+		Two_DeBuffDuration = TwoKeyDoping->DeBuffDuration;
+		Two_CheckBuff = TwoKeyDoping->CheckBuff;
+		Two_CheckDeBuff = TwoKeyDoping->CheckDeBuff;
 		TwoKeyBool = true;
 		Two_Able = true;
 	}
