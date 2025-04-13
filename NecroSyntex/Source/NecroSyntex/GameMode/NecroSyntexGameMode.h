@@ -24,7 +24,7 @@ public:
 	virtual void RequestRespawn(ACharacter* ElimmedCharacter, AController* ElimmedController);
 
 	UPROPERTY(EditDefaultsOnly)
-	float WarmUpTime = 1.0f;
+	float WarmUpTime = 5.0f;
 	
 	UPROPERTY(EditDefaultsOnly)
 	float MatchTime = 120.f;
@@ -66,6 +66,8 @@ public:
 	FTimerHandle CheckPlayerStateTimer;
 
 	void SetupPlayers();
+
+	void SetupPlayers2();
 
 	UPROPERTY()
 	FVector SpawnLocation;

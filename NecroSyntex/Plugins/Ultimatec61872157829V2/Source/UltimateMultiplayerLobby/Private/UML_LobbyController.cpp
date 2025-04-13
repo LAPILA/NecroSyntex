@@ -405,30 +405,41 @@ void AUML_LobbyController::OnUnPossess()
 	Super::OnUnPossess();
 }
 
+
 void AUML_LobbyController::OnSessionUserInviteAccepted(bool bWasSuccesful, int32 ControllerId,
 	TSharedPtr<const FUniqueNetId> UserId, const FOnlineSessionSearchResult& InviteResult)
 {
-	if(bWasSuccesful)
+	if (bWasSuccesful)
 	{
-		if(IOnlineSubsystem* OnlineSub = Online::GetSubsystem(GetWorld()))
+		if (IOnlineSubsystem* OnlineSub = Online::GetSubsystem(GetWorld()))
 		{
-			if(IOnlineSessionPtr SessionPtr = OnlineSub->GetSessionInterface())
+			if (IOnlineSessionPtr SessionPtr = OnlineSub->GetSessionInterface())
 			{
-				OnInviteAcceptedDestroyHandle = SessionPtr->AddOnDestroySessionCompleteDelegate_Handle(FOnDestroySessionCompleteDelegate::CreateLambda([this, SessionPtr, InviteResult](FName SessionName, bool bWasSuccessful)
-				{
-					SessionPtr->ClearOnDestroySessionCompleteDelegate_Handle(OnInviteAcceptedDestroyHandle);
-					OnInviteAcceptedJoinHandle = SessionPtr->AddOnJoinSessionCompleteDelegate_Handle(FOnJoinSessionCompleteDelegate::CreateLambda([this, SessionPtr](FName SessionName, EOnJoinSessionCompleteResult::Type Result)
-					{
-						SessionPtr->ClearOnJoinSessionCompleteDelegate_Handle(OnInviteAcceptedJoinHandle);
-						if(Result == EOnJoinSessionCompleteResult::Success)
+				// ✅ InviteResult 복사 (핵심 수정)
+				const FOnlineSessionSearchResult InviteResultCopy = InviteResult;
+
+				OnInviteAcceptedDestroyHandle = SessionPtr->AddOnDestroySessionCompleteDelegate_Handle(
+					FOnDestroySessionCompleteDelegate::CreateLambda(
+						[this, SessionPtr, InviteResultCopy](FName SessionName, bool bWasSuccessful)
 						{
-							FString ConnectString;
-							SessionPtr->GetResolvedConnectString(SessionName, ConnectString);
-							UGameplayStatics::OpenLevel(GetWorld(), FName(*ConnectString), true);
-						}
-					}));
-					SessionPtr->JoinSession(0, NAME_PartySession, InviteResult);
-				}));
+							SessionPtr->ClearOnDestroySessionCompleteDelegate_Handle(OnInviteAcceptedDestroyHandle);
+
+							OnInviteAcceptedJoinHandle = SessionPtr->AddOnJoinSessionCompleteDelegate_Handle(
+								FOnJoinSessionCompleteDelegate::CreateLambda(
+									[this, SessionPtr](FName SessionName, EOnJoinSessionCompleteResult::Type Result)
+									{
+										SessionPtr->ClearOnJoinSessionCompleteDelegate_Handle(OnInviteAcceptedJoinHandle);
+										if (Result == EOnJoinSessionCompleteResult::Success)
+										{
+											FString ConnectString;
+											SessionPtr->GetResolvedConnectString(SessionName, ConnectString);
+											UGameplayStatics::OpenLevel(GetWorld(), FName(*ConnectString), true);
+										}
+									}));
+
+							SessionPtr->JoinSession(0, NAME_PartySession, InviteResultCopy);
+						}));
+
 				SessionPtr->DestroySession(NAME_PartySession);
 			}
 		}
