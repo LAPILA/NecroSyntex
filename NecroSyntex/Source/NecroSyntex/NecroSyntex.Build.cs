@@ -8,7 +8,7 @@ public class NecroSyntex : ModuleRules
 	{
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 	
-		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "EnhancedInput", "OnlineSubsystem", "OnlineSubsystemSteam", "Niagara" });
+		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "EnhancedInput", "SteamShared", "SteamSdk", "OnlineSubsystemSteam", "Niagara" });
 
 		PrivateDependencyModuleNames.AddRange(new string[] {  });
 

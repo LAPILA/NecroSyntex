@@ -31,7 +31,7 @@
 		},
 		{
 			"Name": "UltimateMultiplayerLobby",
-			"Enabled": false,
+			"Enabled": true,
 			"MarketplaceURL": "com.epicgames.launcher://ue/Fab/product/74a15004-2adf-4fe3-abc6-16190fb582c5"
 		},
 		{
