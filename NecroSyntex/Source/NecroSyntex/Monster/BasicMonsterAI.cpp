@@ -130,7 +130,20 @@ float ABasicMonsterAI::TakeDamage_Implementation(float DamageAmount, FDamageEven
 //Doping Damage
 void ABasicMonsterAI::TakeDopingDamage(float DopingDamageAmount)
 {
-	if (MonsterHP <= 0) {
+	UE_LOG(LogTemp, Warning, TEXT("TakeDopingDamage"));
+
+	if (MonsterHP <= 0.0f) {
+		if (GEngine)
+		{
+			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Death"));
+		}
+		return;
+	}
+
+	MonsterHP -= DopingDamageAmount;//if doping take damage setting speed slowly? 
+	PlayHitAnimation();
+
+	if (MonsterHP <= 0.0f) {
 		AController* AIController = GetController();
 
 		if (AIController)
@@ -138,19 +151,12 @@ void ABasicMonsterAI::TakeDopingDamage(float DopingDamageAmount)
 			AIController->UnPossess();  // AIController 해제
 		}
 
-		//CanAttack = false;
 		PlayDeathAnimation();
-		//ChaseSpeed = 0.0f;
 		UpdateWalkSpeed();
-
 		UE_LOG(LogTemp, Warning, TEXT("Monster is Dead! Cause Doping"));
-
 		DelayedFunction(3.5f); // 일정 시간 후 제거 또는 리스폰
 	}
-
-	MonsterHP -= DopingDamageAmount;//if doping take damage setting speed slowly? 
-	PlayHitAnimation();
-	DelayedFunction(3.0f);
+	return;
 }
 
 void ABasicMonsterAI::PlayHitAnimation()
