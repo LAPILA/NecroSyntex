@@ -67,8 +67,6 @@ public:
 
 	void SetupPlayers();
 
-	void SetupPlayers2();
-
 	UPROPERTY()
 	FVector SpawnLocation;
 	FVector SpawnRotation;

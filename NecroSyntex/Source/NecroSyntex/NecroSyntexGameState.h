@@ -22,7 +22,23 @@ public:
 	TArray<ANecroSyntexPlayerState*> TopScoringPlayers;
 
 	UPROPERTY(Replicated, BlueprintReadOnly)
-	FString CurrentMission;
+	FName CurrentMission;
+
+	UPROPERTY(Replicated, BlueprintReadOnly)
+	int32 TotalPlayer = 0;
+
+	UPROPERTY(Replicated, BlueprintReadOnly)
+	int32 SurvivingPlayer = 0;
+
+	UPROPERTY(Replicated, BlueprintReadOnly)
+	float MissionCountDown;
+
+	UPROPERTY(Replicated, BlueprintReadOnly)
+	bool MissionCountDownBool = false;
+
+	void UpdateMissionStartCountdown(float newTimer);
+
+
 private:
 
 	float TopScore = 0.f;

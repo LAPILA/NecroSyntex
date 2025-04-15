@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "UObject/NoExportTypes.h"
+#include "TimerManager.h"
 #include "MissionManager.generated.h"
 
 /**
@@ -15,16 +16,55 @@ class NECROSYNTEX_API UMissionManager : public UObject
 	GENERATED_BODY()
 
 public:
+	UFUNCTION()
 	void Init(class ANecroSyntexGameMode* InGameMode);
 
-	void StartSurvivalMission(FName RegionTag, float Duration);
-	void EndSurvivlvalMission(FName RegionTag);
+	UFUNCTION()
+	void MissionSet(FName MissionName, FName RegionTag, float Duration);
 
-	void ActivateSpawners(FName Region);
+	UPROPERTY()
+	FName CurrentMissionName;
+	UPROPERTY()
+	FName CurrentRegionTag;
+	UPROPERTY()
+	float CurrentDuration;
 
-	void PlayerMissionUIUpdate(FString MissionName);
+	UFUNCTION()
+	void ActiveMission();
+
+	/*UFUNCTION()
+	void ActivateSpawners(FName MissionName, FName Region);*/
+
+	UFUNCTION()
+	void GameStateAndUIUpdate(FName MissionName);
 
 
+	//count down
+	UFUNCTION()
+	void MissionCountdownStart();
+	
+	UFUNCTION()
+	void MissionCountdownCancel();
+
+	UFUNCTION()
+	void UpdateMissionCountdown();
+
+	UPROPERTY()
+	float count;
+
+	FTimerHandle CountDownTimer;
+
+	// Survival Mission
+	UFUNCTION()
+	void StartSurvivalMission(FName MissionName, FName RegionTag, float Duration);
+	/*UFUNCTION()
+	void SurvivalMissionSuccess();
+	UFUNCTION()
+	void SurvivalMissionFail();*/
+	UFUNCTION()
+	void EndSurvivlvalMission(FName MissionName, FName RegionTag);
+
+	// Defense Mission
 
 private:
 	TWeakObjectPtr<class ANecroSyntexGameMode> CurrentGameMode;

@@ -462,10 +462,10 @@ void UDopingComponent::SecondDopingForAlly()
 	if (GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_Visibility, Params))
 	{
 		APlayerCharacter* HitCharacter = Cast<APlayerCharacter>(HitResult.GetActor());
-
-		if (HitCharacter->CurrentDoped >= 2) {
+		if (!HitCharacter || HitCharacter->CurrentDoped >= 2) {
 			return;
 		}
+
 
 		if (HitCharacter) {
 			switch (SecondDopingCode)

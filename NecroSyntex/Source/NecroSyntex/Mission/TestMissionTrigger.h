@@ -18,17 +18,24 @@ protected:
 
 	virtual void NotifyActorBeginOverlap(AActor* OtherActor) override;
 
+	virtual void NotifyActorEndOverlap(AActor* OtherActor) override;
+
 	void PlayerTriggerOverlap(AActor* OtherActor);
 
 public:
 	UPROPERTY()
-	int32 PlayerInTrigger;
+	int32 PlayerInTrigger = 0;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float MissionDuration;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FName MissionRegion;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FName MissionName;
+
+
 
 	ATestMissionTrigger();
 

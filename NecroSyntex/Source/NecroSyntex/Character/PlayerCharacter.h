@@ -414,8 +414,6 @@ public:
 
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
 	void CallBlueprintBurningFurnaceDamage();
-	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
-	void MissionUIUpdate();
 
 	UFUNCTION()
 	void SPStrengthDeBuffON();

@@ -196,69 +196,19 @@ void ANecroSyntexGameMode::SetupPlayers()
 	}
 }
 
-void ANecroSyntexGameMode::SetupPlayers2()
-{
-
-	for (FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
-	{
-		ANecroSyntexPlayerController* MyPC = Cast<ANecroSyntexPlayerController>(*It);
-		if (!MyPC) continue;
-
-		MyPC->CheckPSSetTimer();
-
-		ANecroSyntexPlayerState* PS = MyPC->GetPlayerState<ANecroSyntexPlayerState>();
-
-		if (APawn* OldPawn = MyPC->GetPawn())
-		{
-			OldPawn->Destroy();
-		}
-
-		if (PS)
-		{
-
-			// PlayerStart 직접 선택 (안전하게 처리)
-			TArray<AActor*> PlayerStarts;
-			UGameplayStatics::GetAllActorsOfClass(this, APlayerStart::StaticClass(), PlayerStarts);
-
-			if (PlayerStarts.Num() > 0)
-			{
-				AActor* ChosenStart = PlayerStarts[FMath::RandRange(0, PlayerStarts.Num() - 1)];
-				RestartPlayerAtPlayerStart(MyPC, ChosenStart);
-			}
-			else
-			{
-				UE_LOG(LogTemp, Error, TEXT("❌ PlayerStart 없음!"));
-				continue;
-			}
-
-
-			// GetPawn() null 체크 후 안전하게 처리
-			if (APlayerCharacter* NewCharacter = Cast<APlayerCharacter>(MyPC->GetPawn()))
-			{
-				UE_LOG(LogTemp, Warning, TEXT("캐릭터 생성 성공"));
-
-
-				MyPC->ClientRestart(NewCharacter);
-				UE_LOG(LogTemp, Warning, TEXT("ClientRestart 호출"));
-			}
-			else
-			{
-				UE_LOG(LogTemp, Error, TEXT("❌ 캐릭터 스폰 실패! GetPawn() == nullptr"));
-			}
-		}
-		else
-		{
-			UE_LOG(LogTemp, Error, TEXT("❌ PlayerState 또는 SelectedCharacterClass가 유효하지 않음"));
-		}
-	}
-}
 
 void ANecroSyntexGameMode::PostLogin(APlayerController* NewPlayer)
 {
 	Super::PostLogin(NewPlayer);
 
-
-	SetupPlayers2();
+	ANecroSyntexPlayerController* PC = Cast<ANecroSyntexPlayerController>(NewPlayer);
+	if (PC)
+	{
+		if (ANecroSyntexGameState* GS = GetGameState<ANecroSyntexGameState>())
+		{
+			GS->TotalPlayer++;
+		}
+	}
 
 	//UE_LOG(LogTemp, Warning, TEXT("111111"));
 	//ANecroSyntexPlayerController* PC = Cast<ANecroSyntexPlayerController>(NewPlayer);

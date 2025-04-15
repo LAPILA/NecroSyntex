@@ -11,6 +11,7 @@ ATestMissionTrigger::ATestMissionTrigger()
 {
 	MissionDuration = 5.0f;
 	MissionRegion = "Survival";
+	MissionName = "Survival";
 }
 
 void ATestMissionTrigger::NotifyActorBeginOverlap(AActor* OtherActor)
@@ -19,12 +20,44 @@ void ATestMissionTrigger::NotifyActorBeginOverlap(AActor* OtherActor)
 
 	if (APlayerCharacter* PC = Cast<APlayerCharacter>(OtherActor))
 	{
-		UCapsuleComponent* PCCapsule = PC->GetCapsuleComponent();
-		if(PCCapsule)
+		PlayerInTrigger++;
 
-		if (ANecroSyntexGameMode* GM = Cast<ANecroSyntexGameMode>(UGameplayStatics::GetGameMode(this)))
+		ANecroSyntexGameState* GS = Cast<ANecroSyntexGameState>(GetWorld()->GetGameState());
+		if (GS)
 		{
-			GM->MissionManager->StartSurvivalMission(MissionRegion, MissionDuration);
+			if (GS->TotalPlayer == PlayerInTrigger)
+			{
+				if (ANecroSyntexGameMode* GM = Cast<ANecroSyntexGameMode>(UGameplayStatics::GetGameMode(this)))
+				{
+					//시작할 미션 설정
+					GM->MissionManager->MissionSet(MissionName, MissionRegion, MissionDuration);
+
+					//미션 시작 카운터 다운 시작 (도중에 영역 나가면 타이머 취소 및 초기화)
+					GM->MissionManager->MissionCountdownStart();
+				}
+			}
+		}
+	}
+}
+
+void ATestMissionTrigger::NotifyActorEndOverlap(AActor* OtherActor) {
+	if (!HasAuthority()) return;
+
+	if (APlayerCharacter* PC = Cast<APlayerCharacter>(OtherActor))
+	{
+		PlayerInTrigger--;
+		ANecroSyntexGameState* GS = Cast<ANecroSyntexGameState>(GetWorld()->GetGameState());
+		if (GS)
+		{
+			if (GS->TotalPlayer > PlayerInTrigger)
+			{
+				if (GS->MissionCountDownBool == true) {
+					if (ANecroSyntexGameMode* GM = Cast<ANecroSyntexGameMode>(UGameplayStatics::GetGameMode(this)))
+					{
+						GM->MissionManager->MissionCountdownCancel();
+					}
+				}
+			}
 		}
 	}
 }
@@ -37,7 +70,7 @@ void ATestMissionTrigger::PlayerTriggerOverlap(AActor* OtherActor)
 	{
 		if (ANecroSyntexGameMode* GM = Cast<ANecroSyntexGameMode>(UGameplayStatics::GetGameMode(this)))
 		{
-			GM->MissionManager->StartSurvivalMission(MissionRegion, MissionDuration);
+			
 		}
 	}
 }

@@ -10,6 +10,10 @@ void ANecroSyntexGameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>
 
 	DOREPLIFETIME(ANecroSyntexGameState, TopScoringPlayers);
 	DOREPLIFETIME(ANecroSyntexGameState, CurrentMission);
+	DOREPLIFETIME(ANecroSyntexGameState, TotalPlayer);
+	DOREPLIFETIME(ANecroSyntexGameState, SurvivingPlayer);
+	DOREPLIFETIME(ANecroSyntexGameState, MissionCountDown);
+	DOREPLIFETIME(ANecroSyntexGameState, MissionCountDownBool);
 }
 
 void ANecroSyntexGameState::UpdateTopScore(class ANecroSyntexPlayerState* ScoringPlayer)
@@ -29,4 +33,9 @@ void ANecroSyntexGameState::UpdateTopScore(class ANecroSyntexPlayerState* Scorin
 		TopScoringPlayers.AddUnique(ScoringPlayer);
 		TopScore = ScoringPlayer->GetScore();
 	}
+}
+
+void ANecroSyntexGameState::UpdateMissionStartCountdown(float newTimer)
+{
+	MissionCountDown = newTimer;
 }
