@@ -164,7 +164,7 @@ protected:
 	void DropOrDestroyWeapon(AWeapon* Weapon);
 	void DropOrDestroyWeapons();
 
-	UFUNCTION()
+	UFUNCTION(BlueprintCallable)
 	void ReceiveDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, class AController* InstigatorController, AActor* DamageCauser);
 	void PollInit();
 	void RotateInPlace(float DeltaTime);
