@@ -4,6 +4,7 @@
 #include "BasicMonsterAI.h"
 #include "TimerManager.h"
 #include "Components/SphereComponent.h"
+#include "Components/BoxComponent.h"
 #include "Animation/AnimInstance.h"
 #include "GameFramework/Character.h"
 #include "GameFramework/Actor.h"
@@ -19,6 +20,15 @@ ABasicMonsterAI::ABasicMonsterAI()
 {
 	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
+
+	SkillAttackArea = CreateDefaultSubobject<UBoxComponent>(TEXT("SkillArea"));
+	SkillAttackArea->SetupAttachment(RootComponent);
+	SkillAttackArea->SetRelativeLocation(FVector(168.f, 0.f, 0.f));
+	SkillAttackArea->SetBoxExtent(FVector(100.f, 50.f, 50.f));
+	SkillAttackArea->SetCollisionProfileName(TEXT("Trigger")); 
+	SkillAttackArea->SetGenerateOverlapEvents(true);
+
+	SkillAttackArea->OnComponentBeginOverlap.AddDynamic(this, &ABasicMonsterAI::OnSkillAreaOverlapBegin);
 
 	//AttackPoint = CreateDefaultSubobject<USphereComponent>(TEXT("AttackPoint"));
 	//AttackPoint->SetupAttachment(RootComponent);
@@ -84,16 +94,13 @@ float ABasicMonsterAI::TakeDamage_Implementation(float DamageAmount, FDamageEven
 	//UpdateWalkSpeed();// one seconds later call function. delayedfunction will set target function UpdataeWalkSpeed();
 
 	MonsterHP -= DamageAmount;
-
-	if (GEngine)
-	{
-		//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("MonsterHP--"));
-	}
 	
 	if (DamageAmount < 50) {//Refactoring Need..
+		UGameplayStatics::PlaySoundAtLocation(this, HitSound, GetActorLocation());
 		PlayHitAnimation();
 	}
 	else {
+		UGameplayStatics::PlaySoundAtLocation(this, HitSound, GetActorLocation());
 		PlayHitHighDamageAnimation();
 	}
 
@@ -159,7 +166,7 @@ void ABasicMonsterAI::TakeDopingDamage(float DopingDamageAmount)
 	return;
 }
 
-void ABasicMonsterAI::PlayHitAnimation()
+void ABasicMonsterAI::PlayHitAnimation()//약한 데미지인 경우 hit 애니메이션 재생
 {
 	if (HitReactionMontage && GetMesh() && GetMesh()->GetAnimInstance())
 	{
@@ -167,7 +174,7 @@ void ABasicMonsterAI::PlayHitAnimation()
 	}
 }
 
-void ABasicMonsterAI::PlayHitHighDamageAnimation()
+void ABasicMonsterAI::PlayHitHighDamageAnimation()//강한 데미지인 경우 hit 애니메이션 재생
 {
 	if (HitReactionMontage && GetMesh() && GetMesh()->GetAnimInstance())
 	{
@@ -175,7 +182,7 @@ void ABasicMonsterAI::PlayHitHighDamageAnimation()
 	}
 }
 
-void ABasicMonsterAI::PlayDeathAnimation()
+void ABasicMonsterAI::PlayDeathAnimation()//죽음 애니메이션 재생
 {
 	
 	if (DeathReactionMontage && GetMesh() && GetMesh()->GetAnimInstance())
@@ -184,7 +191,14 @@ void ABasicMonsterAI::PlayDeathAnimation()
 	}
 }
 
-void ABasicMonsterAI::DelayedFunction(float DelayTime)
+void ABasicMonsterAI::PlaySkillAttackAnimation()//스킬 공격 애니메이션 재생
+{
+	if (SkillAttackMontage && GetMesh() && GetMesh()->GetAnimInstance()) {
+		GetMesh()->GetAnimInstance()->Montage_Play(SkillAttackMontage);
+	}
+}
+
+void ABasicMonsterAI::DelayedFunction(float DelayTime)//일정 시간 동안 비동기적으로 함수가 실행되다가 destroy
 {
 	FTimerHandle handle;
 	GetWorld()->GetTimerManager().SetTimer(handle, this, &ABasicMonsterAI::DestroyMonster, DelayTime, false);
@@ -196,7 +210,7 @@ void ABasicMonsterAI::DestroyMonster()
 	Destroy();
 }
 
-void ABasicMonsterAI::Attack_Player()
+void ABasicMonsterAI::Attack_Player()//c++로 구현 시도했지만 블프로 이미 해둬서 패스 playx4 이후로 삭제 예정.
 {
 	UE_LOG(LogTemp, Warning, TEXT("Monster Attack Triggered"));
 
@@ -222,7 +236,7 @@ void ABasicMonsterAI::MoveToPlayer()
 		if (AIController)
 		{
 			UE_LOG(LogTemp, Warning, TEXT("Moving to Player"));
-			if (MeleeAttack) {
+			if (MeleeAttack) {//비교적 근접 공격을 하는 경우.
 				AIController->MoveToActor(Player, 100.0f, true, true, true, 0, true);
 			}
 			else {
@@ -230,6 +244,32 @@ void ABasicMonsterAI::MoveToPlayer()
 			}
 		}
 	}
+}
+
+//void ABasicMonsterAI::SkillAttackPrepare()
+//{
+//	//
+//}
+
+void ABasicMonsterAI::OnSkillAreaOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	if (GEngine)
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("overlab"));
+	}
+	if (OtherActor && OtherActor != this && OtherActor->ActorHasTag("Player"))
+	{
+		SkillAttack();
+		float DamageAmount = MonsterAD * 2; // 또는 MonsterAD
+		UGameplayStatics::ApplyDamage(OtherActor, DamageAmount, GetController(), this, nullptr);
+	}
+}
+
+void ABasicMonsterAI::SkillAttack()
+{
+	PlaySkillAttackAnimation();
+	//apply damage check code..
+	//damage apply code..
 }
 
 //void ABasicMonsterAI::OnAttackAreaOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
