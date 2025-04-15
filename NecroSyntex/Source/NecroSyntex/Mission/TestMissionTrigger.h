@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Engine/TriggerBox.h"
+#include "TimerManager.h"
 #include "TestMissionTrigger.generated.h"
 
 /**
@@ -35,7 +36,15 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FName MissionName;
 
+	UPROPERTY(Replicated)
+	bool OnTrigger = true;
 
+	UPROPERTY(Replicated)
+	bool OnTriggerTimer = false;
+
+	FTimerHandle TriggerTimer;
+
+	void TriggerDestroy();
 
 	ATestMissionTrigger();
 

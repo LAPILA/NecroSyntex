@@ -22,7 +22,12 @@ public:
 	TArray<ANecroSyntexPlayerState*> TopScoringPlayers;
 
 	UPROPERTY(Replicated, BlueprintReadOnly)
-	FName CurrentMission;
+	FName CurrentMission = " ";
+
+	UPROPERTY(Replicated, BlueprintReadOnly)
+	bool OngoingMission = false;
+
+
 
 	UPROPERTY(Replicated, BlueprintReadOnly)
 	int32 TotalPlayer = 0;

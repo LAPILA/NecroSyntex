@@ -14,6 +14,7 @@ void ANecroSyntexGameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>
 	DOREPLIFETIME(ANecroSyntexGameState, SurvivingPlayer);
 	DOREPLIFETIME(ANecroSyntexGameState, MissionCountDown);
 	DOREPLIFETIME(ANecroSyntexGameState, MissionCountDownBool);
+	DOREPLIFETIME(ANecroSyntexGameState, OngoingMission);
 }
 
 void ANecroSyntexGameState::UpdateTopScore(class ANecroSyntexPlayerState* ScoringPlayer)

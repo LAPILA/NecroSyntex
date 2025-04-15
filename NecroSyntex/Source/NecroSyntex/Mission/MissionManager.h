@@ -36,7 +36,7 @@ public:
 	void ActivateSpawners(FName MissionName, FName Region);*/
 
 	UFUNCTION()
-	void GameStateAndUIUpdate(FName MissionName);
+	void GameStateAndUIUpdate(FName MissionName, bool MissionBool);
 
 
 	//count down

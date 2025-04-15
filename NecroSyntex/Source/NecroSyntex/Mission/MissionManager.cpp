@@ -57,7 +57,7 @@ void UMissionManager::StartSurvivalMission(FName MissionName, FName RegionTag, f
         }
     }
 
-    GameStateAndUIUpdate("Survival");
+    GameStateAndUIUpdate("Survival", true);
 
     // 생존 미션 타이머 작동
     FTimerHandle handle;
@@ -83,16 +83,17 @@ void UMissionManager::EndSurvivlvalMission(FName MissionName, FName RegionTag)
         }
     }
 
-    GameStateAndUIUpdate(" ");
+    GameStateAndUIUpdate(" ", false);
 }
 
-void UMissionManager::GameStateAndUIUpdate(FName MissionName)
+void UMissionManager::GameStateAndUIUpdate(FName MissionName, bool MissionBool)
 {
     // GameState && Auto Mission UI Update
     ANecroSyntexGameState* GS = Cast<ANecroSyntexGameState>(GetWorld()->GetGameState());
     if (GS)
     {
         GS->CurrentMission = MissionName;
+        GS->OngoingMission = MissionBool;
     }
 }
 
