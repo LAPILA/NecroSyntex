@@ -234,6 +234,8 @@ protected:
 	UPROPERTY(ReplicatedUsing = OnRep_bIsSprinting)
 	bool bIsSprinting;
 
+	bool bWantsToSprint = false;
+
 	UFUNCTION()
 	void OnRep_bIsSprinting();
 private:
