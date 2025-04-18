@@ -8,6 +8,20 @@
 #include "NecroSyntex\NecroSyntaxComponents\LagCompensationComponent.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 
+namespace
+{
+	static const TSet<FName> BodyBones =
+	{
+		TEXT("pelvis"), TEXT("spine_01"), TEXT("spine_02"), TEXT("spine_03"),
+		TEXT("clavicle_l"), TEXT("clavicle_r"),
+		TEXT("upperarm_l"), TEXT("upperarm_r"),
+		TEXT("thigh_l"),   TEXT("thigh_r")
+	};
+
+	FORCEINLINE bool IsHeadBone(const FName& Bone) { return Bone == TEXT("head"); }
+	FORCEINLINE bool IsBodyBone(const FName& Bone) { return BodyBones.Contains(Bone); }
+}
+
 AProjectileBullet::AProjectileBullet()
 {
 	ProjectileMovementComponent = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("ProjectileMovementComponent"));
@@ -34,67 +48,60 @@ void AProjectileBullet::PostEditChangeProperty(FPropertyChangedEvent& Event)
 }
 #endif
 
-void AProjectileBullet::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
+void AProjectileBullet::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor,
+	UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
 {
-	APlayerCharacter* OwnerCharacter = Cast<APlayerCharacter>(GetOwner());
-	if (OwnerCharacter)
-	{
-		ANecroSyntexPlayerController* OwnerController = Cast<ANecroSyntexPlayerController>(OwnerCharacter->Controller);
-		if (OwnerController)
+	APlayerCharacter* Shooter = Cast<APlayerCharacter>(GetOwner());
+	if (!Shooter) { Super::OnHit(HitComp, OtherActor, OtherComp, NormalImpulse, Hit); return; }
+
+	ANecroSyntexPlayerController* PC =
+		Cast<ANecroSyntexPlayerController>(Shooter->Controller);
+	if (!PC) { Super::OnHit(HitComp, OtherActor, OtherComp, NormalImpulse, Hit); return; }
+
+	auto CalcDamage = [&](const FName& Bone) -> float
 		{
-			const float DamageToCause = Hit.BoneName.ToString() == FString("head") ? HeadShotDamage : Damage;
+			if (IsHeadBone(Bone)) return HeadShotDamage;
+			else if (IsBodyBone(Bone)) return Damage;
+			else                       return SubDamage;
+		};
+	const float DamageToCause = CalcDamage(Hit.BoneName);
 
-			if (OwnerCharacter->HasAuthority() && !bUseServerSideRewind)
-			{
-				UGameplayStatics::ApplyDamage(OtherActor, DamageToCause, OwnerController, this, UDamageType::StaticClass());
-				Super::OnHit(HitComp, OtherActor, OtherComp, NormalImpulse, Hit);
-				return;
-			}
+	if (Shooter->HasAuthority() && !bUseServerSideRewind)
+	{
+		UGameplayStatics::ApplyDamage(OtherActor, DamageToCause,
+			PC, this, UDamageType::StaticClass());
+		Super::OnHit(HitComp, OtherActor, OtherComp, NormalImpulse, Hit);
+		return;
+	}
 
-			APlayerCharacter* HitCharacter = Cast<APlayerCharacter>(OtherActor);
-			if (bUseServerSideRewind && OwnerCharacter->GetLagCompensation() && OwnerCharacter->IsLocallyControlled() && HitCharacter)
-			{
-				OwnerCharacter->GetLagCompensation()->ProjectileServerScoreRequest(
-					HitCharacter,
-					TraceStart,
-					InitialVelocity,
-					OwnerController->GetServerTime() - OwnerController->SingleTripTime
-				);
-			}
+	if (APlayerCharacter* Victim = Cast<APlayerCharacter>(OtherActor))
+	{
+		if (bUseServerSideRewind && Shooter->IsLocallyControlled() &&
+			Shooter->GetLagCompensation())
+		{
+			Shooter->GetLagCompensation()->ProjectileServerScoreRequest(
+				Victim,
+				TraceStart,
+				InitialVelocity,
+				PC->GetServerTime() - PC->SingleTripTime);
+		}
+	}
 
-			ABasicMonsterAI* MonsterCharacter = Cast<ABasicMonsterAI>(OtherActor);
-			if (MonsterCharacter && !OwnerCharacter->HasAuthority() && OwnerCharacter->IsLocallyControlled())
+	if (ABasicMonsterAI* Monster = Cast<ABasicMonsterAI>(OtherActor))
+	{
+		if (!Shooter->HasAuthority() && Shooter->IsLocallyControlled())
+		{
+			if (AWeapon* Wep = Shooter->GetEquippedWeapon())
 			{
-				AWeapon* Weapon = OwnerCharacter->GetEquippedWeapon();
-				if (Weapon)
-				{
-					Weapon->Server_ApplyMonsterDamage(MonsterCharacter, DamageToCause, OwnerController);
-				}
+				Wep->Server_ApplyMonsterDamage(Monster, DamageToCause, PC);
 			}
 		}
 	}
+
 	Super::OnHit(HitComp, OtherActor, OtherComp, NormalImpulse, Hit);
 }
-
 
 void AProjectileBullet::BeginPlay()
 {
 	Super::BeginPlay();
-	/*
-	FPredictProjectilePathParams PathParams;
-	PathParams.bTraceWithChannel = true;
-	PathParams.bTraceWithCollision = true;
-	PathParams.DrawDebugTime = 5.f;
-	PathParams.DrawDebugType = EDrawDebugTrace::ForDuration;
-	PathParams.LaunchVelocity = GetActorForwardVector() * InitialSpeed;
-	PathParams.MaxSimTime = 4.f;
-	PathParams.ProjectileRadius = 5.f;
-	PathParams.SimFrequency = 30.f;
-	PathParams.StartLocation = GetActorLocation();
-	PathParams.TraceChannel = ECollisionChannel::ECC_Visibility;
-	PathParams.ActorsToIgnore.Add(this);
-
-	FPredictProjectilePathResult PathResult;
-
-	UGameplayStatics::PredictProjectilePath(this, PathParams, PathResult);*/
 }
