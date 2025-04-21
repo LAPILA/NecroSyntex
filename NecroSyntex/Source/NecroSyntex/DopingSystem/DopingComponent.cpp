@@ -94,11 +94,15 @@ void UDopingComponent::BeginPlay()
 
 		//임시로 도핑키 셋팅
 		OneKeyDoping = HallucinationShield;
+		One_DopingItemNum = OneKeyDoping->DopingItemNum;
+		One_DopingCoolTime = OneKeyDoping->DopingCoolTime;
 		FirstDopingCode = 1;
 		OneKeyBool = true;
 		One_Able = true;
 
 		TwoKeyDoping = BurningFurnace;
+		Two_DopingCoolTime = TwoKeyDoping->DopingCoolTime;
+		Two_DopingItemNum = TwoKeyDoping->DopingItemNum;
 		SecondDopingCode = 2;
 		TwoKeyBool = true;
 		Two_Able = true;
@@ -326,6 +330,7 @@ void UDopingComponent::FirstDopingUse() {
 
 	OneKeyDoping->UseDopingItem(OwnerCharacter);
 	OwnerCharacter->PlayDopingEffect();
+	OwnerCharacter->PlayDopingMontage();
 	ClientPlayDopingEffect();
 	FirstDopingCoolStart();
 }
@@ -342,6 +347,7 @@ void UDopingComponent::SecondDopingUse() {
 
 	TwoKeyDoping->UseDopingItem(OwnerCharacter);
 	OwnerCharacter->PlayDopingEffect();
+	OwnerCharacter->PlayDopingMontage();
 	ClientPlayDopingEffect();
 	SecondDopingCoolStart();
 
@@ -381,17 +387,12 @@ void UDopingComponent::FirstDopingForAlly()
 	AActor* Owner = GetOwner();
 	if (!Owner) return;
 
-	//UE_LOG(LogTemp, Warning, TEXT("1"));
-
 	APlayerCharacter* OwnerCharacter = Cast<APlayerCharacter>(Owner);
 	if (!OwnerCharacter) return;
 
-	//UE_LOG(LogTemp, Warning, TEXT("2"));
 
 	UCameraComponent* CameraComponent = OwnerCharacter->FindComponentByClass<UCameraComponent>();
 	if (!CameraComponent) return;
-
-	//UE_LOG(LogTemp, Warning, TEXT("3"));
 
 	FVector Start = CameraComponent->GetComponentLocation();
 	FVector ForwardVector = CameraComponent->GetForwardVector();
@@ -401,10 +402,8 @@ void UDopingComponent::FirstDopingForAlly()
 	FCollisionQueryParams Params;
 	Params.AddIgnoredActor(Owner);
 
-	//UE_LOG(LogTemp, Warning, TEXT("4"));
 	if (GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_Visibility, Params))
 	{
-		//UE_LOG(LogTemp, Warning, TEXT("5"));
 		APlayerCharacter* HitCharacter = Cast<APlayerCharacter>(HitResult.GetActor());
 		if (HitCharacter) {
 
@@ -412,7 +411,6 @@ void UDopingComponent::FirstDopingForAlly()
 				return;
 			}
 
-			//UE_LOG(LogTemp, Warning, TEXT("6"));
 			switch (FirstDopingCode)
 			{
 			case 1: HitCharacter->UDC->SupremeStrength->BuffOn(HitCharacter); UE_LOG(LogTemp, Warning, TEXT("7ㄴ")); break;
@@ -470,7 +468,7 @@ void UDopingComponent::SecondDopingForAlly()
 		if (HitCharacter) {
 			switch (SecondDopingCode)
 			{
-			case 1: HitCharacter->UDC->SupremeStrength->BuffOn(HitCharacter); UE_LOG(LogTemp, Warning, TEXT("7ㄴ")); break;
+			case 1: HitCharacter->UDC->SupremeStrength->BuffOn(HitCharacter); break;
 			case 2: HitCharacter->UDC->BurningFurnace->BuffOn(HitCharacter); break;
 			case 3: HitCharacter->UDC->Painless->BuffOn(HitCharacter); break;
 			case 4: HitCharacter->UDC->FinalEmber->BuffOn(HitCharacter); break;

@@ -57,10 +57,10 @@ public:
 	// Survival Mission
 	UFUNCTION()
 	void StartSurvivalMission(FName MissionName, FName RegionTag, float Duration);
-	/*UFUNCTION()
+	UFUNCTION()
 	void SurvivalMissionSuccess();
 	UFUNCTION()
-	void SurvivalMissionFail();*/
+	void SurvivalMissionFail();
 	UFUNCTION()
 	void EndSurvivlvalMission(FName MissionName, FName RegionTag);
 

@@ -42,6 +42,8 @@ void UMissionManager::ActiveMission()
     }
 }
 
+
+//Survival Mission
 void UMissionManager::StartSurvivalMission(FName MissionName, FName RegionTag, float Duration)
 {
     // 생존 미션 몬스터 스포너 작동
@@ -63,10 +65,20 @@ void UMissionManager::StartSurvivalMission(FName MissionName, FName RegionTag, f
     FTimerHandle handle;
     GetWorld()->GetTimerManager().SetTimer(
         handle,
-        [this, MissionName, RegionTag]() { EndSurvivlvalMission(MissionName, RegionTag); },
+        [this]() { SurvivalMissionSuccess(); },
         Duration,
         false
     );
+}
+
+void UMissionManager::SurvivalMissionSuccess()
+{
+    EndSurvivlvalMission(CurrentMissionName, CurrentRegionTag);
+}
+
+void UMissionManager::SurvivalMissionFail()
+{
+
 }
 
 void UMissionManager::EndSurvivlvalMission(FName MissionName, FName RegionTag)
@@ -86,6 +98,8 @@ void UMissionManager::EndSurvivlvalMission(FName MissionName, FName RegionTag)
     GameStateAndUIUpdate(" ", false);
 }
 
+
+//Game State Update
 void UMissionManager::GameStateAndUIUpdate(FName MissionName, bool MissionBool)
 {
     // GameState && Auto Mission UI Update

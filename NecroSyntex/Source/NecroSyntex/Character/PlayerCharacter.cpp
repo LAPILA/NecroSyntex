@@ -822,7 +822,7 @@ void APlayerCharacter::FirstDoping()
 {
 	if (UDC)
 	{
-		PlayDopingMontage();
+		//PlayDopingMontage();
 		UDC->PressedFirstDopingKey();
 	}
 }
@@ -831,7 +831,7 @@ void APlayerCharacter::SecondDoping()
 {
 	if (UDC)
 	{
-		PlayDopingMontage();
+		//PlayDopingMontage();
 		UDC->PressedSecondDopingKey();
 	}
 }
