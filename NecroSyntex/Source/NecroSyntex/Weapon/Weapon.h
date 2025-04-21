@@ -145,6 +145,9 @@ protected:
 	float Damage = 20.f;
 
 	UPROPERTY(EditAnywhere)
+	float SubDamage = 5.f;
+
+	UPROPERTY(EditAnywhere)
 	float HeadShotDamage = 40.f;
 
 	UPROPERTY(Replicated, EditAnywhere)
@@ -211,5 +214,6 @@ public:
 	FORCEINLINE int32 GetAmmo() const { return Ammo; }
 	FORCEINLINE int32 GetMagCapacity() const { return MagCapacity; }
 	FORCEINLINE float GetDamage() const { return Damage; }
+	FORCEINLINE float GetSubDamage() const { return SubDamage; }
 	FORCEINLINE float GetHeadShotDamage() const { return HeadShotDamage; }
 };
