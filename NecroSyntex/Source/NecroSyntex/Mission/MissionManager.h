@@ -32,11 +32,20 @@ public:
 	UFUNCTION()
 	void ActiveMission();
 
+	UFUNCTION()
+	void ActiveMonsterSpawner();
+
+	UFUNCTION()
+	void StopMonsterSpawner();
+
+	UFUNCTION()
+	void CurrentMissionFail();
+
 	/*UFUNCTION()
 	void ActivateSpawners(FName MissionName, FName Region);*/
 
 	UFUNCTION()
-	void GameStateAndUIUpdate(FName MissionName, bool MissionBool);
+	void GameStateAndUIUpdate(bool MissionBool);
 
 
 	//count down
@@ -54,17 +63,31 @@ public:
 
 	FTimerHandle CountDownTimer;
 
+
+
 	// Survival Mission
 	UFUNCTION()
-	void StartSurvivalMission(FName MissionName, FName RegionTag, float Duration);
+	void StartSurvivalMission();
 	UFUNCTION()
 	void SurvivalMissionSuccess();
 	UFUNCTION()
 	void SurvivalMissionFail();
 	UFUNCTION()
-	void EndSurvivlvalMission(FName MissionName, FName RegionTag);
+	void EndSurvivlvalMission();
+
+	FTimerHandle SurvivalTimerhandle;
 
 	// Defense Mission
+	UFUNCTION()
+	void StartDefenseMission();
+	UFUNCTION()
+	void DefenseMissionSuccess();
+	UFUNCTION()
+	void DefenseMissionFail();
+	UFUNCTION()
+	void EndDefenseMission();
+
+	FTimerHandle DefenseTimerHandle;
 
 private:
 	TWeakObjectPtr<class ANecroSyntexGameMode> CurrentGameMode;

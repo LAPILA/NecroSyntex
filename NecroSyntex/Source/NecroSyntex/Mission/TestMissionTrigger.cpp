@@ -86,18 +86,6 @@ void ATestMissionTrigger::NotifyActorEndOverlap(AActor* OtherActor) {
 	}
 }
 
-void ATestMissionTrigger::PlayerTriggerOverlap(AActor* OtherActor)
-{
-	if (!HasAuthority()) return;
-
-	if (Cast<APlayerCharacter>(OtherActor))
-	{
-		if (ANecroSyntexGameMode* GM = Cast<ANecroSyntexGameMode>(UGameplayStatics::GetGameMode(this)))
-		{
-			
-		}
-	}
-}
 
 void ATestMissionTrigger::TriggerDestroy()
 {

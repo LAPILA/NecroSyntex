@@ -94,6 +94,7 @@ void ANecroSyntexGameMode::PlayerEliminated(APlayerCharacter* ElimmedCharacter, 
 	{
 		AttackerPlayerState->AddToScore(1.f);
 		NecroSyntexGameState->UpdateTopScore(AttackerPlayerState);
+		NecroSyntexGameState->PlayerDeathUpdate();
 	}
 	if (VictimPlayerState)
 	{
@@ -119,7 +120,13 @@ void ANecroSyntexGameMode::RequestRespawn(ACharacter* ElimmedCharacter, AControl
 		TArray<AActor*> PlayerStarts;
 		UGameplayStatics::GetAllActorsOfClass(this, APlayerStart::StaticClass(), PlayerStarts);
 		int32 Selection = FMath::RandRange(0, PlayerStarts.Num() - 1);
+
+		ANecroSyntexGameState* NecroSyntexGameState = GetGameState<ANecroSyntexGameState>();
+		NecroSyntexGameState->PlayerReviveUpdate();
+
 		RestartPlayerAtPlayerStart(ElimmedController, PlayerStarts[Selection]);
+
+
 	}
 }
 
@@ -207,6 +214,7 @@ void ANecroSyntexGameMode::PostLogin(APlayerController* NewPlayer)
 		if (ANecroSyntexGameState* GS = GetGameState<ANecroSyntexGameState>())
 		{
 			GS->TotalPlayer++;
+			GS->SurvivingPlayer = GS->TotalPlayer;
 		}
 	}
 

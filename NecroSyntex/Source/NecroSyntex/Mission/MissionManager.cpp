@@ -4,6 +4,8 @@
 #include "MissionManager.h"
 #include "Kismet/GameplayStatics.h"
 #include "NecroSyntex/Monster/M_Spawner.h"
+#include "NecroSyntex/Mission/DefenseObject.h"
+#include "NecroSyntex/Mission/DefenseTarget.h"
 #include "NecroSyntex/GameMode/NecroSyntexGameMode.h"
 #include "NecroSyntex/NecroSyntexGameState.h"
 #include "NecroSyntex/Character/PlayerCharacter.h"
@@ -11,7 +13,7 @@
 void UMissionManager::Init(class ANecroSyntexGameMode* InGameMode)
 {
 	CurrentGameMode = InGameMode;
-    count = 10.0f;
+    count = 3.0f;
     ANecroSyntexGameState* GS = Cast<ANecroSyntexGameState>(GetWorld()->GetGameState());
     if (GS)
     {
@@ -29,10 +31,56 @@ void UMissionManager::MissionSet(FName MissionName, FName RegionTag, float Durat
 void UMissionManager::ActiveMission()
 {
     if (CurrentMissionName == "Survival") {
-        StartSurvivalMission(CurrentMissionName, CurrentRegionTag, CurrentDuration);
+        StartSurvivalMission();
     }
     else if (CurrentMissionName == "Defense") {
+        StartDefenseMission();
+    }
+    else if (CurrentMissionName == "Boss") {
 
+    }
+    else {
+        UE_LOG(LogTemp, Warning, TEXT("MissionName is Unavilable"));
+    }
+}
+
+void UMissionManager::ActiveMonsterSpawner()
+{
+    TArray<AActor*> FoundSpawners;
+    UGameplayStatics::GetAllActorsOfClass(GetWorld(), AM_Spawner::StaticClass(), FoundSpawners);
+
+    for (AActor* Actor : FoundSpawners)
+    {
+        AM_Spawner* Spawner = Cast<AM_Spawner>(Actor);
+        if (Spawner && Spawner->RegionTag == CurrentRegionTag && Spawner->MissionName == CurrentMissionName)
+        {
+            Spawner->StartSpawnMonster(Spawner->MonsterSpawnSpeed);
+        }
+    }
+}
+
+void UMissionManager::StopMonsterSpawner()
+{
+    TArray<AActor*> FoundSpawners;
+    UGameplayStatics::GetAllActorsOfClass(GetWorld(), AM_Spawner::StaticClass(), FoundSpawners);
+
+    for (AActor* Actor : FoundSpawners)
+    {
+        AM_Spawner* Spawner = Cast<AM_Spawner>(Actor);
+        if (Spawner && Spawner->RegionTag == CurrentRegionTag && Spawner->MissionName == CurrentMissionName)
+        {
+            Spawner->StopSpawnMonster();
+        }
+    }
+}
+
+void UMissionManager::CurrentMissionFail()
+{
+    if (CurrentMissionName == "Survival") {
+        SurvivalMissionFail();
+    }
+    else if (CurrentMissionName == "Defense") {
+        DefenseMissionFail();
     }
     else if (CurrentMissionName == "Boss") {
 
@@ -44,69 +92,102 @@ void UMissionManager::ActiveMission()
 
 
 //Survival Mission
-void UMissionManager::StartSurvivalMission(FName MissionName, FName RegionTag, float Duration)
+void UMissionManager::StartSurvivalMission()
 {
     // 생존 미션 몬스터 스포너 작동
-	TArray<AActor*> FoundSpawners;
-	UGameplayStatics::GetAllActorsOfClass(GetWorld(), AM_Spawner::StaticClass(), FoundSpawners);
+    ActiveMonsterSpawner();
 
-    for (AActor* Actor : FoundSpawners)
-    {
-        AM_Spawner* Spawner = Cast<AM_Spawner>(Actor);
-        if (Spawner && Spawner->RegionTag == RegionTag && Spawner->MissionName == MissionName)
-        {
-            Spawner->StartSpawnMonster(Spawner->MonsterSpawnSpeed);
-        }
-    }
-
-    GameStateAndUIUpdate("Survival", true);
+    GameStateAndUIUpdate(true);
 
     // 생존 미션 타이머 작동
-    FTimerHandle handle;
     GetWorld()->GetTimerManager().SetTimer(
-        handle,
+        SurvivalTimerhandle,
         [this]() { SurvivalMissionSuccess(); },
-        Duration,
+        CurrentDuration,
         false
     );
 }
 
 void UMissionManager::SurvivalMissionSuccess()
 {
-    EndSurvivlvalMission(CurrentMissionName, CurrentRegionTag);
+    EndSurvivlvalMission();
 }
 
 void UMissionManager::SurvivalMissionFail()
 {
-
+    GetWorld()->GetTimerManager().ClearTimer(SurvivalTimerhandle);
+    EndSurvivlvalMission();
 }
 
-void UMissionManager::EndSurvivlvalMission(FName MissionName, FName RegionTag)
+void UMissionManager::EndSurvivlvalMission()
 {
-    TArray<AActor*> FoundSpawners;
-    UGameplayStatics::GetAllActorsOfClass(GetWorld(), AM_Spawner::StaticClass(), FoundSpawners);
+    StopMonsterSpawner();
 
-    for (AActor* Actor : FoundSpawners)
+    MissionSet("None", "None", 0.0f);
+
+    GameStateAndUIUpdate(false);
+}
+
+
+//DefenseMission
+
+void UMissionManager::StartDefenseMission()
+{
+    TArray<AActor*> FoundDefenseTarget;
+    UGameplayStatics::GetAllActorsOfClass(GetWorld(), ADefenseTarget::StaticClass(), FoundDefenseTarget);
+
+    for (AActor* Actor : FoundDefenseTarget)
     {
-        AM_Spawner* Spawner = Cast<AM_Spawner>(Actor);
-        if (Spawner && Spawner->RegionTag == RegionTag && Spawner->MissionName == MissionName)
+        ADefenseTarget* DefenseTarget = Cast<ADefenseTarget>(Actor);
+        if (DefenseTarget && DefenseTarget->RegionName == CurrentRegionTag)
         {
-            Spawner->StopSpawnMonster();
+            DefenseTarget->DefenseObjectActive();
         }
     }
 
-    GameStateAndUIUpdate(" ", false);
+    ActiveMonsterSpawner();
+
+    GameStateAndUIUpdate(true);
+
+    GetWorld()->GetTimerManager().SetTimer(
+        DefenseTimerHandle,
+        [this]() { DefenseMissionSuccess(); },
+        CurrentDuration,
+        false
+    );
 }
 
+void UMissionManager::DefenseMissionSuccess()
+{
+    EndSurvivlvalMission();
+}
+
+void UMissionManager::DefenseMissionFail()
+{
+    GetWorld()->GetTimerManager().ClearTimer(DefenseTimerHandle);
+    GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Mission Fail"));
+    UE_LOG(LogTemp, Warning, TEXT("Mission Fail"));
+    EndSurvivlvalMission();
+}
+
+void UMissionManager::EndDefenseMission()
+{
+    StopMonsterSpawner();
+
+    MissionSet("None", "None", 0.0f);
+
+    GameStateAndUIUpdate(false);
+}
 
 //Game State Update
-void UMissionManager::GameStateAndUIUpdate(FName MissionName, bool MissionBool)
+void UMissionManager::GameStateAndUIUpdate( bool MissionBool)
 {
     // GameState && Auto Mission UI Update
     ANecroSyntexGameState* GS = Cast<ANecroSyntexGameState>(GetWorld()->GetGameState());
     if (GS)
     {
-        GS->CurrentMission = MissionName;
+        GS->CurrentMission = CurrentMissionName;
+        GS->MissionRemainTime = CurrentDuration;
         GS->OngoingMission = MissionBool;
     }
 }

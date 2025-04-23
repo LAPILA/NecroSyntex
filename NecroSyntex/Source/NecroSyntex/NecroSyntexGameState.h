@@ -13,6 +13,12 @@ UCLASS()
 class NECROSYNTEX_API ANecroSyntexGameState : public AGameState
 {
 	GENERATED_BODY()
+
+private:
+	ANecroSyntexGameState();
+
+protected:
+	virtual void Tick(float DeltaTime) override;
 	
 public:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
@@ -29,6 +35,8 @@ public:
 
 
 
+	// Mission
+
 	UPROPERTY(Replicated, BlueprintReadOnly)
 	int32 TotalPlayer = 0;
 
@@ -39,9 +47,18 @@ public:
 	float MissionCountDown;
 
 	UPROPERTY(Replicated, BlueprintReadOnly)
+	float MissionRemainTime;
+
+	UPROPERTY(Replicated, BlueprintReadOnly)
 	bool MissionCountDownBool = false;
 
 	void UpdateMissionStartCountdown(float newTimer);
+
+	UFUNCTION(Server, Reliable)
+	void PlayerDeathUpdate();
+
+	UFUNCTION(Server, Reliable)
+	void PlayerReviveUpdate();
 
 
 private:

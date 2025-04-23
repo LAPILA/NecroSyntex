@@ -21,7 +21,6 @@ protected:
 
 	virtual void NotifyActorEndOverlap(AActor* OtherActor) override;
 
-	void PlayerTriggerOverlap(AActor* OtherActor);
 
 public:
 	UPROPERTY()

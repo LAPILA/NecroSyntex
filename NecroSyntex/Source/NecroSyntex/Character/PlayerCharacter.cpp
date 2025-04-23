@@ -1058,7 +1058,7 @@ void APlayerCharacter::FirstDoping()
 {
 	if (UDC)
 	{
-		PlayDopingMontage();
+	
 		UDC->PressedFirstDopingKey();
 	}
 }
@@ -1067,7 +1067,6 @@ void APlayerCharacter::SecondDoping()
 {
 	if (UDC)
 	{
-		PlayDopingMontage();
 		UDC->PressedSecondDopingKey();
 	}
 }
