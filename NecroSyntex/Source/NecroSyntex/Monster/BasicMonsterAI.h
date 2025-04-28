@@ -74,6 +74,7 @@ public:
 	UPROPERTY()
 	TArray<AActor*> OverlappingPlayers;
 
+	TArray<AActor*>& GetOverlappingPlayers() { return OverlappingPlayers; }
 
 protected:
 	// Called when the game starts or when spawned

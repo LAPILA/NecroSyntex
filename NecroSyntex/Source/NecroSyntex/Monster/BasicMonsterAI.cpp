@@ -271,16 +271,17 @@ void ABasicMonsterAI::OnSkillAreaOverlapBegin(UPrimitiveComponent* OverlappedCom
 		if (MonsterAnim->isSkillAttackTime) {
 			UGameplayStatics::PlaySoundAtLocation(this, AttackSound, GetActorLocation());
 			SkillAttack();
-			ChaseSpeed = 0;
+			ChaseSpeed = 0;//Monster Stop.
 			UpdateWalkSpeed();
 
-			ChaseSpeed = 500;
+			ChaseSpeed = 500;//Monster can move.
 			GetWorld()->GetTimerManager().SetTimer(SpeedRestoreTimerHandle, this, &ABasicMonsterAI::UpdateWalkSpeed, SlowTime, false);
 
-			for (AActor* Target : OverlappingPlayers) {
-				float DamageAmount = MonsterAD * 2; // 또는 MonsterAD
-				UGameplayStatics::ApplyDamage(OtherActor, DamageAmount, GetController(), this, nullptr);
-			}
+			//공격 타이밍에 데미지를 적용시켜야한다.
+			//for (AActor* Target : OverlappingPlayers) {
+			//	float DamageAmount = MonsterAD * 2; // 또는 MonsterAD
+			//	UGameplayStatics::ApplyDamage(OtherActor, DamageAmount, GetController(), this, nullptr);
+			//}
 		}
 	}
 }
