@@ -128,6 +128,9 @@ public:
 	UFUNCTION(Client, Reliable)
 	void ShowCharacterSelectUI();
 
+	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
+	void GetInstanceAndSetSelectedCharacter();
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UI")
 	TSubclassOf<UUserWidget> SelectionWidgetClass;
 
