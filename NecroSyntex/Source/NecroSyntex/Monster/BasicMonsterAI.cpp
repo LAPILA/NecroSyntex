@@ -28,6 +28,11 @@ ABasicMonsterAI::ABasicMonsterAI()
 	SkillAttackArea->SetCollisionProfileName(TEXT("Trigger")); 
 	SkillAttackArea->SetGenerateOverlapEvents(true);
 
+	SkillAttackArea->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+	SkillAttackArea->SetCollisionObjectType(ECC_WorldDynamic);
+	SkillAttackArea->SetCollisionResponseToAllChannels(ECR_Ignore);
+	SkillAttackArea->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
+	SkillAttackArea->SetGenerateOverlapEvents(true);
 	SkillAttackArea->OnComponentBeginOverlap.AddDynamic(this, &ABasicMonsterAI::OnSkillAreaOverlapBegin);
 
 	//AttackPoint = CreateDefaultSubobject<USphereComponent>(TEXT("AttackPoint"));
@@ -42,6 +47,7 @@ ABasicMonsterAI::ABasicMonsterAI()
 	SlowTime = 3.0f;
 	CanAttack = true;
 	MeleeAttack = false;
+	CanSkill = true;
 }
 
 // Called when the game starts or when spawned
@@ -49,6 +55,9 @@ void ABasicMonsterAI::BeginPlay()
 {
 	Super::BeginPlay();
 
+	//SkillBoxComponent overlab event bind.
+	SkillAttackArea->OnComponentBeginOverlap.AddDynamic(this, &ABasicMonsterAI::OnSkillAreaOverlapBegin);
+	SkillAttackArea->OnComponentEndOverlap.AddDynamic(this, &ABasicMonsterAI::OnSkillAreaOverlapEnd);
 }
 
 // Called every frame
@@ -246,30 +255,78 @@ void ABasicMonsterAI::MoveToPlayer()
 	}
 }
 
+void ABasicMonsterAI::OnSkillAreaOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	//isSkillAttackTime = true;
+	if (OtherActor && OtherActor != this && OtherActor->ActorHasTag("Player"))
+	{
+		if (!OverlappingPlayers.Contains(OtherActor))
+		{
+			OverlappingPlayers.Add(OtherActor);
+			UE_LOG(LogTemp, Warning, TEXT("Player entered skill area: %s"), *OtherActor->GetName());
+		}
+		if (CanSkill) {
+			//CanSkill = false;
+			UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+			UMonsterAnimInstance* MonsterAnim = Cast<UMonsterAnimInstance>(AnimInstance);
+			MonsterAnim->isSkillAttackTime = true;
+
+			if (MonsterAnim->isSkillAttackTime) {
+				UGameplayStatics::PlaySoundAtLocation(this, AttackSound, GetActorLocation());
+				SkillAttack();
+				ChaseSpeed = 0;//Monster Stop.
+				UpdateWalkSpeed();
+
+				ChaseSpeed = 500;//Monster can move.
+				GetWorld()->GetTimerManager().SetTimer(SpeedRestoreTimerHandle, this, &ABasicMonsterAI::UpdateWalkSpeed, SlowTime, false);
+			}
+		}
+		//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Cool Time Start"));
+		//GetWorld()->GetTimerManager().SetTimer(MonsterSkillCoolTime, this, &ABasicMonsterAI::SkillCoolTime, 5.0f, false);
+	}
+}
+
+void ABasicMonsterAI::OnSkillAreaOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
+{
+	//isSkillAttackTime = false;
+	if (OverlappingPlayers.Contains(OtherActor))
+	{
+		OverlappingPlayers.Remove(OtherActor);
+		UE_LOG(LogTemp, Warning, TEXT("Player left skill area: %s"), *OtherActor->GetName());
+	}
+}
 //void ABasicMonsterAI::SkillAttackPrepare()
 //{
 //	//
 //}
 
-void ABasicMonsterAI::OnSkillAreaOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
-{
-	if (GEngine)
-	{
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("overlab"));
-	}
-	if (OtherActor && OtherActor != this && OtherActor->ActorHasTag("Player"))
-	{
-		SkillAttack();
-		float DamageAmount = MonsterAD * 2; // 또는 MonsterAD
-		UGameplayStatics::ApplyDamage(OtherActor, DamageAmount, GetController(), this, nullptr);
-	}
-}
+//void ABasicMonsterAI::OnSkillAreaOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+//{
+//	if (GEngine)
+//	{
+//		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("overlab"));
+//	}
+//	if (OtherActor && OtherActor != this && OtherActor->ActorHasTag("Player"))
+//	{
+//		SkillAttack();
+//		float DamageAmount = MonsterAD * 2; // 또는 MonsterAD
+//		UGameplayStatics::ApplyDamage(OtherActor, DamageAmount, GetController(), this, nullptr);
+//	}
+//}
 
 void ABasicMonsterAI::SkillAttack()
 {
 	PlaySkillAttackAnimation();
 	//apply damage check code..
 	//damage apply code..
+}
+
+
+void ABasicMonsterAI::SkillCoolTime()
+{
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Skill Cool Complete"));
+	CanSkill = true;
+	GetWorld()->GetTimerManager().ClearTimer(MonsterSkillCoolTime);
 }
 
 //void ABasicMonsterAI::OnAttackAreaOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)

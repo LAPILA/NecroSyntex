@@ -213,8 +213,8 @@ void ANecroSyntexGameMode::PostLogin(APlayerController* NewPlayer)
 			GS->SurvivingPlayer = GS->TotalPlayer;
 		}
 
-		PC->GetInstanceAndSetSelectedCharacter();
-		SelectAndReadyComplete();
+		PC->GetInstanceAndSetSelectedCharacter();//요거 주석 처리하면 멀티 가능.
+		SelectAndReadyComplete();//요거 주석 처리하면 멀티가능.
 	}
 
 	//UE_LOG(LogTemp, Warning, TEXT("111111"));

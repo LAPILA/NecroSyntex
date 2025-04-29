@@ -71,6 +71,14 @@ public:
 	UFUNCTION(BlueprintImplementableEvent, Category = "Combat")
 	void OnWeaponHitEvent(const FHitResult& HitResult);
 
+	UPROPERTY()
+	TArray<AActor*> OverlappingPlayers;
+
+	TArray<AActor*>& GetOverlappingPlayers() { return OverlappingPlayers; }
+
+	UPROPERTY()
+	bool CanSkill;
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -102,6 +110,9 @@ protected:
 	UFUNCTION()
 	void OnSkillAreaOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 
+	UFUNCTION()
+	void OnSkillAreaOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
+
 	void PlayHitAnimation();
 
 	void PlayHitHighDamageAnimation();
@@ -111,6 +122,10 @@ protected:
 	void DestroyMonster();
 
 	void PlaySkillAttackAnimation();
+
+	FTimerHandle MonsterSkillCoolTime;
+
+	void SkillCoolTime();
 
 	FTimerHandle DeathDelayTimerHandle;
 	//Timer Function
