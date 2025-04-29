@@ -35,8 +35,9 @@ void ATestMissionTrigger::NotifyActorBeginOverlap(AActor* OtherActor)
 		PlayerInTrigger++;
 
 		ANecroSyntexGameState* GS = Cast<ANecroSyntexGameState>(GetWorld()->GetGameState());
-		if (GS)
+		if (GS && !GS->OngoingMission)
 		{
+
 			if (GS->TotalPlayer == PlayerInTrigger)
 			{
 				if (ANecroSyntexGameMode* GM = Cast<ANecroSyntexGameMode>(UGameplayStatics::GetGameMode(this)))
@@ -50,7 +51,7 @@ void ATestMissionTrigger::NotifyActorBeginOverlap(AActor* OtherActor)
 					GetWorld()->GetTimerManager().SetTimer(
 						TriggerTimer,
 						[this]() { TriggerDestroy(); },
-						10.0f,
+						GM->MissionManager->count,
 						false
 					);
 

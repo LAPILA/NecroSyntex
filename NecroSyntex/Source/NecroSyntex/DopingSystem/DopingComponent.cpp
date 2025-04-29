@@ -3,6 +3,7 @@
 
 #include "DopingComponent.h"
 #include "Camera/CameraComponent.h"
+#include "NecroSyntex/PlayerState/NecroSyntexPlayerState.h"
 #include "Net/UnrealNetwork.h"
 
 // Sets default values for this component's properties
@@ -51,6 +52,7 @@ void UDopingComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 
 }
 
+
 // Called when the game starts
 void UDopingComponent::BeginPlay()
 {
@@ -72,6 +74,7 @@ void UDopingComponent::BeginPlay()
 		HallucinationShield = NewObject<UDPHallucinationShield>(this);
 		HPconversion = NewObject<UDPHPconversion>(this);
 		CurseofChaos = NewObject<UDPCurseofChaos>(this);
+
 
 		//도핑 모드(아군에게 도핑을 줄지 나에게 줄지 설정)
 		DopingforAllyMode = false;
@@ -105,6 +108,14 @@ void UDopingComponent::BeginPlay()
 		Two_CheckDeBuff = TwoKeyDoping->CheckDeBuff;
 		TwoKeyBool = true;
 		Two_Able = true;
+
+		APlayerCharacter* OwnerCharacter = Cast<APlayerCharacter>(GetOwner());
+		ANecroSyntexPlayerState* PS = Cast<ANecroSyntexPlayerState>(OwnerCharacter->GetPlayerState());
+		if (PS)
+		{
+			SetFirstDopingKey(PS->FirstDopingCode);
+			SetSecondDopingKey(PS->SecondDopingCode);
+		}
 	}
 
 }

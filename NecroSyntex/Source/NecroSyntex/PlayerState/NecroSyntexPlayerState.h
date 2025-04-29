@@ -39,10 +39,10 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Replicated)
 	TSubclassOf<APlayerCharacter> SelectedCharacterClass;
 
-	UPROPERTY(EditAnywhere, Replicated)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Replicated)
 	int32 FirstDopingCode;
 
-	UPROPERTY(EditAnywhere, Replicated)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Replicated)
 	int32 SecondDopingCode;
 
 	UPROPERTY(Replicated)
