@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Engine/TriggerBox.h"
+#include "TimerManager.h"
 #include "TestMissionTrigger.generated.h"
 
 /**
@@ -18,17 +19,31 @@ protected:
 
 	virtual void NotifyActorBeginOverlap(AActor* OtherActor) override;
 
-	void PlayerTriggerOverlap(AActor* OtherActor);
+	virtual void NotifyActorEndOverlap(AActor* OtherActor) override;
+
 
 public:
 	UPROPERTY()
-	int32 PlayerInTrigger;
+	int32 PlayerInTrigger = 0;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float MissionDuration;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FName MissionRegion;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FName MissionName;
+
+	UPROPERTY(Replicated)
+	bool OnTrigger = true;
+
+	UPROPERTY(Replicated)
+	bool OnTriggerTimer = false;
+
+	FTimerHandle TriggerTimer;
+
+	void TriggerDestroy();
 
 	ATestMissionTrigger();
 

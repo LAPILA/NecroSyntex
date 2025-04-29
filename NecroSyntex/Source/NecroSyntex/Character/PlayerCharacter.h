@@ -234,6 +234,8 @@ protected:
 	UPROPERTY(ReplicatedUsing = OnRep_bIsSprinting)
 	bool bIsSprinting;
 
+	bool bWantsToSprint = false;
+
 	UFUNCTION()
 	void OnRep_bIsSprinting();
 private:
@@ -414,8 +416,6 @@ public:
 
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
 	void CallBlueprintBurningFurnaceDamage();
-	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
-	void MissionUIUpdate();
 
 	UFUNCTION()
 	void SPStrengthDeBuffON();

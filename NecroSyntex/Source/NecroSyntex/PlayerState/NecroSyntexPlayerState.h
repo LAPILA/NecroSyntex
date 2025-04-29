@@ -36,7 +36,7 @@ private:
 public:
 	ANecroSyntexPlayerState();
 
-	UPROPERTY(EditAnywhere, Replicated)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Replicated)
 	TSubclassOf<APlayerCharacter> SelectedCharacterClass;
 
 	UPROPERTY(EditAnywhere, Replicated)

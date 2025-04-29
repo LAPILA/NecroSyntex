@@ -1,8 +1,15 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "NecroSyntexGameState.h"
+#include "NecroSyntex/GameMode/NecroSyntexGameMode.h"
 #include "NecroSyntex\PlayerState\NecroSyntexPlayerState.h"
 #include "Net/UnrealNetwork.h"
+
+ANecroSyntexGameState::ANecroSyntexGameState()
+{
+	PrimaryActorTick.bStartWithTickEnabled = true;
+	PrimaryActorTick.bCanEverTick = true;
+}
 
 void ANecroSyntexGameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
@@ -10,6 +17,29 @@ void ANecroSyntexGameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>
 
 	DOREPLIFETIME(ANecroSyntexGameState, TopScoringPlayers);
 	DOREPLIFETIME(ANecroSyntexGameState, CurrentMission);
+	DOREPLIFETIME(ANecroSyntexGameState, TotalPlayer);
+	DOREPLIFETIME(ANecroSyntexGameState, SurvivingPlayer);
+	DOREPLIFETIME(ANecroSyntexGameState, MissionCountDown);
+	DOREPLIFETIME(ANecroSyntexGameState, MissionCountDownBool);
+	DOREPLIFETIME(ANecroSyntexGameState, OngoingMission);
+	DOREPLIFETIME(ANecroSyntexGameState, MissionRemainTime);
+}
+
+void ANecroSyntexGameState::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+
+	if (HasAuthority())
+	{
+		if (OngoingMission)
+		{
+			if (MissionRemainTime > 0.0f)
+			{
+				MissionRemainTime = FMath::Max(0.f, MissionRemainTime - DeltaTime);
+			}
+		}
+	}
+
 }
 
 void ANecroSyntexGameState::UpdateTopScore(class ANecroSyntexPlayerState* ScoringPlayer)
@@ -29,4 +59,24 @@ void ANecroSyntexGameState::UpdateTopScore(class ANecroSyntexPlayerState* Scorin
 		TopScoringPlayers.AddUnique(ScoringPlayer);
 		TopScore = ScoringPlayer->GetScore();
 	}
+}
+
+void ANecroSyntexGameState::UpdateMissionStartCountdown(float newTimer)
+{
+	MissionCountDown = newTimer;
+}
+
+void ANecroSyntexGameState::PlayerDeathUpdate_Implementation()
+{
+	SurvivingPlayer--;
+	if (SurvivingPlayer == 0)
+	{
+		ANecroSyntexGameMode* NecroSyntexGameMode = GetWorld()->GetAuthGameMode<ANecroSyntexGameMode>();
+		NecroSyntexGameMode->MissionManager->CurrentMissionFail();
+	}
+}
+
+void ANecroSyntexGameState::PlayerReviveUpdate_Implementation()
+{
+	SurvivingPlayer++;
 }

@@ -4,7 +4,8 @@
 #include "MissionManager.h"
 #include "Kismet/GameplayStatics.h"
 #include "NecroSyntex/Monster/M_Spawner.h"
-#include "TimerManager.h"
+#include "NecroSyntex/Mission/DefenseObject.h"
+#include "NecroSyntex/Mission/DefenseTarget.h"
 #include "NecroSyntex/GameMode/NecroSyntexGameMode.h"
 #include "NecroSyntex/NecroSyntexGameState.h"
 #include "NecroSyntex/Character/PlayerCharacter.h"
@@ -12,44 +13,38 @@
 void UMissionManager::Init(class ANecroSyntexGameMode* InGameMode)
 {
 	CurrentGameMode = InGameMode;
-}
-
-void UMissionManager::StartSurvivalMission(FName RegionTag, float Duration)
-{
-    // 생존 미션 몬스터 스포너 작동
-	TArray<AActor*> FoundSpawners;
-	UGameplayStatics::GetAllActorsOfClass(GetWorld(), AM_Spawner::StaticClass(), FoundSpawners);
-
-    for (AActor* Actor : FoundSpawners)
-    {
-        AM_Spawner* Spawner = Cast<AM_Spawner>(Actor);
-        if (Spawner && Spawner->RegionTag == RegionTag)
-        {
-            Spawner->StartSpawnMonster(Spawner->MonsterSpawnSpeed);
-        }
-    }
-
-    // GameState
+    count = 3.0f;
     ANecroSyntexGameState* GS = Cast<ANecroSyntexGameState>(GetWorld()->GetGameState());
     if (GS)
     {
-        GS->CurrentMission = "Survival";
+        GS->SurvivingPlayer = GS->TotalPlayer;
     }
-
-    // 플레이어 미션 UI 업데이트
-    PlayerMissionUIUpdate("Survival");
-
-    // 생존 미션 타이머 작동
-    FTimerHandle handle;
-    GetWorld()->GetTimerManager().SetTimer(
-        handle,
-        [this, RegionTag]() { EndSurvivlvalMission(RegionTag); },
-        Duration,
-        false
-    );
 }
 
-void UMissionManager::EndSurvivlvalMission(FName RegionTag)
+void UMissionManager::MissionSet(FName MissionName, FName RegionTag, float Duration)
+{
+    CurrentMissionName = MissionName;
+    CurrentRegionTag = RegionTag;
+    CurrentDuration = Duration;
+}
+
+void UMissionManager::ActiveMission()
+{
+    if (CurrentMissionName == "Survival") {
+        StartSurvivalMission();
+    }
+    else if (CurrentMissionName == "Defense") {
+        StartDefenseMission();
+    }
+    else if (CurrentMissionName == "Boss") {
+
+    }
+    else {
+        UE_LOG(LogTemp, Warning, TEXT("MissionName is Unavilable"));
+    }
+}
+
+void UMissionManager::ActiveMonsterSpawner()
 {
     TArray<AActor*> FoundSpawners;
     UGameplayStatics::GetAllActorsOfClass(GetWorld(), AM_Spawner::StaticClass(), FoundSpawners);
@@ -57,24 +52,179 @@ void UMissionManager::EndSurvivlvalMission(FName RegionTag)
     for (AActor* Actor : FoundSpawners)
     {
         AM_Spawner* Spawner = Cast<AM_Spawner>(Actor);
-        if (Spawner && Spawner->RegionTag == RegionTag)
+        if (Spawner && Spawner->RegionTag == CurrentRegionTag && Spawner->MissionName == CurrentMissionName)
+        {
+            Spawner->StartSpawnMonster(Spawner->MonsterSpawnSpeed);
+        }
+    }
+}
+
+void UMissionManager::StopMonsterSpawner()
+{
+    TArray<AActor*> FoundSpawners;
+    UGameplayStatics::GetAllActorsOfClass(GetWorld(), AM_Spawner::StaticClass(), FoundSpawners);
+
+    for (AActor* Actor : FoundSpawners)
+    {
+        AM_Spawner* Spawner = Cast<AM_Spawner>(Actor);
+        if (Spawner && Spawner->RegionTag == CurrentRegionTag && Spawner->MissionName == CurrentMissionName)
         {
             Spawner->StopSpawnMonster();
         }
     }
 }
 
-void UMissionManager::PlayerMissionUIUpdate(FString MissionName)
+void UMissionManager::CurrentMissionFail()
 {
-    TArray<AActor*> FoundPlayers;
-    UGameplayStatics::GetAllActorsOfClass(GetWorld(), APlayerCharacter::StaticClass(), FoundPlayers);
+    if (CurrentMissionName == "Survival") {
+        SurvivalMissionFail();
+    }
+    else if (CurrentMissionName == "Defense") {
+        DefenseMissionFail();
+    }
+    else if (CurrentMissionName == "Boss") {
 
-    for (AActor* Actor : FoundPlayers)
+    }
+    else {
+        UE_LOG(LogTemp, Warning, TEXT("MissionName is Unavilable"));
+    }
+}
+
+
+//Survival Mission
+void UMissionManager::StartSurvivalMission()
+{
+    // 생존 미션 몬스터 스포너 작동
+    ActiveMonsterSpawner();
+
+    GameStateAndUIUpdate(true);
+
+    // 생존 미션 타이머 작동
+    GetWorld()->GetTimerManager().SetTimer(
+        SurvivalTimerhandle,
+        [this]() { SurvivalMissionSuccess(); },
+        CurrentDuration,
+        false
+    );
+}
+
+void UMissionManager::SurvivalMissionSuccess()
+{
+    EndSurvivlvalMission();
+}
+
+void UMissionManager::SurvivalMissionFail()
+{
+    GetWorld()->GetTimerManager().ClearTimer(SurvivalTimerhandle);
+    EndSurvivlvalMission();
+}
+
+void UMissionManager::EndSurvivlvalMission()
+{
+    StopMonsterSpawner();
+
+    MissionSet("None", "None", 0.0f);
+
+    GameStateAndUIUpdate(false);
+}
+
+
+//DefenseMission
+
+void UMissionManager::StartDefenseMission()
+{
+    TArray<AActor*> FoundDefenseTarget;
+    UGameplayStatics::GetAllActorsOfClass(GetWorld(), ADefenseTarget::StaticClass(), FoundDefenseTarget);
+
+    for (AActor* Actor : FoundDefenseTarget)
     {
-        APlayerCharacter* Player = Cast<APlayerCharacter>(Actor);
-        if (Player)
+        ADefenseTarget* DefenseTarget = Cast<ADefenseTarget>(Actor);
+        if (DefenseTarget && DefenseTarget->RegionName == CurrentRegionTag)
         {
-            Player->MissionUIUpdate();
+            DefenseTarget->DefenseObjectActive();
         }
+    }
+
+    ActiveMonsterSpawner();
+
+    GameStateAndUIUpdate(true);
+
+    GetWorld()->GetTimerManager().SetTimer(
+        DefenseTimerHandle,
+        [this]() { DefenseMissionSuccess(); },
+        CurrentDuration,
+        false
+    );
+}
+
+void UMissionManager::DefenseMissionSuccess()
+{
+    EndSurvivlvalMission();
+}
+
+void UMissionManager::DefenseMissionFail()
+{
+    GetWorld()->GetTimerManager().ClearTimer(DefenseTimerHandle);
+    GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Mission Fail"));
+    UE_LOG(LogTemp, Warning, TEXT("Mission Fail"));
+    EndSurvivlvalMission();
+}
+
+void UMissionManager::EndDefenseMission()
+{
+    StopMonsterSpawner();
+
+    MissionSet("None", "None", 0.0f);
+
+    GameStateAndUIUpdate(false);
+}
+
+//Game State Update
+void UMissionManager::GameStateAndUIUpdate( bool MissionBool)
+{
+    // GameState && Auto Mission UI Update
+    ANecroSyntexGameState* GS = Cast<ANecroSyntexGameState>(GetWorld()->GetGameState());
+    if (GS)
+    {
+        GS->CurrentMission = CurrentMissionName;
+        GS->MissionRemainTime = CurrentDuration;
+        GS->OngoingMission = MissionBool;
+    }
+}
+
+void UMissionManager::MissionCountdownStart()
+{
+    ANecroSyntexGameState* GS = Cast<ANecroSyntexGameState>(GetWorld()->GetGameState());
+    GS->MissionCountDown = count;
+    GS->MissionCountDownBool = true;
+
+    GetWorld()->GetTimerManager().SetTimer(
+        CountDownTimer,
+        [this]() { UpdateMissionCountdown(); },
+        1.0f,
+        true
+    );
+}
+
+void UMissionManager::UpdateMissionCountdown()
+{
+    if (ANecroSyntexGameState* GS = Cast<ANecroSyntexGameState>(GetWorld()->GetGameState()))
+    {
+        GS->UpdateMissionStartCountdown(GS->MissionCountDown - 1.f);
+
+        if (GS->MissionCountDown <= 0)
+        {
+            GetWorld()->GetTimerManager().ClearTimer(CountDownTimer);
+            GS->MissionCountDownBool = false;
+            ActiveMission(); // 실제 미션 시작
+        }
+    }
+}
+
+void UMissionManager::MissionCountdownCancel()
+{
+    GetWorld()->GetTimerManager().ClearTimer(CountDownTimer);
+    if (ANecroSyntexGameState* GS = Cast<ANecroSyntexGameState>(GetWorld()->GetGameState())) {
+        GS->MissionCountDownBool = false;
     }
 }

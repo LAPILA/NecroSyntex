@@ -33,6 +33,7 @@ ABasicMonsterAI::ABasicMonsterAI()
 	SkillAttackArea->SetCollisionResponseToAllChannels(ECR_Ignore);
 	SkillAttackArea->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
 	SkillAttackArea->SetGenerateOverlapEvents(true);
+	SkillAttackArea->OnComponentBeginOverlap.AddDynamic(this, &ABasicMonsterAI::OnSkillAreaOverlapBegin);
 
 	//AttackPoint = CreateDefaultSubobject<USphereComponent>(TEXT("AttackPoint"));
 	//AttackPoint->SetupAttachment(RootComponent);
@@ -294,6 +295,24 @@ void ABasicMonsterAI::OnSkillAreaOverlapEnd(UPrimitiveComponent* OverlappedComp,
 		UE_LOG(LogTemp, Warning, TEXT("Player left skill area: %s"), *OtherActor->GetName());
 	}
 }
+//void ABasicMonsterAI::SkillAttackPrepare()
+//{
+//	//
+//}
+
+void ABasicMonsterAI::OnSkillAreaOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	if (GEngine)
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("overlab"));
+	}
+	if (OtherActor && OtherActor != this && OtherActor->ActorHasTag("Player"))
+	{
+		SkillAttack();
+		float DamageAmount = MonsterAD * 2; // ¶Ç´Â MonsterAD
+		UGameplayStatics::ApplyDamage(OtherActor, DamageAmount, GetController(), this, nullptr);
+	}
+}
 
 void ABasicMonsterAI::SkillAttack()
 {
@@ -301,6 +320,7 @@ void ABasicMonsterAI::SkillAttack()
 	//apply damage check code..
 	//damage apply code..
 }
+
 
 void ABasicMonsterAI::SkillCoolTime()
 {

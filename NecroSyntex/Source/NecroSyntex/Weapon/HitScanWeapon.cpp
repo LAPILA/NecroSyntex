@@ -14,112 +14,112 @@
 
 #include "DrawDebugHelpers.h"
 
+namespace
+{
+	static const TSet<FName> SCBodyBones =
+	{
+		TEXT("pelvis"), TEXT("spine_01"), TEXT("spine_02"), TEXT("spine_03"),
+		TEXT("clavicle_l"), TEXT("clavicle_r"),
+		TEXT("upperarm_l"), TEXT("upperarm_r"),
+		TEXT("thigh_l"),   TEXT("thigh_r")
+	};
+
+	FORCEINLINE bool IsSCHeadBone(const FName& Bone) { return Bone == TEXT("head"); }
+	FORCEINLINE bool IsSCBodyBone(const FName& Bone) { return SCBodyBones.Contains(Bone); }
+}
+
 void AHitScanWeapon::Fire(const FVector& HitTarget)
 {
 	Super::Fire(HitTarget);
 
 	APawn* OwnerPawn = Cast<APawn>(GetOwner());
-	if (OwnerPawn == nullptr) return;
-	AController* InstigatorController = OwnerPawn->GetController();
+	if (!OwnerPawn) return;
+	AController* InstController = OwnerPawn->GetController();
 
-	const USkeletalMeshSocket* MuzzleFlashSocket = GetWeaponMesh()->GetSocketByName("MuzzleFlash");
-	if (MuzzleFlashSocket)
+	const USkeletalMeshSocket* MuzzleSocket = GetWeaponMesh()->GetSocketByName(TEXT("MuzzleFlash"));
+	if (!MuzzleSocket) return;
+
+	/* ------------------------------------------------------------------ */
+	/* 1) Trace                                                       */
+	/* ------------------------------------------------------------------ */
+	const FTransform SocketTransform = MuzzleSocket->GetSocketTransform(GetWeaponMesh());
+	const FVector     TraceStart = SocketTransform.GetLocation();
+
+	FHitResult FireHit;
+	WeaponTraceHit(TraceStart, HitTarget, FireHit);
+
+	/* ------------------------------------------------------------------ */
+	/* 2) Head / Body / Sub)                                 */
+	/* ------------------------------------------------------------------ */
+	auto CalcDamageForBone = [&](const FName& Bone) -> float
+		{
+			if (IsSCHeadBone(Bone)) return HeadShotDamage;
+			else if (IsSCBodyBone(Bone)) return Damage;
+			else                      return SubDamage;
+		};
+
+	const float DamageToCause = CalcDamageForBone(FireHit.BoneName);
+
+	/* ------------------------------------------------------------------ */
+	/* 3) Monster                             */
+	/* ------------------------------------------------------------------ */
+	if (ABasicMonsterAI* Monster = Cast<ABasicMonsterAI>(FireHit.GetActor()))
 	{
-		FTransform SocketTransform = MuzzleFlashSocket->GetSocketTransform(GetWeaponMesh());
-		FVector Start = SocketTransform.GetLocation();
-
-		FHitResult FireHit;
-		WeaponTraceHit(Start, HitTarget, FireHit);
-
-		APlayerCharacter* PlayerCharacter = Cast<APlayerCharacter>(FireHit.GetActor());
-
-		ABasicMonsterAI* MonsterCharacter = Cast<ABasicMonsterAI>(FireHit.GetActor());
-
-		if (MonsterCharacter && InstigatorController && OwnerPawn->IsLocallyControlled())
+		if (OwnerPawn->HasAuthority())
 		{
-			bool bCauseAuthDamage = !bUseServerSideRewind || OwnerPawn->IsLocallyControlled();
-			if (HasAuthority() && bCauseAuthDamage)
+			UGameplayStatics::ApplyDamage(Monster, DamageToCause, InstController, this, UDamageType::StaticClass());
+		}
+		else
+		{
+			Server_ApplyMonsterDamage(Monster, DamageToCause, InstController);
+		}
+	}
+
+	/* ------------------------------------------------------------------ */
+	/* 4) PlayerCharacter                */
+	/* ------------------------------------------------------------------ */
+	if (APlayerCharacter* Victim = Cast<APlayerCharacter>(FireHit.GetActor()))
+	{
+		if (OwnerPawn->HasAuthority() && (!bUseServerSideRewind || OwnerPawn->IsLocallyControlled()))
+		{
+			UGameplayStatics::ApplyDamage(Victim, DamageToCause, InstController, this, UDamageType::StaticClass());
+		}
+		else if (!OwnerPawn->HasAuthority() && bUseServerSideRewind)
+		{
+			APlayerCharacter* Shooter = Cast<APlayerCharacter>(OwnerPawn);
+			auto* PC = Cast<ANecroSyntexPlayerController>(InstController);
+			if (Shooter && PC && Shooter->GetLagCompensation())
 			{
-				const float DamageToCause = FireHit.BoneName.ToString() == FString("head") ? HeadShotDamage : Damage;
-				UGameplayStatics::ApplyDamage(
-					MonsterCharacter,
-					DamageToCause,
-					InstigatorController,
-					this,
-					UDamageType::StaticClass()
+				Shooter->GetLagCompensation()->ServerScoreRequest(
+					Victim,
+					TraceStart,
+					HitTarget,
+					PC->GetServerTime() - PC->SingleTripTime
 				);
 			}
-			else if (!HasAuthority())
-			{
-				const float DamageToCause = FireHit.BoneName.ToString() == FString("head") ? HeadShotDamage : Damage;
-				Server_ApplyMonsterDamage(MonsterCharacter, DamageToCause, InstigatorController);
-			}
 		}
+	}
 
-		if (PlayerCharacter && InstigatorController && OwnerPawn->IsLocallyControlled())
-		{
-			bool bCauseAuthDamage = !bUseServerSideRewind || OwnerPawn->IsLocallyControlled();
-			if (HasAuthority()&& bCauseAuthDamage)
-			{
-				const float DamageToCause = FireHit.BoneName.ToString() == FString("head") ? HeadShotDamage : Damage;
-				UGameplayStatics::ApplyDamage(
-					PlayerCharacter,
-					DamageToCause,
-					InstigatorController,
-					this,
-					UDamageType::StaticClass()
-				);
-			}
-			if (!HasAuthority() && bUseServerSideRewind)
-			{
-				PlayerOwnerCharacter = PlayerOwnerCharacter == nullptr ? Cast<APlayerCharacter>(OwnerPawn) : PlayerOwnerCharacter;
-				NecroSyntexPlayerOwnerController = NecroSyntexPlayerOwnerController == nullptr ? Cast<ANecroSyntexPlayerController>(InstigatorController) : NecroSyntexPlayerOwnerController;
-				if (NecroSyntexPlayerOwnerController && PlayerOwnerCharacter && PlayerOwnerCharacter->GetLagCompensation() && PlayerOwnerCharacter->IsLocallyControlled())
-				{
-					PlayerOwnerCharacter->GetLagCompensation()->ServerScoreRequest(
-						PlayerCharacter,
-						Start,
-						HitTarget,
-						NecroSyntexPlayerOwnerController->GetServerTime() - NecroSyntexPlayerOwnerController->SingleTripTime
-					);
-				}
-			}
-		}
-
-		if (ImpactParticles)
-		{
-			UGameplayStatics::SpawnEmitterAtLocation(
-				GetWorld(),
-				ImpactParticles,
-				FireHit.ImpactPoint,
-				FireHit.ImpactNormal.Rotation()
-			);
-		}
-		if (HitSound)
-		{
-			UGameplayStatics::PlaySoundAtLocation(
-				this,
-				HitSound,
-				FireHit.ImpactPoint
-			);
-		}
-		if (MuzzleFlash)
-		{
-			UGameplayStatics::SpawnEmitterAtLocation(
-				GetWorld(),
-				MuzzleFlash,
-				SocketTransform
-			);
-		}
-		if (FireSound)
-		{
-			UGameplayStatics::PlaySoundAtLocation(
-				this,
-				FireSound,
-				GetActorLocation()
-			);
-		}
-
+	/* ------------------------------------------------------------------ */
+	/* 5) VFX / SFX                                                      */
+	/* ------------------------------------------------------------------ */
+	if (ImpactParticles)
+	{
+		UGameplayStatics::SpawnEmitterAtLocation(
+			GetWorld(), ImpactParticles,
+			FireHit.ImpactPoint, FireHit.ImpactNormal.Rotation());
+	}
+	if (HitSound)
+	{
+		UGameplayStatics::PlaySoundAtLocation(this, HitSound, FireHit.ImpactPoint);
+	}
+	if (MuzzleFlash)
+	{
+		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), MuzzleFlash, SocketTransform);
+	}
+	if (FireSound)
+	{
+		UGameplayStatics::PlaySoundAtLocation(this, FireSound, GetActorLocation());
 	}
 }
 
@@ -128,20 +128,16 @@ void AHitScanWeapon::WeaponTraceHit(const FVector& TraceStart, const FVector& Hi
 	UWorld* World = GetWorld();
 	if (World)
 	{
-		// 1) 라인 트레이스 범위 계산
 		FVector End = TraceStart + (HitTarget - TraceStart) * 1.25f;
 
-		// 2) 자기 자신 또는 Owner를 무시하기 위한 QueryParams 생성
 		FCollisionQueryParams QueryParams;
-		QueryParams.bReturnPhysicalMaterial = false; // 필요에 따라 사용
-		// 무조건 자신(Weapon 액터)과 Owner(플레이어 Pawn)를 Ignore
+		QueryParams.bReturnPhysicalMaterial = false;
 		QueryParams.AddIgnoredActor(this);
 		if (AActor* MyOwner = GetOwner())
 		{
 			QueryParams.AddIgnoredActor(MyOwner);
 		}
 
-		// 3) 라인 트레이스 실행
 		World->LineTraceSingleByChannel(
 			OutHit,
 			TraceStart,
@@ -155,7 +151,6 @@ void AHitScanWeapon::WeaponTraceHit(const FVector& TraceStart, const FVector& Hi
 			APlayerCharacter* HitCharacter = Cast<APlayerCharacter>(OutHit.GetActor());
 			if (HitCharacter)
 			{
-				// 여기서 호출해야 BP에서도 제대로 작동함
 				HitCharacter->OnWeaponHitEvent(OutHit);
 			}
 			else if (ABasicMonsterAI* HitMonster = Cast<ABasicMonsterAI>(OutHit.GetActor()))
@@ -164,7 +159,6 @@ void AHitScanWeapon::WeaponTraceHit(const FVector& TraceStart, const FVector& Hi
 			}
 		}
 
-		// 4) 맞은 위치/이펙트 처리
 		FVector BeamEnd = End;
 		if (OutHit.bBlockingHit)
 		{
@@ -175,7 +169,6 @@ void AHitScanWeapon::WeaponTraceHit(const FVector& TraceStart, const FVector& Hi
 			OutHit.ImpactPoint = End;
 		}
 
-		// 빔 이펙트 처리
 		if (BeamParticles)
 		{
 			UParticleSystemComponent* Beam = UGameplayStatics::SpawnEmitterAtLocation(

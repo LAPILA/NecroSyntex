@@ -408,29 +408,111 @@ void AUML_LobbyController::OnUnPossess()
 void AUML_LobbyController::OnSessionUserInviteAccepted(bool bWasSuccesful, int32 ControllerId,
 	TSharedPtr<const FUniqueNetId> UserId, const FOnlineSessionSearchResult& InviteResult)
 {
-	if(bWasSuccesful)
+	if(!bWasSuccesful || !IsValid(this))
 	{
-		if(IOnlineSubsystem* OnlineSub = Online::GetSubsystem(GetWorld()))
+		return;
+	}
+
+	UWorld* World = GetWorld();
+	if(!World)
+	{
+		UE_LOG(LogTemp, Error, TEXT("OnSessionUserInviteAccepted: GetWorld() returned null."));
+		return;
+	}
+
+	IOnlineSubsystem* OnlineSub = Online::GetSubsystem(World);
+	if(!OnlineSub)
+	{
+		UE_LOG(LogTemp, Error, TEXT("OnSessionUserInviteAccepted: Online subsystem is null."));
+		return;
+	}
+
+	IOnlineSessionPtr SessionPtr = OnlineSub->GetSessionInterface();
+	if(!SessionPtr)
+	{
+		UE_LOG(LogTemp, Error, TEXT("OnSessionUserInviteAccepted: Session interface is invalid."));
+		return;
+	}
+
+	// Store invite result for use in lambdas
+	FOnlineSessionSearchResult StoredInviteResult = InviteResult;
+
+	// Create a weak pointer to ourselves to safely use in lambdas
+	TWeakObjectPtr<AUML_LobbyController> WeakThis(this);
+
+	OnInviteAcceptedDestroyHandle = SessionPtr->AddOnDestroySessionCompleteDelegate_Handle(
+		FOnDestroySessionCompleteDelegate::CreateLambda([WeakThis, SessionPtr, StoredInviteResult](FName SessionName, bool bWasSuccessful)
 		{
-			if(IOnlineSessionPtr SessionPtr = OnlineSub->GetSessionInterface())
+			// Clear the delegate handle first
+			if(WeakThis.IsValid())
 			{
-				OnInviteAcceptedDestroyHandle = SessionPtr->AddOnDestroySessionCompleteDelegate_Handle(FOnDestroySessionCompleteDelegate::CreateLambda([this, SessionPtr, InviteResult](FName SessionName, bool bWasSuccessful)
-				{
-					SessionPtr->ClearOnDestroySessionCompleteDelegate_Handle(OnInviteAcceptedDestroyHandle);
-					OnInviteAcceptedJoinHandle = SessionPtr->AddOnJoinSessionCompleteDelegate_Handle(FOnJoinSessionCompleteDelegate::CreateLambda([this, SessionPtr](FName SessionName, EOnJoinSessionCompleteResult::Type Result)
-					{
-						SessionPtr->ClearOnJoinSessionCompleteDelegate_Handle(OnInviteAcceptedJoinHandle);
-						if(Result == EOnJoinSessionCompleteResult::Success)
-						{
-							FString ConnectString;
-							SessionPtr->GetResolvedConnectString(SessionName, ConnectString);
-							UGameplayStatics::OpenLevel(GetWorld(), FName(*ConnectString), true);
-						}
-					}));
-					SessionPtr->JoinSession(0, NAME_PartySession, InviteResult);
-				}));
-				SessionPtr->DestroySession(NAME_PartySession);
+				SessionPtr->ClearOnDestroySessionCompleteDelegate_Handle(WeakThis->OnInviteAcceptedDestroyHandle);
 			}
-		}
+			
+			// Safety check that we're still valid
+			if(!WeakThis.IsValid())
+			{
+				UE_LOG(LogTemp, Warning, TEXT("OnDestroySessionComplete: Controller is no longer valid"));
+				return;
+			}
+			
+			AUML_LobbyController* Controller = WeakThis.Get();
+			
+			Controller->OnInviteAcceptedJoinHandle = SessionPtr->AddOnJoinSessionCompleteDelegate_Handle(
+				FOnJoinSessionCompleteDelegate::CreateLambda([WeakThis, SessionPtr](FName SessionName, EOnJoinSessionCompleteResult::Type Result)
+				{
+					// Clear the delegate handle first
+					if(WeakThis.IsValid())
+					{
+						SessionPtr->ClearOnJoinSessionCompleteDelegate_Handle(WeakThis->OnInviteAcceptedJoinHandle);
+					}
+					
+					// Safety check that we're still valid
+					if(!WeakThis.IsValid())
+					{
+						UE_LOG(LogTemp, Warning, TEXT("OnJoinSessionComplete: Controller is no longer valid"));
+						return;
+					}
+					
+					AUML_LobbyController* Controller = WeakThis.Get();
+					UWorld* InnerWorld = Controller->GetWorld();
+					
+					if(!InnerWorld)
+					{
+						UE_LOG(LogTemp, Error, TEXT("OnJoinSessionComplete: GetWorld() returned null."));
+						return;
+					}
+					
+					if(Result == EOnJoinSessionCompleteResult::Success)
+					{
+						FString ConnectString;
+						if(SessionPtr->GetResolvedConnectString(SessionName, ConnectString))
+						{
+							UGameplayStatics::OpenLevel(InnerWorld, FName(*ConnectString), true);
+						}
+						else
+						{
+							UE_LOG(LogTemp, Error, TEXT("OnJoinSessionComplete: GetResolvedConnectString failed."));
+						}
+					}
+					else
+					{
+						UE_LOG(LogTemp, Warning, TEXT("OnJoinSessionComplete: Join failed with result %d."), Result);
+					}
+				}));
+			
+			// Now that we've set up the join callback, initiate the join
+			if(!SessionPtr->JoinSession(0, NAME_PartySession, StoredInviteResult))
+			{
+				UE_LOG(LogTemp, Error, TEXT("OnDestroySessionComplete: JoinSession call failed."));
+				SessionPtr->ClearOnJoinSessionCompleteDelegate_Handle(Controller->OnInviteAcceptedJoinHandle);
+			}
+		}));
+
+	// Initiate the session destroy
+	if(!SessionPtr->DestroySession(NAME_PartySession))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("OnSessionUserInviteAccepted: DestroySession failed."));
+		SessionPtr->ClearOnDestroySessionCompleteDelegate_Handle(OnInviteAcceptedDestroyHandle);
 	}
 }
