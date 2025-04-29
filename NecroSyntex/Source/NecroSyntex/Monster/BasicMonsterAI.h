@@ -76,6 +76,9 @@ public:
 
 	TArray<AActor*>& GetOverlappingPlayers() { return OverlappingPlayers; }
 
+	UPROPERTY()
+	bool CanSkill;
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -119,6 +122,10 @@ protected:
 	void DestroyMonster();
 
 	void PlaySkillAttackAnimation();
+
+	FTimerHandle MonsterSkillCoolTime;
+
+	void SkillCoolTime();
 
 	FTimerHandle DeathDelayTimerHandle;
 	//Timer Function
