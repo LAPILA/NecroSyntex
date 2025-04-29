@@ -300,19 +300,19 @@ void ABasicMonsterAI::OnSkillAreaOverlapEnd(UPrimitiveComponent* OverlappedComp,
 //	//
 //}
 
-void ABasicMonsterAI::OnSkillAreaOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
-{
-	if (GEngine)
-	{
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("overlab"));
-	}
-	if (OtherActor && OtherActor != this && OtherActor->ActorHasTag("Player"))
-	{
-		SkillAttack();
-		float DamageAmount = MonsterAD * 2; // 또는 MonsterAD
-		UGameplayStatics::ApplyDamage(OtherActor, DamageAmount, GetController(), this, nullptr);
-	}
-}
+//void ABasicMonsterAI::OnSkillAreaOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+//{
+//	if (GEngine)
+//	{
+//		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("overlab"));
+//	}
+//	if (OtherActor && OtherActor != this && OtherActor->ActorHasTag("Player"))
+//	{
+//		SkillAttack();
+//		float DamageAmount = MonsterAD * 2; // 또는 MonsterAD
+//		UGameplayStatics::ApplyDamage(OtherActor, DamageAmount, GetController(), this, nullptr);
+//	}
+//}
 
 void ABasicMonsterAI::SkillAttack()
 {
