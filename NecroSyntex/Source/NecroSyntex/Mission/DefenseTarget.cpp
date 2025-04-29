@@ -54,6 +54,9 @@ void ADefenseTarget::DefenseObjectDestroy_Implementation()
 {
 	ANecroSyntexGameMode* NecroSyntexGameMode = GetWorld()->GetAuthGameMode<ANecroSyntexGameMode>();
 
+	Survive = false;
+	Active = false;
+
 	NecroSyntexGameMode->MissionManager->DefenseMissionFail();
 }
 
