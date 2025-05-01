@@ -77,6 +77,7 @@ void ABasicMonsterAI::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
 
 void ABasicMonsterAI::UpdateWalkSpeed()
 {
+	//CanAttack = true;
 	if (GetCharacterMovement())
 	{
 		GetCharacterMovement()->MaxWalkSpeed = ChaseSpeed;
@@ -86,6 +87,7 @@ void ABasicMonsterAI::UpdateWalkSpeed()
 //Weapon Damage
 float ABasicMonsterAI::TakeDamage_Implementation(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
 {
+	CanAttack = false;
 	// 이미 죽은 상태면 처리하지 않음
 	if (MonsterHP <= 0.0f) {
 		if (GEngine)
@@ -111,6 +113,7 @@ float ABasicMonsterAI::TakeDamage_Implementation(float DamageAmount, FDamageEven
 	}
 
 	GetWorld()->GetTimerManager().SetTimer(SpeedRestoreTimerHandle, this, &ABasicMonsterAI::UpdateWalkSpeed, SlowTime, false);
+	GetWorld()->GetTimerManager().SetTimer(AttackRestoreTimerHandle, this, &ABasicMonsterAI::AttackCoolTime, 0.02f, false);
 	//UpdateWalkSpeed();// one seconds later call function. delayedfunction will set target function UpdataeWalkSpeed();
 
 	MonsterHP -= DamageAmount + DPA->DopingDamageBuff;
@@ -157,7 +160,8 @@ float ABasicMonsterAI::TakeDamage_Implementation(float DamageAmount, FDamageEven
 //Doping Damage
 void ABasicMonsterAI::TakeDopingDamage(float DopingDamageAmount)
 {
-	UE_LOG(LogTemp, Warning, TEXT("TakeDopingDamage"));
+	CanAttack = false;
+	UE_LOG(LogTemp, Warning, TEXT("TakeDopingDamage1"));
 
 	if (MonsterHP <= 0.0f) {
 		if (GEngine)
@@ -167,8 +171,17 @@ void ABasicMonsterAI::TakeDopingDamage(float DopingDamageAmount)
 		return;
 	}
 
+	if (GetCharacterMovement())
+	{
+		GetCharacterMovement()->MaxWalkSpeed = 0.0f;
+	}
+
 	MonsterHP -= DopingDamageAmount;//if doping take damage setting speed slowly? 
 	PlayHitAnimation();
+
+	GetWorld()->GetTimerManager().SetTimer(SpeedRestoreTimerHandle, this, &ABasicMonsterAI::UpdateWalkSpeed, SlowTime, false);
+	GetWorld()->GetTimerManager().SetTimer(AttackRestoreTimerHandle, this, &ABasicMonsterAI::AttackCoolTime, 0.02f, false);
+
 
 	if (MonsterHP <= 0.0f) {
 		AController* AIController = GetController();
@@ -185,6 +198,11 @@ void ABasicMonsterAI::TakeDopingDamage(float DopingDamageAmount)
 		DelayedFunction(3.5f); // 일정 시간 후 제거 또는 리스폰
 	}
 	return;
+}
+
+void ABasicMonsterAI::AttackCoolTime()
+{
+	CanAttack = true;
 }
 
 void ABasicMonsterAI::PlayHitAnimation()//약한 데미지인 경우 hit 애니메이션 재생

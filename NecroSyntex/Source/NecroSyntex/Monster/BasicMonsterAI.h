@@ -27,6 +27,8 @@ public:
 
 	FTimerHandle SpeedRestoreTimerHandle;
 
+	FTimerHandle AttackRestoreTimerHandle;
+
 	UPROPERTY(EditAnywhere, Category = "AI")
 	float SlowTime;
 
@@ -53,6 +55,9 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void UpdateWalkSpeed(); //float NewWalkSpeed in parameter
+
+	UFUNCTION(BlueprintCallable)
+	void AttackCoolTime();
 
 	UFUNCTION(BlueprintCallable)
 	void Attack_Player();
