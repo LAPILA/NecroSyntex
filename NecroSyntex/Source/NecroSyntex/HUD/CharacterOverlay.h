@@ -18,11 +18,11 @@ class NECROSYNTEX_API UCharacterOverlay : public UUserWidget
 
 public:
 	
-	// Player State UI
 	UPROPERTY(meta = (BindWidget))
-	class UImage* HealthBar;
+	class UProgressBar* HealthBar;
+
 	UPROPERTY(meta = (BindWidget))
-	class UImage* ShieldBar;
+	class UProgressBar* ShieldBar;
 
 	// UI Effect Animation
 	// To Do : nedd to make working this

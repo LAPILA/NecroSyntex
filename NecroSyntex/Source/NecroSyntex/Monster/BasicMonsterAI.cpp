@@ -9,6 +9,7 @@
 #include "GameFramework/Character.h"
 #include "GameFramework/Actor.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "NecroSyntex/PlayerController/NecroSyntexPlayerController.h"
 #include "AIController.h"
 #include "NecroSyntex/Monster/MonsterAnimInstance.h"
 #include "NecroSyntex/Character/PlayerCharacter.h"
@@ -94,6 +95,16 @@ float ABasicMonsterAI::TakeDamage_Implementation(float DamageAmount, FDamageEven
 		return 0.0f;
 	}
 
+	// 데미지를 입힌 플레이어의 컨트롤러
+	ANecroSyntexPlayerController* DPC = Cast<ANecroSyntexPlayerController>(EventInstigator);
+	APlayerCharacter* DPA = Cast<APlayerCharacter>(DPC->GetPawn());
+
+	if (!DPA) {
+		UE_LOG(LogTemp, Warning, TEXT("박두림 바보"));
+		return 0.0f;
+	}
+
+
 	if (GetCharacterMovement())
 	{
 		GetCharacterMovement()->MaxWalkSpeed = SlowChaseSpeed;
@@ -102,7 +113,7 @@ float ABasicMonsterAI::TakeDamage_Implementation(float DamageAmount, FDamageEven
 	GetWorld()->GetTimerManager().SetTimer(SpeedRestoreTimerHandle, this, &ABasicMonsterAI::UpdateWalkSpeed, SlowTime, false);
 	//UpdateWalkSpeed();// one seconds later call function. delayedfunction will set target function UpdataeWalkSpeed();
 
-	MonsterHP -= DamageAmount;
+	MonsterHP -= DamageAmount + DPA->DopingDamageBuff;
 	
 	if (DamageAmount < 50) {//Refactoring Need..
 		UGameplayStatics::PlaySoundAtLocation(this, HitSound, GetActorLocation());
@@ -116,8 +127,8 @@ float ABasicMonsterAI::TakeDamage_Implementation(float DamageAmount, FDamageEven
 	// 디버그 메시지
 	if (GEngine)
 	{
-		FString DamageMsg = FString::Printf(TEXT("Hit! Damage: %.1f | HP: %.1f"), DamageAmount, MonsterHP);
-		//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, DamageMsg);
+		FString DamageMsg = FString::Printf(TEXT("Hit! Damage: %.1f | HP: %.1f"), DamageAmount + DPA->DopingDamageBuff, MonsterHP);
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, DamageMsg);
 	}
 
 	// 사망 처리
