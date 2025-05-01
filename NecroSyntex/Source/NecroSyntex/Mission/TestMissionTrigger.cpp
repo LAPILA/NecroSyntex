@@ -10,7 +10,7 @@
 
 ATestMissionTrigger::ATestMissionTrigger()
 {
-	MissionDuration = 5.0f;
+	MissionDuration = 50.0f;
 	MissionRegion = "Survival";
 	MissionName = "Survival";
 }

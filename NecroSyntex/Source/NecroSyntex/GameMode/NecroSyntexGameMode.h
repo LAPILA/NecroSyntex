@@ -27,7 +27,7 @@ public:
 	float WarmUpTime = 1.0f;
 	
 	UPROPERTY(EditDefaultsOnly)
-	float MatchTime = 120.f;
+	float MatchTime = 180.f; //게임 시간 컨트롤 가능.
 
 	UPROPERTY(EditDefaultsOnly)
 	float CooldownTime = 10.f;
