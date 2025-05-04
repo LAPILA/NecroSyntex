@@ -122,11 +122,16 @@ public:
 	bool bFinishedSwapping = false;
 
 	UPROPERTY(Replicated)
-	class AHealingStation* HealingStationActor;
+	class AHealingStation* HealingStationActor = nullptr;
 
 	UFUNCTION(BlueprintCallable)
 	void SetHealingStationActor(AHealingStation* Station);
 
+	UPROPERTY(Replicated)
+	class ASupplyCrate* OverlappingSupplyCrate = nullptr;
+
+	UFUNCTION(BlueprintCallable)
+	void SetOverlappingSupplyCrate(ASupplyCrate* Crate);
 
 	UFUNCTION(Server, Reliable)
 	void ServerRequestHealing();
