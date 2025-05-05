@@ -32,6 +32,7 @@
 #include "NecroSyntex/DopingSystem/DeBuffCameraShake.h"
 #include "NecroSyntex/NecroSyntaxComponents/LagCompensationComponent.h"
 #include "NecroSyntex/PickUps/HealingStation.h"
+#include "NecroSyntex\PickUps\SupplyCrate.h"
 
 // Animation
 #include "PlayerAnimInstance.h"
@@ -478,6 +479,10 @@ void APlayerCharacter::ReloadTimerFinished()
 void APlayerCharacter::EquipButtonPressed()
 {
 	if (bDisableGameplay) return;
+	if (OverlappingSupplyCrate)
+	{
+		OverlappingSupplyCrate->Interact(this);
+	}
 	if (Combat)
 	{
 		ServerEquipButtonPressed();
@@ -1171,6 +1176,7 @@ void APlayerCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 	DOREPLIFETIME(APlayerCharacter, Health);
 	DOREPLIFETIME(APlayerCharacter, Shield);
 	DOREPLIFETIME(APlayerCharacter, HealingStationActor);
+	DOREPLIFETIME(APlayerCharacter, OverlappingSupplyCrate);
 
 	DOREPLIFETIME(APlayerCharacter, WalkSpeed);
 	DOREPLIFETIME(APlayerCharacter, RunningSpeed);
@@ -1260,6 +1266,11 @@ void APlayerCharacter::SetOverlappingWeapon(AWeapon* Weapon)
 			OverlappingWeapon->ShowPickupWidget(true);
 		}
 	}
+}
+
+void APlayerCharacter::SetOverlappingSupplyCrate(ASupplyCrate* Crate)
+{
+	OverlappingSupplyCrate = Crate;
 }
 
 bool APlayerCharacter::IsWeaponEquipped()
