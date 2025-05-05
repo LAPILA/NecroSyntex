@@ -32,10 +32,13 @@
 #include "NecroSyntex/DopingSystem/DeBuffCameraShake.h"
 #include "NecroSyntex/NecroSyntaxComponents/LagCompensationComponent.h"
 #include "NecroSyntex/PickUps/HealingStation.h"
+#include "NecroSyntex\PickUps\SupplyCrate.h"
 
 // Animation
 #include "PlayerAnimInstance.h"
 #pragma endregion
+
+#define TRY_PLAY_VOICE(Cue)  if (VoiceComp) VoiceComp->PlayVoice((Cue))
 
 #pragma region Constructor
 
@@ -115,6 +118,10 @@ APlayerCharacter::APlayerCharacter()
 	TurningInPlace = ETurningInPlace::ETIP_NotTurning;
 	NetUpdateFrequency = 66.0f;
 	MinNetUpdateFrequency = 33.0f;
+
+	//================= Voice Pack ================
+	VoiceComp = CreateDefaultSubobject<UVoiceComponent>(TEXT("VoiceComponent"));
+	VoiceComp->SetIsReplicated(true);
 }
 
 #pragma endregion
@@ -123,6 +130,13 @@ APlayerCharacter::APlayerCharacter()
 void APlayerCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+
+	if (VoiceComp && DefaultVoiceSet)
+	{
+		VoiceComp->VoiceSet = DefaultVoiceSet;
+	}
+
+	TRY_PLAY_VOICE(EVoiceCue::GameStart);
 
 	// Input mapping
 	if (APlayerController* PC = Cast<APlayerController>(GetController()))
@@ -478,6 +492,10 @@ void APlayerCharacter::ReloadTimerFinished()
 void APlayerCharacter::EquipButtonPressed()
 {
 	if (bDisableGameplay) return;
+	if (OverlappingSupplyCrate)
+	{
+		OverlappingSupplyCrate->Interact(this);
+	}
 	if (Combat)
 	{
 		ServerEquipButtonPressed();
@@ -700,6 +718,7 @@ void APlayerCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, const U
 		return;
 	}
 
+	TRY_PLAY_VOICE(EVoiceCue::TakeHit);
 	PlayerHitReactMontage();
 
 	if (Combat && Combat->CombatState == ECombatState::ECS_Reloading)
@@ -726,6 +745,8 @@ void APlayerCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, const U
 	{
 		Health = FMath::Clamp(Health - Damage, 0.f, MaxHealth);
 		UpdateHUDHealth();
+
+		if (Health <= Health / 20) TRY_PLAY_VOICE(EVoiceCue::LowHP);
 
 		if (Health == 0.0f)
 		{
@@ -767,6 +788,8 @@ void APlayerCharacter::MulticastElim_Implementation()
 		NecroSyntexPlayerController->SetHUDWeaponAmmo(0);
 	}
 	bElimed = true;
+
+	TRY_PLAY_VOICE(EVoiceCue::Death);
 	PlayElimMontage();
 
 	if (DissolveEffectComponent)
@@ -1171,6 +1194,7 @@ void APlayerCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 	DOREPLIFETIME(APlayerCharacter, Health);
 	DOREPLIFETIME(APlayerCharacter, Shield);
 	DOREPLIFETIME(APlayerCharacter, HealingStationActor);
+	DOREPLIFETIME(APlayerCharacter, OverlappingSupplyCrate);
 
 	DOREPLIFETIME(APlayerCharacter, WalkSpeed);
 	DOREPLIFETIME(APlayerCharacter, RunningSpeed);
@@ -1260,6 +1284,11 @@ void APlayerCharacter::SetOverlappingWeapon(AWeapon* Weapon)
 			OverlappingWeapon->ShowPickupWidget(true);
 		}
 	}
+}
+
+void APlayerCharacter::SetOverlappingSupplyCrate(ASupplyCrate* Crate)
+{
+	OverlappingSupplyCrate = Crate;
 }
 
 bool APlayerCharacter::IsWeaponEquipped()
