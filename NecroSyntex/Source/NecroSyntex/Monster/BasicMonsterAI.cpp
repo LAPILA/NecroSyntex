@@ -34,7 +34,7 @@ ABasicMonsterAI::ABasicMonsterAI()
 	SkillAttackArea->SetCollisionResponseToAllChannels(ECR_Ignore);
 	SkillAttackArea->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
 	SkillAttackArea->SetGenerateOverlapEvents(true);
-	SkillAttackArea->OnComponentBeginOverlap.AddDynamic(this, &ABasicMonsterAI::OnSkillAreaOverlapBegin);
+	//SkillAttackArea->OnComponentBeginOverlap.AddDynamic(this, &ABasicMonsterAI::OnSkillAreaOverlapBegin);
 
 	//AttackPoint = CreateDefaultSubobject<USphereComponent>(TEXT("AttackPoint"));
 	//AttackPoint->SetupAttachment(RootComponent);
