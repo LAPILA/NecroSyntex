@@ -116,6 +116,10 @@ APlayerCharacter::APlayerCharacter()
 	TurningInPlace = ETurningInPlace::ETIP_NotTurning;
 	NetUpdateFrequency = 66.0f;
 	MinNetUpdateFrequency = 33.0f;
+
+	//================= Voice Pack ================
+	VoiceComp = CreateDefaultSubobject<UVoiceComponent>(TEXT("VoiceComponent"));
+	VoiceComp->SetIsReplicated(true);
 }
 
 #pragma endregion
@@ -124,6 +128,13 @@ APlayerCharacter::APlayerCharacter()
 void APlayerCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+
+	if (VoiceComp && DefaultVoiceSet)
+	{
+		VoiceComp->VoiceSet = DefaultVoiceSet;
+	}
+
+	if (VoiceComp) VoiceComp->PlayVoice(EVoiceCue::GameStart);
 
 	// Input mapping
 	if (APlayerController* PC = Cast<APlayerController>(GetController()))

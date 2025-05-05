@@ -10,6 +10,7 @@
 #include "NiagaraComponent.h"
 #include "NecroSyntex/Interfaces/InteractWithCrossHairsInterface.h"
 #include "NecroSyntex/NecroSyntexType/CombatState.h"
+#include "NecroSyntex/Voice/VoiceComponent.h"
 #include "PlayerCharacter.generated.h"
 
 class UInputMappingContext;
@@ -268,6 +269,12 @@ private:
 
 	UPROPERTY(VisibleAnywhere)
 	class ULagCompensationComponent* LagCompensation;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	UVoiceComponent* VoiceComp;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Voice")
+	TObjectPtr<UVoiceSet> DefaultVoiceSet;
 
 	UFUNCTION(Server, Reliable)
 	void ServerEquipButtonPressed();
