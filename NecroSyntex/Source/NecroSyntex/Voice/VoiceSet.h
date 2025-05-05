@@ -18,7 +18,7 @@ struct FVoiceLines
 
 	UPROPERTY(EditDefaultsOnly, Category = "Voice",
 		meta = (ClampMin = "0.0", UIMin = "0.0"))
-	float MinInterval = 0.0f;
+	float MinInterval = 0.2f;
 
 	FORCEINLINE USoundBase* GetRandomClip() const
 	{

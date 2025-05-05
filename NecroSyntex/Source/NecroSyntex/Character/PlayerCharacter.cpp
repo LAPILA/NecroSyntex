@@ -38,6 +38,8 @@
 #include "PlayerAnimInstance.h"
 #pragma endregion
 
+#define TRY_PLAY_VOICE(Cue)  if (VoiceComp) VoiceComp->PlayVoice((Cue))
+
 #pragma region Constructor
 
 APlayerCharacter::APlayerCharacter()
@@ -134,7 +136,7 @@ void APlayerCharacter::BeginPlay()
 		VoiceComp->VoiceSet = DefaultVoiceSet;
 	}
 
-	if (VoiceComp) VoiceComp->PlayVoice(EVoiceCue::GameStart);
+	TRY_PLAY_VOICE(EVoiceCue::GameStart);
 
 	// Input mapping
 	if (APlayerController* PC = Cast<APlayerController>(GetController()))
@@ -716,6 +718,7 @@ void APlayerCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, const U
 		return;
 	}
 
+	TRY_PLAY_VOICE(EVoiceCue::TakeHit);
 	PlayerHitReactMontage();
 
 	if (Combat && Combat->CombatState == ECombatState::ECS_Reloading)
@@ -742,6 +745,8 @@ void APlayerCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, const U
 	{
 		Health = FMath::Clamp(Health - Damage, 0.f, MaxHealth);
 		UpdateHUDHealth();
+
+		if (Health <= Health / 20) TRY_PLAY_VOICE(EVoiceCue::LowHP);
 
 		if (Health == 0.0f)
 		{
@@ -783,6 +788,8 @@ void APlayerCharacter::MulticastElim_Implementation()
 		NecroSyntexPlayerController->SetHUDWeaponAmmo(0);
 	}
 	bElimed = true;
+
+	TRY_PLAY_VOICE(EVoiceCue::Death);
 	PlayElimMontage();
 
 	if (DissolveEffectComponent)
