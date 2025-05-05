@@ -38,6 +38,8 @@
 #include "PlayerAnimInstance.h"
 #pragma endregion
 
+#define TRY_PLAY_VOICE(Cue)  if (VoiceComp) VoiceComp->PlayVoice((Cue))
+
 #pragma region Constructor
 
 APlayerCharacter::APlayerCharacter()
@@ -116,6 +118,10 @@ APlayerCharacter::APlayerCharacter()
 	TurningInPlace = ETurningInPlace::ETIP_NotTurning;
 	NetUpdateFrequency = 66.0f;
 	MinNetUpdateFrequency = 33.0f;
+
+	//================= Voice Pack ================
+	VoiceComp = CreateDefaultSubobject<UVoiceComponent>(TEXT("VoiceComponent"));
+	VoiceComp->SetIsReplicated(true);
 }
 
 #pragma endregion
@@ -124,6 +130,13 @@ APlayerCharacter::APlayerCharacter()
 void APlayerCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+
+	if (VoiceComp && DefaultVoiceSet)
+	{
+		VoiceComp->VoiceSet = DefaultVoiceSet;
+	}
+
+	TRY_PLAY_VOICE(EVoiceCue::GameStart);
 
 	// Input mapping
 	if (APlayerController* PC = Cast<APlayerController>(GetController()))
@@ -705,6 +718,7 @@ void APlayerCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, const U
 		return;
 	}
 
+	TRY_PLAY_VOICE(EVoiceCue::TakeHit);
 	PlayerHitReactMontage();
 
 	if (Combat && Combat->CombatState == ECombatState::ECS_Reloading)
@@ -731,6 +745,8 @@ void APlayerCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, const U
 	{
 		Health = FMath::Clamp(Health - Damage, 0.f, MaxHealth);
 		UpdateHUDHealth();
+
+		if (Health <= Health / 20) TRY_PLAY_VOICE(EVoiceCue::LowHP);
 
 		if (Health == 0.0f)
 		{
@@ -772,6 +788,8 @@ void APlayerCharacter::MulticastElim_Implementation()
 		NecroSyntexPlayerController->SetHUDWeaponAmmo(0);
 	}
 	bElimed = true;
+
+	TRY_PLAY_VOICE(EVoiceCue::Death);
 	PlayElimMontage();
 
 	if (DissolveEffectComponent)
