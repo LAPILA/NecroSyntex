@@ -10,7 +10,6 @@
 #include "NiagaraComponent.h"
 #include "NecroSyntex/Interfaces/InteractWithCrossHairsInterface.h"
 #include "NecroSyntex/NecroSyntexType/CombatState.h"
-#include "NecroSyntex/Voice/VoiceComponent.h"
 #include "PlayerCharacter.generated.h"
 
 class UInputMappingContext;
@@ -123,16 +122,11 @@ public:
 	bool bFinishedSwapping = false;
 
 	UPROPERTY(Replicated)
-	class AHealingStation* HealingStationActor = nullptr;
+	class AHealingStation* HealingStationActor;
 
 	UFUNCTION(BlueprintCallable)
 	void SetHealingStationActor(AHealingStation* Station);
 
-	UPROPERTY(Replicated)
-	class ASupplyCrate* OverlappingSupplyCrate = nullptr;
-
-	UFUNCTION(BlueprintCallable)
-	void SetOverlappingSupplyCrate(ASupplyCrate* Crate);
 
 	UFUNCTION(Server, Reliable)
 	void ServerRequestHealing();
@@ -269,12 +263,6 @@ private:
 
 	UPROPERTY(VisibleAnywhere)
 	class ULagCompensationComponent* LagCompensation;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-	UVoiceComponent* VoiceComp;
-
-	UPROPERTY(EditDefaultsOnly, Category = "Voice")
-	TObjectPtr<UVoiceSet> DefaultVoiceSet;
 
 	UFUNCTION(Server, Reliable)
 	void ServerEquipButtonPressed();
@@ -537,5 +525,4 @@ public:
 	FORCEINLINE bool GetDisableGameplay() const { return bDisableGameplay; }
 	bool IsLocallyReloading();
 	FORCEINLINE ULagCompensationComponent* GetLagCompensation() const { return LagCompensation; }
-	FORCEINLINE UVoiceComponent* GetVoiceComp() const { return VoiceComp; }
 };
