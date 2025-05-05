@@ -86,6 +86,7 @@ void ABasicMonsterAI::UpdateWalkSpeed()
 	//CanAttack = true;
 	if (GetCharacterMovement())
 	{
+		UE_LOG(LogTemp, Warning, TEXT("Chase Speed %f"), ChaseSpeed);
 		GetCharacterMovement()->MaxWalkSpeed = ChaseSpeed;
 	}
 }
@@ -166,7 +167,7 @@ float ABasicMonsterAI::TakeDamage_Implementation(float DamageAmount, FDamageEven
 void ABasicMonsterAI::TakeDopingDamage(float DopingDamageAmount)
 {
 	CanAttack = false;
-	UE_LOG(LogTemp, Warning, TEXT("TakeDopingDamage1"));
+	//UE_LOG(LogTemp, Warning, TEXT("TakeDopingDamage1"));
 
 	if (MonsterHP <= 0.0f) {
 		if (GEngine)
@@ -199,7 +200,7 @@ void ABasicMonsterAI::TakeDopingDamage(float DopingDamageAmount)
 		PlayDeathAnimation();
 		ChaseSpeed = 0.0f;
 		UpdateWalkSpeed();
-		UE_LOG(LogTemp, Warning, TEXT("Monster is Dead! Cause Doping"));
+		//UE_LOG(LogTemp, Warning, TEXT("Monster is Dead! Cause Doping"));
 		DelayedFunction(3.5f); // 일정 시간 후 제거 또는 리스폰
 	}
 	return;
@@ -237,7 +238,7 @@ void ABasicMonsterAI::PlayDeathAnimation()//죽음 애니메이션 재생
 
 void ABasicMonsterAI::PlaySkillAttackAnimation()//스킬 공격 애니메이션 재생
 {
-	UE_LOG(LogTemp, Warning, TEXT("Playing SkillAttack Montage"));
+	//UE_LOG(LogTemp, Warning, TEXT("Playing SkillAttack Montage"));
 	if (SkillAttackMontage && GetMesh() && GetMesh()->GetAnimInstance()) {
 		GetMesh()->GetAnimInstance()->Montage_Play(SkillAttackMontage);
 	}
@@ -280,7 +281,7 @@ void ABasicMonsterAI::MoveToPlayer()
 		AAIController* AIController = Cast<AAIController>(GetController());
 		if (AIController)
 		{
-			UE_LOG(LogTemp, Warning, TEXT("Moving to Player"));
+			//UE_LOG(LogTemp, Warning, TEXT("Moving to Player"));
 			if (MeleeAttack) {//비교적 근접 공격을 하는 경우.
 				AIController->MoveToActor(Player, 100.0f, true, true, true, 0, true);
 			}
@@ -299,7 +300,7 @@ void ABasicMonsterAI::OnSkillAreaOverlapBegin(UPrimitiveComponent* OverlappedCom
 		if (!OverlappingPlayers.Contains(OtherActor))
 		{
 			OverlappingPlayers.Add(OtherActor);
-			UE_LOG(LogTemp, Warning, TEXT("Player entered skill area: %s"), *OtherActor->GetName());
+			//UE_LOG(LogTemp, Warning, TEXT("Player entered skill area: %s"), *OtherActor->GetName());
 		}
 		if (CanSkill) {
 			UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
@@ -308,18 +309,18 @@ void ABasicMonsterAI::OnSkillAreaOverlapBegin(UPrimitiveComponent* OverlappedCom
 
 			if (MonsterAnim->isSkillAttackTime) {
 				CanAttack = false;
-				UE_LOG(LogTemp, Warning, TEXT("Skill!!!!!!!!!!!!"));
+				//UE_LOG(LogTemp, Warning, TEXT("Skill!!!!!!!!!!!!"));
 				ChaseSpeed = 0;//Monster Stop.
 				UpdateWalkSpeed();
 				UGameplayStatics::PlaySoundAtLocation(this, AttackSound, GetActorLocation());
 				SkillAttack();
 
-				ChaseSpeed = 500;//Monster can move.
+				ChaseSpeed = 300;//Monster can move.
 				GetWorld()->GetTimerManager().SetTimer(SpeedRestoreTimerHandle, this, &ABasicMonsterAI::UpdateWalkSpeed, SlowTime, false);
 			}
 		}
 		else {
-			UE_LOG(LogTemp, Warning, TEXT("Return OnOverLap"));
+			//UE_LOG(LogTemp, Warning, TEXT("Return OnOverLap"));
 			return;
 		}
 		CanSkill = false;
@@ -334,7 +335,7 @@ void ABasicMonsterAI::OnSkillAreaOverlapEnd(UPrimitiveComponent* OverlappedComp,
 	if (OverlappingPlayers.Contains(OtherActor))
 	{
 		OverlappingPlayers.Remove(OtherActor);
-		UE_LOG(LogTemp, Warning, TEXT("Player left skill area: %s"), *OtherActor->GetName());
+		//UE_LOG(LogTemp, Warning, TEXT("Player left skill area: %s"), *OtherActor->GetName());
 	}
 }
 
