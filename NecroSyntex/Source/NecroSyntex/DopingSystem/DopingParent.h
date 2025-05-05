@@ -2,7 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "TimerManager.h"
-#include "PlayerInformData.h"
+#include "NecroSyntex/Character/PlayerCharacter.h"
 #include "UObject/NoExportTypes.h"
 #include "DopingParent.generated.h"
 
@@ -39,17 +39,19 @@ public:
 
 	// 아이템 사용 함수
 	UFUNCTION(BlueprintCallable, Category = "Doping")
-	virtual void UseDopingItem(UPlayerInformData* PID);
+	virtual void UseDopingItem(APlayerCharacter* DopedPC);
+
+	APlayerCharacter* APC;
 
 	// Buff/DeBuff 처리 함수 (오버라이드 가능)
 	UFUNCTION(BlueprintCallable, Category = "Doping")
-	virtual void BuffOn(UPlayerInformData* PID);
+	virtual void BuffOn(APlayerCharacter* DopedPC);
 	UFUNCTION(BlueprintCallable, Category = "Doping")
-	virtual void BuffOff(UPlayerInformData* PID);
+	virtual void BuffOff(APlayerCharacter* DopedPC);
 	UFUNCTION(BlueprintCallable, Category = "Doping")
-	virtual void DeBuffOn(UPlayerInformData* PID);
+	virtual void DeBuffOn(APlayerCharacter* DopedPC);
 	UFUNCTION(BlueprintCallable, Category = "Doping")
-	virtual void DeBuffOff(UPlayerInformData* PID);
+	virtual void DeBuffOff(APlayerCharacter* DopedPC);
 
 	// 내부 타이머 관리
 	FTimerHandle BuffTimerHandle;
@@ -57,12 +59,12 @@ public:
 	FTimerHandle CooldownTimerHandle;
 
 	// 타이머 시작 함수
-	void StartBuff(UPlayerInformData* PID);
-	void StartDeBuff(UPlayerInformData* PID);
+	void StartBuff(APlayerCharacter* DopedPC);
+	void StartDeBuff(APlayerCharacter* DopedPC);
 	void StartCooldown();
 
 	// 타이머 종료 함수
-	void EndBuff(UPlayerInformData* PID);
-	void EndDeBuff(UPlayerInformData* PID);
+	void EndBuff(APlayerCharacter* DopedPC);
+	void EndDeBuff(APlayerCharacter* DopedPC);
 	void EndCooldown();
 };

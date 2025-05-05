@@ -22,10 +22,18 @@ public:
 
 
 	void EquipWeapon(class AWeapon* WeaponToEquip);
-	void SwapWeapons();
 	void Reload();
 	UFUNCTION(BlueprintCallable)
 	void FinishReloading();
+
+	UFUNCTION(BlueprintCallable)
+	void FinishSwap();
+
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastPlaySwapMontage();
+
+	UFUNCTION(BlueprintCallable)
+	void FinishSwapAttachWeapons();
 
 	void FireButtonPressed(bool bPressed);
 
@@ -45,6 +53,10 @@ public:
 
 	void PickUpAmmo(EWeaponType WeaponType, int32 AmmoAmount);
 	bool bLocallyReloading = false;
+
+	void CycleWeapons();
+
+	void CycleWeaponsLogic();
 protected:
 	virtual void BeginPlay() override;
 	void SetAiming(bool bIsAiming);
@@ -57,6 +69,9 @@ protected:
 
 	UFUNCTION()
 	void OnRep_SecondaryWeapon();
+
+	UFUNCTION()
+	void OnRep_ThirdWeapon();
 
 	void Fire();
 	void FireProjectileWeapon();
@@ -101,12 +116,14 @@ protected:
 	void AttachActorToRightHand(AActor* ActorToAttach);
 	void AttachActorToLeftHand(AActor* ActorToAttach);
 	void AttachActorToBackPack(AActor* ActorToAttach);
+	void AttachActorToBackPack2(AActor* ActorToAttach);
 	void UpdateCarriedAmmo();
 	void PlayEquipWeaponSound(AWeapon* WeaponToEquip);
 	void ReloadEmptyWeapon();
 	void ShowAttachedGrenade(bool bShowGrenade);
-	void EquipPrimariyWeapon(AWeapon* WeaponToEquip);
+	void EquipPrimaryWeapon(AWeapon* WeaponToEquip);
 	void EquipSecondaryWeapon(AWeapon* WeaponToEquip);
+	void EquipThirdWeapon(AWeapon* WeaponToEquip);
 private:
 	UPROPERTY()
 	class APlayerCharacter* Character;
@@ -118,8 +135,14 @@ private:
 	UPROPERTY(ReplicatedUsing = OnRep_EquippedWeapon)
 	AWeapon* EquippedWeapon;
 
+	UPROPERTY(Replicated)
+	AWeapon* PrimaryWeapon;
+
 	UPROPERTY(ReplicatedUsing = OnRep_SecondaryWeapon)
 	AWeapon* SecondaryWeapon;
+
+	UPROPERTY(ReplicatedUsing = OnRep_ThirdWeapon)
+	AWeapon* ThirdWeapon;
 
 	UPROPERTY(ReplicatedUsing = OnRep_Aiming)
 	bool bAiming = false;
@@ -231,7 +254,12 @@ private:
 
 	float LastServerFireTime = 0.f;
 	float LastServerShotgunFireTime = 0.f;
+
+	UFUNCTION(Server, Reliable)
+	void ServerCycleWeapons();
 public:
 	FORCEINLINE int32 GetGrenades() const { return Grenades; }
 	bool ShouldSwapWeapons();
+	UFUNCTION(BlueprintCallable, Category = "Weapon")
+	AWeapon* GetEquippedWeapon() const { return EquippedWeapon; }
 };

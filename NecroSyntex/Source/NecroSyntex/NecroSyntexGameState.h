@@ -13,6 +13,12 @@ UCLASS()
 class NECROSYNTEX_API ANecroSyntexGameState : public AGameState
 {
 	GENERATED_BODY()
+
+private:
+	ANecroSyntexGameState();
+
+protected:
+	virtual void Tick(float DeltaTime) override;
 	
 public:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
@@ -20,6 +26,41 @@ public:
 
 	UPROPERTY(Replicated)
 	TArray<ANecroSyntexPlayerState*> TopScoringPlayers;
+
+	UPROPERTY(Replicated, BlueprintReadOnly)
+	FName CurrentMission = " ";
+
+	UPROPERTY(Replicated, BlueprintReadOnly)
+	bool OngoingMission = false;
+
+
+
+	// Mission
+
+	UPROPERTY(Replicated, BlueprintReadOnly)
+	int32 TotalPlayer = 0;
+
+	UPROPERTY(Replicated, BlueprintReadOnly)
+	int32 SurvivingPlayer = 0;
+
+	UPROPERTY(Replicated, BlueprintReadOnly)
+	float MissionCountDown;
+
+	UPROPERTY(Replicated, BlueprintReadOnly)
+	float MissionRemainTime;
+
+	UPROPERTY(Replicated, BlueprintReadOnly)
+	bool MissionCountDownBool = false;
+
+	void UpdateMissionStartCountdown(float newTimer);
+
+	UFUNCTION(Server, Reliable)
+	void PlayerDeathUpdate();
+
+	UFUNCTION(Server, Reliable)
+	void PlayerReviveUpdate();
+
+
 private:
 
 	float TopScore = 0.f;

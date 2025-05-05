@@ -12,46 +12,7 @@ UDPBurningFurnace::UDPBurningFurnace()
 	CheckDeBuff = false;
 }
 
-void UDPBurningFurnace::BuffOn(UPlayerInformData* PID)
-{
-	if (CheckBuff == false) {
-		DefenseBuffNum = PID->Defense;
-		PID->Defense = PID->Defense + DefenseBuffNum;
-
-		CheckBuff = true;
-
-	}
-
-	DeBuffOn(PID);
-	StartBuff(PID);
-}
-
-void UDPBurningFurnace::BuffOff(UPlayerInformData* PID)
-{
-	if (CheckBuff == true) {
-		PID->Defense = PID->Defense - DefenseBuffNum;
-
-		CheckBuff = false;
-	}
-}
-
-void UDPBurningFurnace::DeBuffOn(UPlayerInformData* PID)
-{
-	if (CheckDeBuff == false) {
-		CheckDeBuff = true;
-
-		StartDeBuff(PID);
-	}
-}
-
-void UDPBurningFurnace::DeBuffOff(UPlayerInformData* PID)
-{
-	if (CheckDeBuff == true) {
-		CheckDeBuff = false;
-	}
-}
-
-void UDPBurningFurnace::UseDopingItem(UPlayerInformData* PID)
+void UDPBurningFurnace::UseDopingItem(APlayerCharacter* DopedPC)
 {
 	if (Able && DopingItemNum > 0)
 	{
@@ -61,9 +22,77 @@ void UDPBurningFurnace::UseDopingItem(UPlayerInformData* PID)
 
 		UE_LOG(LogTemp, Warning, TEXT("BurningFurnace Use"));
 		//효과
-		BuffOn(PID);
+		BuffOn(DopedPC);
 
 		//
 		StartCooldown();
 	}
+}
+
+void UDPBurningFurnace::BuffOn(APlayerCharacter* DopedPC)
+{
+	if (CheckBuff == false) {
+
+		GetWorld()->GetTimerManager().SetTimer(
+			DamageTimer,
+			[this, DopedPC]() { BFDamageApply(DopedPC); },
+			1.0f,
+			true
+		);
+
+
+		CheckBuff = true;
+
+	}
+
+	DeBuffOn(DopedPC);
+	StartBuff(DopedPC);
+}
+
+void UDPBurningFurnace::BuffOff(APlayerCharacter* DopedPC)
+{
+	if (CheckBuff == true) {
+		GetWorld()->GetTimerManager().ClearTimer(DamageTimer);
+		CheckBuff = false;
+
+	}
+}
+
+void UDPBurningFurnace::DeBuffOn(APlayerCharacter* DopedPC)
+{
+	if (CheckDeBuff == false) {
+
+		GetWorld()->GetTimerManager().SetTimer(
+			PlayerHPMinusTimer,
+			[this, DopedPC]() { PCHPMinus(DopedPC); },
+			1.0f,
+			true
+		);
+
+		CheckDeBuff = true;
+
+		StartDeBuff(DopedPC);
+	}
+}
+
+void UDPBurningFurnace::DeBuffOff(APlayerCharacter* DopedPC)
+{
+	if (CheckDeBuff == true) {
+		GetWorld()->GetTimerManager().ClearTimer(PlayerHPMinusTimer);
+
+		CheckDeBuff = false;
+	}
+}
+
+
+void UDPBurningFurnace::BFDamageApply(APlayerCharacter* DopedPC)
+{
+	DopedPC->CallBlueprintBurningFurnaceDamage();
+}
+
+void UDPBurningFurnace::PCHPMinus(APlayerCharacter* DopedPC)
+{
+	DopedPC->Health -= DopedPC->MaxHealth * 0.04f;
+
+	DopedPC->UpdateHUDHealth();
 }

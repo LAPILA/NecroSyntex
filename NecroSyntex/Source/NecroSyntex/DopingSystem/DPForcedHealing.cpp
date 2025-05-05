@@ -12,31 +12,33 @@ UDPForcedHealing::UDPForcedHealing() : Super()
 	CheckDeBuff = false;
 }
 
-void UDPForcedHealing::HealCharacter(UPlayerInformData* PID)
+void UDPForcedHealing::HealCharacter(APlayerCharacter* DopedPC)
 {
-	if (PID->CurrentHealth < PID->MaxHealth) {
-		if (PID->CurrentHealth + BuffRecoverAPS > PID->MaxHealth) {
-			PID->CurrentHealth = PID->MaxHealth;
+	if (DopedPC->Health < DopedPC->MaxHealth) {
+		if (DopedPC->Health + BuffRecoverAPS > DopedPC->MaxHealth) {
+			DopedPC->Health = DopedPC->MaxHealth;
 		}
 		else {
-			PID->CurrentHealth += BuffRecoverAPS;
+			DopedPC->Health += BuffRecoverAPS;
 		}
 	}
+
+	DopedPC->UpdateHUDHealth();
 }
 
-void UDPForcedHealing::BuffOn(UPlayerInformData* PID)
+void UDPForcedHealing::BuffOn(APlayerCharacter* DopedPC)
 {
 
 	if (CheckBuff == false) {
 		
-		targetRecover = (PID->MaxHealth * 0.3);
-		BuffRecoverAPS = targetRecover / (BuffDuration * 0.2f);
+		targetRecover = (DopedPC->MaxHealth * 0.3);
+		BuffRecoverAPS = targetRecover / 10.0f;
 
-		PID->CurrentDoped += 1;
+		DopedPC->CurrentDoped += 1;
 
 		GetWorld()->GetTimerManager().SetTimer(
 			HealingTimer,
-			[this, PID]() { HealCharacter(PID); },
+			[this, DopedPC]() { HealCharacter(DopedPC); },
 			0.2f,
 			true
 		);
@@ -45,10 +47,10 @@ void UDPForcedHealing::BuffOn(UPlayerInformData* PID)
 	}
 
 
-	StartBuff(PID);
+	StartBuff(DopedPC);
 }
 
-void UDPForcedHealing::BuffOff(UPlayerInformData* PID)
+void UDPForcedHealing::BuffOff(APlayerCharacter* DopedPC)
 {
 	if (CheckBuff == true) {
 		GetWorld()->GetTimerManager().ClearTimer(HealingTimer);
@@ -56,33 +58,33 @@ void UDPForcedHealing::BuffOff(UPlayerInformData* PID)
 	}
 
 
-	DeBuffOn(PID);
+	DeBuffOn(DopedPC);
 }
 
-void UDPForcedHealing::DeBuffOn(UPlayerInformData* PID)
+void UDPForcedHealing::DeBuffOn(APlayerCharacter* DopedPC)
 {
 	if (CheckDeBuff == false) {
-		DebuffMaxHP = PID->MaxHealth * 0.2;
-		PID->MaxHealth = PID->MaxHealth - DebuffMaxHP;
+		DebuffMaxHP = DopedPC->MaxHealth * 0.2;
+		DopedPC->MaxHealth = DopedPC->MaxHealth - DebuffMaxHP;
 
 		CheckDeBuff = true;
 	}
 
-	StartDeBuff(PID);
+	StartDeBuff(DopedPC);
 }
 
-void UDPForcedHealing::DeBuffOff(UPlayerInformData* PID)
+void UDPForcedHealing::DeBuffOff(APlayerCharacter* DopedPC)
 {
 	if (CheckDeBuff == true) {
-		PID->MaxHealth = PID->MaxHealth + DebuffMaxHP;
+		DopedPC->MaxHealth = DopedPC->MaxHealth + DebuffMaxHP;
 		CheckDeBuff = false;
 
-		PID->CurrentDoped -= 1;
+		DopedPC->CurrentDoped -= 1;
 	}
 
 }
 
-void UDPForcedHealing::UseDopingItem(UPlayerInformData* PID)
+void UDPForcedHealing::UseDopingItem(APlayerCharacter* DopedPC)
 {
 	if (Able && DopingItemNum > 0)
 	{
@@ -92,7 +94,7 @@ void UDPForcedHealing::UseDopingItem(UPlayerInformData* PID)
 
 		UE_LOG(LogTemp, Warning, TEXT("ForcedHealing Use"));
 		//효과
-
+		BuffOn(DopedPC);
 
 		//
 		StartCooldown();

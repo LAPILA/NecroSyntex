@@ -7,8 +7,8 @@
 #include "Online.h"
 #include "OnlineSubsystem.h"
 #if STEAM_SDK_INSTALLED && (PLATFORM_WINDOWS || PLATFORM_MAC || PLATFORM_LINUX)
-#include "steam/isteamugc.h"
-#include "steam/isteamremotestorage.h"
+#include "isteamugc.h"
+#include "isteamremotestorage.h"
 #endif
 #include "Interfaces/OnlineSessionInterface.h"
 
@@ -31,7 +31,7 @@ MSVC_PRAGMA(warning(push))
 MSVC_PRAGMA(warning(disable : ALL_CODE_ANALYSIS_WARNINGS))
 #endif	// USING_CODE_ANALYSIS
 
-#include <steam/steam_api.h>
+#include <steam_api.h>
 
 #if USING_CODE_ANALYSIS
 MSVC_PRAGMA(warning(pop))

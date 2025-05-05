@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Weapon.h"
+#include "NecroSyntex\Monster\BasicMonsterAI.h"
 #include "HitScanWeapon.generated.h"
 
 /**
@@ -19,6 +20,8 @@ public:
 protected:
 
 	void WeaponTraceHit(const FVector& TraceStart, const FVector& HitTarget, FHitResult& OutHit);
+
+	void PerformLineTrace(const FVector& Start, const FVector& End, FHitResult& OutHit);
 
 	UPROPERTY(EditAnywhere)
 	class UParticleSystem* ImpactParticles;

@@ -10,6 +10,7 @@
 #include "NiagaraComponent.h"
 #include "NecroSyntex/Interfaces/InteractWithCrossHairsInterface.h"
 #include "NecroSyntex/NecroSyntexType/CombatState.h"
+#include "NecroSyntex/Voice/VoiceComponent.h"
 #include "PlayerCharacter.generated.h"
 
 class UInputMappingContext;
@@ -62,6 +63,14 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* SwapWeaponAction;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UInputAction* UDCskill1;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UInputAction* UDCskill2;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UInputAction* UDCModeChange;
 public:
     APlayerCharacter();
 
@@ -77,6 +86,8 @@ public:
 	void PlayReloadMontage();
 	void PlayElimMontage();
 	void PlayThrowGrenadeMontage();
+	void PlaySwapMontage();
+	void PlayDopingMontage();
 	virtual void OnRep_ReplicatedMovement() override;
 
 	void Elim();
@@ -90,8 +101,9 @@ public:
 	UFUNCTION(BluePrintImplementableEvent)
 	void ShowSniperScopeWidget(bool bShowScope);
 
+	UFUNCTION(BlueprintCallable)
 	void UpdateHUDHealth();
-
+	UFUNCTION(BlueprintCallable)
 	void UpdateHUDShield();
 
 	bool bInitializeAmmo = false;
@@ -101,6 +113,7 @@ public:
 
 	void UpdateHUDAmmo();
 
+	UFUNCTION(BlueprintCallable)
 	void SpawnDefaultWeapon();
 
 	UPROPERTY()
@@ -108,6 +121,27 @@ public:
 
 
 	bool bFinishedSwapping = false;
+
+	UPROPERTY(Replicated)
+	class AHealingStation* HealingStationActor = nullptr;
+
+	UFUNCTION(BlueprintCallable)
+	void SetHealingStationActor(AHealingStation* Station);
+
+	UPROPERTY(Replicated)
+	class ASupplyCrate* OverlappingSupplyCrate = nullptr;
+
+	UFUNCTION(BlueprintCallable)
+	void SetOverlappingSupplyCrate(ASupplyCrate* Crate);
+
+	UFUNCTION(Server, Reliable)
+	void ServerRequestHealing();
+	void ServerRequestHealing_Implementation();
+	bool ServerRequestHealing_Validate() { return true; }
+
+	UFUNCTION(BlueprintImplementableEvent, Category = "Combat")
+	void OnWeaponHitEvent(const FHitResult& HitResult);
+
 protected:
     virtual void BeginPlay() override;
 
@@ -129,11 +163,14 @@ protected:
 	void PlayerHitReactMontage();
 	void GrenadeButtonPressed();
 	void SwapWeaponWheel();
+	void FirstDoping();
+	void SecondDoping();
+	void DopingModeChange();
 
 	void DropOrDestroyWeapon(AWeapon* Weapon);
 	void DropOrDestroyWeapons();
 
-	UFUNCTION()
+	UFUNCTION(BlueprintCallable)
 	void ReceiveDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, class AController* InstigatorController, AActor* DamageCauser);
 	void PollInit();
 	void RotateInPlace(float DeltaTime);
@@ -200,15 +237,19 @@ protected:
 	UPROPERTY(EditAnywhere)
 	UBoxComponent* foot_r;
 
+	UPROPERTY(ReplicatedUsing = OnRep_bIsSprinting)
+	bool bIsSprinting;
+
+	bool bWantsToSprint = false;
+
+	UFUNCTION()
+	void OnRep_bIsSprinting();
 private:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera", meta = (AllowPrivateAccess = "true"))
     class USpringArmComponent* CameraBoom;
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera", meta = (AllowPrivateAccess = "true"))
     class UCameraComponent* FollowCamera;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-	class UWidgetComponent* OverheadWidget;
 
 	UPROPERTY(ReplicatedUsing = OnRep_OverlappingWeapon)
 	class AWeapon* OverlappingWeapon;
@@ -229,13 +270,18 @@ private:
 	UPROPERTY(VisibleAnywhere)
 	class ULagCompensationComponent* LagCompensation;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	UVoiceComponent* VoiceComp;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Voice")
+	TObjectPtr<UVoiceSet> DefaultVoiceSet;
+
 	UFUNCTION(Server, Reliable)
 	void ServerEquipButtonPressed();
 
 	UFUNCTION(Server, Reliable, WithValidation)
 	void ServerSwapWeaponWheel();
 
-	bool bIsSprinting;
 	float AO_Yaw;
 	float AO_Pitch;
 	float InterpAO_Yaw;
@@ -262,6 +308,9 @@ private:
 	UPROPERTY(EditAnywhere, Category = Combat)
 	UAnimMontage* SwapMontage;
 
+	UPROPERTY(EditAnywhere, Category = Combat)
+	UAnimMontage* DopingMontage;
+
 	bool bRotateRootBone;
 	float TurnThreshold = 0.5f;
 	FRotator ProxyRotationLastFrame;
@@ -273,19 +322,13 @@ private:
 	/**
 	* Player health
 	*/
-	UPROPERTY(EditAnywhere, Category = "Player Stats")
-	float MaxHealth = 100.f;
-	UPROPERTY(ReplicatedUsing = OnRep_Health, VisibleAnywhere, Category = "Player Stats")
-	float Health = 100.f;
+	
 	UFUNCTION()
 	void OnRep_Health(float LastHealth);
 	/**
 	* Player sheild
 	*/
-	UPROPERTY(EditAnywhere, Category = "Player Stats")
-	float MaxShield = 200.f;
-	UPROPERTY(ReplicatedUsing = OnRep_Shield, VisibleAnywhere, Category = "Player Stats")
-	float Shield = 200.f;
+	
 	UFUNCTION()
 	void OnRep_Shield(float LastShield);
 
@@ -328,6 +371,8 @@ private:
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<AWeapon> SubWeaponClass;
 
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<AWeapon> ThirdWeaponClass;
 	UFUNCTION()
 	void ReloadMontageEndedHandler(UAnimMontage* Montage, bool bInterrupted);
 
@@ -335,6 +380,19 @@ private:
 
 	UFUNCTION()
 	void ReloadTimerFinished();
+
+	// Headbob 관련 속성
+	UPROPERTY(EditAnywhere, Category = "HeadBob")
+	TSubclassOf<UCameraShakeBase> IdleHeadBob;
+
+	UPROPERTY(EditAnywhere, Category = "HeadBob")
+	TSubclassOf<UCameraShakeBase> WalkHeadBob;
+
+	UPROPERTY(EditAnywhere, Category = "HeadBob")
+	TSubclassOf<UCameraShakeBase> SprintHeadBob;
+
+	void HandleHeadBob(float DeltaTime);
+
 public:
 	//Pahu
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
@@ -353,8 +411,105 @@ public:
 	UFUNCTION()
 	float GetTotalDamage();
 
-	UFUNCTION(BlueprintCallable)
-	void GetDopingFromAlly();
+	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
+	void PlayDopingEffect();
+
+	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
+	void SetHUDFirstDopingTrueicon();
+
+	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
+	void SetHUDFirstDopingFalseicon();
+
+	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
+	void SetHUDSecondDopingTrueicon();
+
+	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
+	void SetHUDSecondDopingFalseicon();
+
+	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
+	void CallBlueprintBurningFurnaceDamage();
+
+	UFUNCTION()
+	void SPStrengthDeBuffON();
+
+	UFUNCTION()
+	void SPStrengthDeBuffOFF();
+
+	UFUNCTION()
+	void HSDeBuffON();
+
+
+	//PID(Player Inform Data)
+	UPROPERTY(EditAnywhere, Category = "Player Stats")
+	float MaxHealth = 100.f;
+	UPROPERTY(ReplicatedUsing = OnRep_Health, BlueprintReadWrite, VisibleAnywhere, Category = "Player Stats")
+	float Health = 100.f;
+
+	UPROPERTY(EditAnywhere, Category = "Player Stats")
+	float MaxShield = 200.f;
+	UPROPERTY(ReplicatedUsing = OnRep_Shield, VisibleAnywhere, BlueprintReadWrite, Category = "Player Stats")
+	float Shield = 200.f;
+
+
+	//Speed
+	UPROPERTY(Replicated, EditDefaultsOnly, Category = "Movement")
+	float WalkSpeed = 600.f;
+
+	UPROPERTY(Replicated, EditDefaultsOnly, Category = "Movement")
+	float RunningSpeed = 1200.f;
+
+	UPROPERTY(Replicated, EditDefaultsOnly, Category = "Movement")
+	float AimWalkSpeed = 400.f;
+
+	UPROPERTY(Replicated, EditDefaultsOnly, Category = "Movement")
+	float CrouchSpeed = 300.f;
+
+	UPROPERTY(Replicated, EditDefaultsOnly, Category = "Movement")
+	float ReloadSpeedMultiplier = 0.5f;
+
+	UPROPERTY(Replicated, EditDefaultsOnly, Category = "Movement")
+	float GrenadeThrowSpeedMultiplier = 0.5f;
+
+	UPROPERTY(Replicated, EditDefaultsOnly, Category = "Movement")
+	float MaxCharacterSpeed = 10000.f;
+
+
+
+	float Rebound; // 반동
+
+	UPROPERTY(Replicated, EditAnywhere)
+	float MLAtaackPoint; // 근접 공격력
+	UPROPERTY(Replicated, EditAnywhere)
+	float Defense; // 방어력
+	UPROPERTY(Replicated, EditAnywhere)
+	float Blurred; // 시야(화면 흐림도)
+	UPROPERTY(Replicated, EditAnywhere)
+	float ROF; // 총 연사속도
+	//float Item_UseRate; // 아이템 사용비율
+
+	UPROPERTY(Replicated, EditAnywhere)
+	float DopingDamageBuff; // 도핑으로 강화된 공격력
+
+	UPROPERTY(Replicated, EditAnywhere)
+	bool ReservedMoving = false; //좌우 뒤바낌 움직임 여부
+
+	/*float BaseMaxHealth;
+	float BaseCurrentHealth;
+	float BaseMaxShield;
+	float BaseCurrentShield;
+	float BaseAttackPointMag;
+	float BaseMoveSpeed;
+	float BaseRunningSpeed;
+	float BaseRebound;
+	float BaseMLAttackPoint;
+	float BaseDefense;
+	float BaseBlurred;
+	float BaseROF;*/
+
+	//현재 캐릭터가 걸려있는 도핑(디버프 상태 포함)
+	UPROPERTY()
+	int CurrentDoped;
+
 	//Pahu end
 
 	void SetOverlappingWeapon(AWeapon* Weapon);
@@ -382,4 +537,5 @@ public:
 	FORCEINLINE bool GetDisableGameplay() const { return bDisableGameplay; }
 	bool IsLocallyReloading();
 	FORCEINLINE ULagCompensationComponent* GetLagCompensation() const { return LagCompensation; }
+	FORCEINLINE UVoiceComponent* GetVoiceComp() const { return VoiceComp; }
 };

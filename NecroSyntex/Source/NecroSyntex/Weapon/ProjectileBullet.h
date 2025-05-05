@@ -4,6 +4,8 @@
 
 #include "CoreMinimal.h"
 #include "Projectile.h"
+#include "NecroSyntex\Monster\BasicMonsterAI.h"
+#include "NecroSyntex/Weapon/Weapon.h"
 #include "ProjectileBullet.generated.h"
 
 /**

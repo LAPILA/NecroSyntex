@@ -19,7 +19,7 @@ UDPCurseofChaos::UDPCurseofChaos()
 
 }
 
-void UDPCurseofChaos::UseDopingItem(UPlayerInformData* PID)
+void UDPCurseofChaos::UseDopingItem(APlayerCharacter* DopedPC)
 {
 	if (Able && DopingItemNum > 0)
 	{
@@ -27,9 +27,9 @@ void UDPCurseofChaos::UseDopingItem(UPlayerInformData* PID)
 		Able = false;
 
 		// Buff 적용 및 타이머 시작
-		BuffOn(PID);
+		BuffOn(DopedPC);
 		// DeBuff 적용 및 타이머 시작
-		DeBuffOn(PID);
+		DeBuffOn(DopedPC);
 
 		// 쿨타임 시작
 		StartCooldown();
@@ -38,37 +38,37 @@ void UDPCurseofChaos::UseDopingItem(UPlayerInformData* PID)
 	}
 }
 
-void UDPCurseofChaos::BuffOn(UPlayerInformData* PID)
+void UDPCurseofChaos::BuffOn(APlayerCharacter* DopedPC)
 {
 	if (CheckBuff == false) {
 
 		CheckBuff = true;
 
-		PID->MoveSpeed += WalkingBuffNum;
-		PID->RunningSpeed += RunningBuffNum;
+		DopedPC->WalkSpeed += WalkingBuffNum;
+		DopedPC->RunningSpeed += RunningBuffNum;
 
 		GetWorld()->GetTimerManager().SetTimer(
 			HealingTimer,
-			[this, PID]() { HealCharacter(PID); },
+			[this, DopedPC]() { HealCharacter(DopedPC); },
 			1.0f,
 			true
 		);
 
-		PID->CurrentDoped += 1;
+		DopedPC->CurrentDoped += 1;
 
 	}
 
-	StartBuff(PID);
+	StartBuff(DopedPC);
 
 	UE_LOG(LogTemp, Warning, TEXT("UDPCurseofChaos BuffOn: Speed increased."));
 }
 
-void UDPCurseofChaos::BuffOff(UPlayerInformData* PID)
+void UDPCurseofChaos::BuffOff(APlayerCharacter* DopedPC)
 {
 	if (CheckBuff == true) {
 
-		PID->MoveSpeed -= WalkingBuffNum;
-		PID->RunningSpeed -= RunningBuffNum;
+		DopedPC->WalkSpeed -= WalkingBuffNum;
+		DopedPC->RunningSpeed -= RunningBuffNum;
 
 		GetWorld()->GetTimerManager().ClearTimer(HealingTimer);
 		CheckBuff = false;
@@ -78,25 +78,28 @@ void UDPCurseofChaos::BuffOff(UPlayerInformData* PID)
 	UE_LOG(LogTemp, Warning, TEXT("UDPCurseofChaos BuffOff: Speed normalized."));
 }
 
-void UDPCurseofChaos::DeBuffOn(UPlayerInformData* PID)
+void UDPCurseofChaos::DeBuffOn(APlayerCharacter* DopedPC)
 {
 
 	if (CheckDeBuff == false) {
 
 		CheckDeBuff = true;
+		DopedPC->ReservedMoving = true;
 	}
 
-	StartDeBuff(PID);
+	StartDeBuff(DopedPC);
 
 	UE_LOG(LogTemp, Warning, TEXT("UDPCurseofChaos DeBuffOn: Speed reduced."));
 }
 
-void UDPCurseofChaos::DeBuffOff(UPlayerInformData* PID)
+void UDPCurseofChaos::DeBuffOff(APlayerCharacter* DopedPC)
 {
 	if (CheckDeBuff == true) {
 
+		DopedPC->ReservedMoving = false;
 
-		PID->CurrentDoped -= 1;
+		DopedPC->CurrentDoped -= 1;
+
 
 		CheckDeBuff = false;
 	}
@@ -104,14 +107,14 @@ void UDPCurseofChaos::DeBuffOff(UPlayerInformData* PID)
 	UE_LOG(LogTemp, Warning, TEXT("UDPCurseofChaos DeBuffOff: Speed restored."));
 }
 
-void UDPCurseofChaos::HealCharacter(UPlayerInformData* PID)
+void UDPCurseofChaos::HealCharacter(APlayerCharacter* DopedPC)
 {
-	if (PID->CurrentHealth < PID->MaxHealth) {
-		if (PID->CurrentHealth + BuffRecoverAPS > PID->MaxHealth) {
-			PID->CurrentHealth = PID->MaxHealth;
+	if (DopedPC->Health < DopedPC->MaxHealth) {
+		if (DopedPC->Health + BuffRecoverAPS > DopedPC->MaxHealth) {
+			DopedPC->Health = DopedPC->MaxHealth;
 		}
 		else {
-			PID->CurrentHealth += BuffRecoverAPS;
+			DopedPC->Health += BuffRecoverAPS;
 		}
 	}
 }

@@ -6,6 +6,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "Particles/ParticleSystemComponent.h"
 #include "Sound/SoundCue.h"
+#include "NecroSyntex\Monster\BasicMonsterAI.h"
 #include "Kismet/KismetMathLibrary.h"
 
 void AShotgun::FireShotgun(const TArray<FVector_NetQuantize>& HitTargets)
@@ -29,9 +30,12 @@ void AShotgun::FireShotgun(const TArray<FVector_NetQuantize>& HitTargets)
 			FHitResult FireHit;
 			WeaponTraceHit(Start, HitTarget, FireHit);
 
+
 			APlayerCharacter* PlayerCharacter = Cast<APlayerCharacter>(FireHit.GetActor());
 			if (PlayerCharacter)
 			{
+				PlayerCharacter->OnWeaponHitEvent(FireHit);
+
 				const bool bHeadShot = FireHit.BoneName.ToString() == FString("head");
 
 				if (bHeadShot)
@@ -64,6 +68,56 @@ void AShotgun::FireShotgun(const TArray<FVector_NetQuantize>& HitTargets)
 						.5f,
 						FMath::FRandRange(-.5f, .5f)
 					);
+				}
+			}
+			else if (ABasicMonsterAI* HitMonster = Cast<ABasicMonsterAI>(FireHit.GetActor()))
+			{
+				HitMonster->OnWeaponHitEvent(FireHit);
+			}
+
+			ABasicMonsterAI* MonsterCharacter = Cast<ABasicMonsterAI>(FireHit.GetActor());
+			if (MonsterCharacter)
+			{
+				const bool bHeadShot = FireHit.BoneName.ToString() == FString("head"); // 없어도 문제 없음
+
+				const float DamageToCause = bHeadShot ? HeadShotDamage : Damage;
+
+				if (ImpactParticles)
+				{
+					UGameplayStatics::SpawnEmitterAtLocation(
+						GetWorld(),
+						ImpactParticles,
+						FireHit.ImpactPoint,
+						FireHit.ImpactNormal.Rotation()
+					);
+				}
+				if (HitSound)
+				{
+					UGameplayStatics::PlaySoundAtLocation(
+						this,
+						HitSound,
+						FireHit.ImpactPoint,
+						.5f,
+						FMath::FRandRange(-.5f, .5f)
+					);
+				}
+
+				if (InstigatorController && OwnerPawn->IsLocallyControlled())
+				{
+					bool bCauseAuthDamage = !bUseServerSideRewind || OwnerPawn->IsLocallyControlled();
+					if (HasAuthority() && bCauseAuthDamage)
+					{
+						UGameplayStatics::ApplyDamage(
+							MonsterCharacter,
+							DamageToCause,
+							InstigatorController,
+							this,
+							UDamageType::StaticClass()
+						);
+					}
+					else if (InstigatorController) {
+						Server_ApplyMonsterDamage(MonsterCharacter, DamageToCause, InstigatorController);
+					}
 				}
 			}
 		}

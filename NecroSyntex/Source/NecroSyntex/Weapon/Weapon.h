@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "WeaponTypes.h"
+#include "NecroSyntex\Monster\BasicMonsterAI.h"
 #include "Weapon.generated.h"
 
 UENUM(BlueprintType)
@@ -12,7 +13,9 @@ enum class EWeaponState : uint8
 {
 	EWS_Initial UMETA(DisplayName = "Initial State"),
 	EWS_Equipped UMETA(DisplayName = "Equipped"),
+	EWS_EquippedPrimary UMETA(DisplayName = "Equipped Primary"),
 	EWS_EquippedSecondary UMETA(DisplayName = "Equipped Secondary"),
+	EWS_EquippedThird UMETA(DisplayName = "Equipped Third"),
 	EWS_Dropped UMETA(DisplayName = "Dropped"),
 
 	EWS_Max UMETA(DisplayName = "DefaultMAX")
@@ -96,12 +99,17 @@ public:
 	UFUNCTION(BlueprintImplementableEvent)
 	void PlayFireSound();
 
+	UFUNCTION(Server, Reliable)
+	void Server_ApplyMonsterDamage(ABasicMonsterAI* Monster, float DamageMonster, AController* InstigatorController);
+
 protected:
 	virtual void BeginPlay() override;
 	virtual void OnWeaponStateSet();
 	virtual void OnEquipped();
 	virtual void OnDropped();
+	virtual void OnEquippedPrimary();
 	virtual void OnEquippedSecondary();
+	virtual void OnEquippedThird();
 
 	UFUNCTION()
 	virtual void OnSphereOverlap(
@@ -121,6 +129,8 @@ protected:
 		int32 OtherBoxIndex
 	);
 
+	void PerformLineTrace(const FVector& Start, const FVector& End, FHitResult& OutHit);
+
 	/**
 	* Trace end with scatter
 	*/
@@ -133,6 +143,9 @@ protected:
 
 	UPROPERTY(EditAnywhere)
 	float Damage = 20.f;
+
+	UPROPERTY(EditAnywhere)
+	float SubDamage = 5.f;
 
 	UPROPERTY(EditAnywhere)
 	float HeadShotDamage = 40.f;
@@ -197,9 +210,12 @@ public:
 	FORCEINLINE float GetZoomedInterpedSpeed() const { return ZoomInterpSpeed; }
 	bool IsEmpty();
 	bool IsFull();
+	UFUNCTION(BlueprintPure, Category = "Weapon")
 	FORCEINLINE EWeaponType GetWeaponType() const { return WeaponType; }
 	FORCEINLINE int32 GetAmmo() const { return Ammo; }
 	FORCEINLINE int32 GetMagCapacity() const { return MagCapacity; }
 	FORCEINLINE float GetDamage() const { return Damage; }
+	FORCEINLINE float GetSubDamage() const { return SubDamage; }
 	FORCEINLINE float GetHeadShotDamage() const { return HeadShotDamage; }
+
 };

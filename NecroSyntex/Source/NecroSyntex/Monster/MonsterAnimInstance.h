@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "BasicMonsterAI.h"
 #include "Animation/AnimInstance.h"
 #include "MonsterAnimInstance.generated.h"
 
@@ -17,4 +18,7 @@ class NECROSYNTEX_API UMonsterAnimInstance : public UAnimInstance
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
 	bool AttackTiming;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
+	bool isSkillAttackTime;
 };

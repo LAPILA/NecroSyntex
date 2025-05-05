@@ -12,45 +12,45 @@ UDPReducePain::UDPReducePain()
 	CheckDeBuff = false;
 }
 
-void UDPReducePain::BuffOn(UPlayerInformData* PID)
+void UDPReducePain::BuffOn(APlayerCharacter* DopedPC)
 {
 	if (CheckBuff == false) {
-		DefenseBuffNum = 50.0f - PID->Defense;
-		PID->Defense = PID->Defense + DefenseBuffNum;
+		DefenseBuffNum = 50.0f - DopedPC->Defense;
+		DopedPC->Defense = DopedPC->Defense + DefenseBuffNum;
 
-		PID->CurrentDoped += 1;
+		DopedPC->CurrentDoped += 1;
 
 		CheckBuff = true;
 		UE_LOG(LogTemp, Warning, TEXT("ReducePain Use"));
 	}
 
-	DeBuffOn(PID);
-	StartBuff(PID);
+	DeBuffOn(DopedPC);
+	StartBuff(DopedPC);
 }
 
-void UDPReducePain::BuffOff(UPlayerInformData* PID)
+void UDPReducePain::BuffOff(APlayerCharacter* DopedPC)
 {
 	if (CheckBuff == true) {
-		PID->Defense = PID->Defense - DefenseBuffNum;
+		DopedPC->Defense = DopedPC->Defense - DefenseBuffNum;
 		CheckBuff = false;
 	}
 	
 }
 
-void UDPReducePain::DeBuffOn(UPlayerInformData* PID)
+void UDPReducePain::DeBuffOn(APlayerCharacter* DopedPC)
 {
 	if (CheckDeBuff == false) {
-		PID->CurrentHealth = PID->CurrentHealth - (PID->CurrentHealth * 0.3);
-		PID->CurrentDoped -= 1;
+		DopedPC->Health = DopedPC->Health - (DopedPC->Health * 0.3);
+		DopedPC->CurrentDoped -= 1;
 	}
 }
 
-void UDPReducePain::DeBuffOff(UPlayerInformData* PID)
+void UDPReducePain::DeBuffOff(APlayerCharacter* DopedPC)
 {
 
 }
 
-void UDPReducePain::UseDopingItem(UPlayerInformData* PID)
+void UDPReducePain::UseDopingItem(APlayerCharacter* DopedPC)
 {
 	if (Able && DopingItemNum > 0)
 	{
@@ -60,7 +60,7 @@ void UDPReducePain::UseDopingItem(UPlayerInformData* PID)
 
 		UE_LOG(LogTemp, Warning, TEXT("ReducePain Use"));
 		//효과
-		BuffOn(PID);
+		BuffOn(DopedPC);
 
 		//
 		StartCooldown();

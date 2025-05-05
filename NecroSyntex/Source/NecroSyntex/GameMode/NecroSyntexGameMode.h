@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/GameMode.h"
+#include "NecroSyntex/Mission/MissionManager.h"
 #include "NecroSyntexGameMode.generated.h"
 
 namespace MatchState
@@ -23,10 +24,10 @@ public:
 	virtual void RequestRespawn(ACharacter* ElimmedCharacter, AController* ElimmedController);
 
 	UPROPERTY(EditDefaultsOnly)
-	float WarmUpTime = 10.f;
+	float WarmUpTime = 1.0f;
 	
 	UPROPERTY(EditDefaultsOnly)
-	float MatchTime = 120.f;
+	float MatchTime = 180.f; //게임 시간 컨트롤 가능.
 
 	UPROPERTY(EditDefaultsOnly)
 	float CooldownTime = 10.f;
@@ -57,7 +58,7 @@ public:
 
 public:
 	// ������ �Ϸ��� �÷��̾� ��
-	int32 PlayersReadyCount = 2;
+	int32 PlayersReadyCount = 0;
 
 	// �� �÷��̾� ��
 	int32 TotalPlayers = 0; // �κ񿡼� ������ �� ����
@@ -69,6 +70,12 @@ public:
 	UPROPERTY()
 	FVector SpawnLocation;
 	FVector SpawnRotation;
+
+
+	// Mission
+	UPROPERTY()
+	UMissionManager* MissionManager;
+
 
 protected:
 	virtual void PostLogin(APlayerController* NewPlayer) override;
