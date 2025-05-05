@@ -14,19 +14,9 @@ UDPBurningFurnace::UDPBurningFurnace()
 
 void UDPBurningFurnace::UseDopingItem(APlayerCharacter* DopedPC)
 {
-	if (Able && DopingItemNum > 0)
-	{
-		--DopingItemNum;
-		Able = false;
-
-
-		UE_LOG(LogTemp, Warning, TEXT("BurningFurnace Use"));
-		//효과
-		BuffOn(DopedPC);
-
-		//
-		StartCooldown();
-	}
+	UE_LOG(LogTemp, Warning, TEXT("BurningFurnace Use"));
+	//효과
+	BuffOn(DopedPC);
 }
 
 void UDPBurningFurnace::BuffOn(APlayerCharacter* DopedPC)
@@ -39,8 +29,6 @@ void UDPBurningFurnace::BuffOn(APlayerCharacter* DopedPC)
 			1.0f,
 			true
 		);
-
-
 		CheckBuff = true;
 
 	}

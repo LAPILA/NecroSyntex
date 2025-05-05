@@ -13,6 +13,13 @@ UDPSolidFortress::UDPSolidFortress()
 	CheckDeBuff = false;
 }
 
+void UDPSolidFortress::UseDopingItem(APlayerCharacter* DopedPC)
+{
+	UE_LOG(LogTemp, Warning, TEXT("SolidFortress Use"));
+	//효과
+	BuffOn(DopedPC);
+}
+
 void UDPSolidFortress::BuffOn(APlayerCharacter* DopedPC)
 {
 	if (CheckBuff == false) {
@@ -64,20 +71,4 @@ void UDPSolidFortress::DeBuffOff(APlayerCharacter* DopedPC)
 		CheckDeBuff = false;
 	}
 
-}
-
-void UDPSolidFortress::UseDopingItem(APlayerCharacter* DopedPC)
-{
-	if (Able && DopingItemNum > 0)
-	{
-		--DopingItemNum;
-		Able = false;
-
-
-		UE_LOG(LogTemp, Warning, TEXT("SolidFortress Use"));
-		//효과
-		BuffOn(DopedPC);
-		//
-		StartCooldown();
-	}
 }

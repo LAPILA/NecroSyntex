@@ -12,6 +12,14 @@ UDPReducePain::UDPReducePain()
 	CheckDeBuff = false;
 }
 
+void UDPReducePain::UseDopingItem(APlayerCharacter* DopedPC)
+{
+	UE_LOG(LogTemp, Warning, TEXT("ReducePain Use"));
+	//효과
+	BuffOn(DopedPC);
+
+}
+
 void UDPReducePain::BuffOn(APlayerCharacter* DopedPC)
 {
 	if (CheckBuff == false) {
@@ -48,21 +56,4 @@ void UDPReducePain::DeBuffOn(APlayerCharacter* DopedPC)
 void UDPReducePain::DeBuffOff(APlayerCharacter* DopedPC)
 {
 
-}
-
-void UDPReducePain::UseDopingItem(APlayerCharacter* DopedPC)
-{
-	if (Able && DopingItemNum > 0)
-	{
-		--DopingItemNum;
-		Able = false;
-
-
-		UE_LOG(LogTemp, Warning, TEXT("ReducePain Use"));
-		//효과
-		BuffOn(DopedPC);
-
-		//
-		StartCooldown();
-	}
 }

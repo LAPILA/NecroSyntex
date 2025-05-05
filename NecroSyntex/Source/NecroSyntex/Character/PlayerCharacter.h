@@ -398,12 +398,6 @@ public:
 	UFUNCTION(BlueprintCallable)
 	UDopingComponent* GetDopingComponent();
 
-	UPROPERTY(EditAnywhere)
-	float TotalDamage;
-
-	UFUNCTION()
-	float GetTotalDamage();
-
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
 	void PlayDopingEffect();
 

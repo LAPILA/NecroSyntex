@@ -1084,13 +1084,6 @@ void APlayerCharacter::DopingModeChange()
 	}
 }
 
-float APlayerCharacter::GetTotalDamage()
-{
-	TotalDamage = UDC->TotalDamage;
-
-	return TotalDamage;
-
-}
 
 UDopingComponent* APlayerCharacter::GetDopingComponent()
 {

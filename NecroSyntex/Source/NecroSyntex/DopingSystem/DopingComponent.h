@@ -227,29 +227,4 @@ public:
 	UFUNCTION()
 	virtual void SecondDopingForAlly();
 
-	UFUNCTION()
-	void UELOGCall();
-
-
-	/*UFUNCTION(BlueprintCallable)
-	void CallFirstDopingUse();
-
-	UFUNCTION(BlueprintCallable)
-	void CallSecondDopingUse();
-
-	UFUNCTION(BlueprintCallable)
-	void CallFirstDopingForAlly();
-
-	UFUNCTION(BlueprintCallable)
-	void CallSecondDopingForAlly();
-	
-	UFUNCTION(BlueprintCallable)
-	void CallDopingModeChange();
-
-
-	
-	*/
-
-
-
 };
