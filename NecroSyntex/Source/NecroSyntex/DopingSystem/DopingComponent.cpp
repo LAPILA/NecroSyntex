@@ -3,6 +3,7 @@
 
 #include "DopingComponent.h"
 #include "Camera/CameraComponent.h"
+#include "NecroSyntex/PlayerState/NecroSyntexPlayerState.h"
 #include "Net/UnrealNetwork.h"
 
 // Sets default values for this component's properties
@@ -45,24 +46,12 @@ void UDopingComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 	DOREPLIFETIME(UDopingComponent, GunDamage);
 	DOREPLIFETIME(UDopingComponent, TotalDamage);
 
-	/*DOREPLIFETIME(UDopingComponent, LegEnforce);
-	DOREPLIFETIME(UDopingComponent, ReducePain);
-	DOREPLIFETIME(UDopingComponent, SupremeStrength);
-	DOREPLIFETIME(UDopingComponent, ForcedHealing);
-	DOREPLIFETIME(UDopingComponent, FinalEmber);
-	DOREPLIFETIME(UDopingComponent, BurningFurnace);
-	DOREPLIFETIME(UDopingComponent, SolidFortress);
-	DOREPLIFETIME(UDopingComponent, Painless);
-	DOREPLIFETIME(UDopingComponent, ParadoxofGuardianship);
-	DOREPLIFETIME(UDopingComponent, HallucinationShield);
-	DOREPLIFETIME(UDopingComponent, HPconversion);
-	DOREPLIFETIME(UDopingComponent, CurseofChaos);*/
-
 
 	DOREPLIFETIME(UDopingComponent, DopingforAllyMode);
 
 
 }
+
 
 // Called when the game starts
 void UDopingComponent::BeginPlay()
@@ -86,6 +75,7 @@ void UDopingComponent::BeginPlay()
 		HPconversion = NewObject<UDPHPconversion>(this);
 		CurseofChaos = NewObject<UDPCurseofChaos>(this);
 
+
 		//도핑 모드(아군에게 도핑을 줄지 나에게 줄지 설정)
 		DopingforAllyMode = false;
 
@@ -94,6 +84,8 @@ void UDopingComponent::BeginPlay()
 
 		//임시로 도핑키 셋팅
 		OneKeyDoping = HallucinationShield;
+		One_DopingItemNum = OneKeyDoping->DopingItemNum;
+		One_DopingCoolTime = OneKeyDoping->DopingCoolTime;
 		FirstDopingCode = 1;
 		One_DopingCoolTime = OneKeyDoping->DopingCoolTime;
 		One_DopingItemNum = OneKeyDoping->DopingItemNum;
@@ -105,6 +97,8 @@ void UDopingComponent::BeginPlay()
 		One_Able = true;
 
 		TwoKeyDoping = BurningFurnace;
+		Two_DopingCoolTime = TwoKeyDoping->DopingCoolTime;
+		Two_DopingItemNum = TwoKeyDoping->DopingItemNum;
 		SecondDopingCode = 2;
 		Two_DopingCoolTime = TwoKeyDoping->DopingCoolTime;
 		Two_DopingItemNum = TwoKeyDoping->DopingItemNum;
@@ -114,6 +108,14 @@ void UDopingComponent::BeginPlay()
 		Two_CheckDeBuff = TwoKeyDoping->CheckDeBuff;
 		TwoKeyBool = true;
 		Two_Able = true;
+
+		APlayerCharacter* OwnerCharacter = Cast<APlayerCharacter>(GetOwner());
+		ANecroSyntexPlayerState* PS = Cast<ANecroSyntexPlayerState>(OwnerCharacter->GetPlayerState());
+		if (PS)
+		{
+			SetFirstDopingKey(PS->FirstDopingCode);
+			SetSecondDopingKey(PS->SecondDopingCode);
+		}
 	}
 
 }
@@ -338,6 +340,7 @@ void UDopingComponent::FirstDopingUse() {
 
 	OneKeyDoping->UseDopingItem(OwnerCharacter);
 	OwnerCharacter->PlayDopingEffect();
+	OwnerCharacter->PlayDopingMontage();
 	ClientPlayDopingEffect();
 	FirstDopingCoolStart();
 }
@@ -354,6 +357,7 @@ void UDopingComponent::SecondDopingUse() {
 
 	TwoKeyDoping->UseDopingItem(OwnerCharacter);
 	OwnerCharacter->PlayDopingEffect();
+	OwnerCharacter->PlayDopingMontage();
 	ClientPlayDopingEffect();
 	SecondDopingCoolStart();
 
@@ -393,17 +397,12 @@ void UDopingComponent::FirstDopingForAlly()
 	AActor* Owner = GetOwner();
 	if (!Owner) return;
 
-	//UE_LOG(LogTemp, Warning, TEXT("1"));
-
 	APlayerCharacter* OwnerCharacter = Cast<APlayerCharacter>(Owner);
 	if (!OwnerCharacter) return;
 
-	//UE_LOG(LogTemp, Warning, TEXT("2"));
 
 	UCameraComponent* CameraComponent = OwnerCharacter->FindComponentByClass<UCameraComponent>();
 	if (!CameraComponent) return;
-
-	//UE_LOG(LogTemp, Warning, TEXT("3"));
 
 	FVector Start = CameraComponent->GetComponentLocation();
 	FVector ForwardVector = CameraComponent->GetForwardVector();
@@ -413,10 +412,8 @@ void UDopingComponent::FirstDopingForAlly()
 	FCollisionQueryParams Params;
 	Params.AddIgnoredActor(Owner);
 
-	//UE_LOG(LogTemp, Warning, TEXT("4"));
 	if (GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_Visibility, Params))
 	{
-		//UE_LOG(LogTemp, Warning, TEXT("5"));
 		APlayerCharacter* HitCharacter = Cast<APlayerCharacter>(HitResult.GetActor());
 		if (HitCharacter) {
 
@@ -424,7 +421,6 @@ void UDopingComponent::FirstDopingForAlly()
 				return;
 			}
 
-			//UE_LOG(LogTemp, Warning, TEXT("6"));
 			switch (FirstDopingCode)
 			{
 			case 1: HitCharacter->UDC->SupremeStrength->BuffOn(HitCharacter); UE_LOG(LogTemp, Warning, TEXT("7ㄴ")); break;
@@ -474,15 +470,15 @@ void UDopingComponent::SecondDopingForAlly()
 	if (GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_Visibility, Params))
 	{
 		APlayerCharacter* HitCharacter = Cast<APlayerCharacter>(HitResult.GetActor());
-
-		if (HitCharacter->CurrentDoped >= 2) {
+		if (!HitCharacter || HitCharacter->CurrentDoped >= 2) {
 			return;
 		}
+
 
 		if (HitCharacter) {
 			switch (SecondDopingCode)
 			{
-			case 1: HitCharacter->UDC->SupremeStrength->BuffOn(HitCharacter); UE_LOG(LogTemp, Warning, TEXT("7ㄴ")); break;
+			case 1: HitCharacter->UDC->SupremeStrength->BuffOn(HitCharacter); break;
 			case 2: HitCharacter->UDC->BurningFurnace->BuffOn(HitCharacter); break;
 			case 3: HitCharacter->UDC->Painless->BuffOn(HitCharacter); break;
 			case 4: HitCharacter->UDC->FinalEmber->BuffOn(HitCharacter); break;

@@ -260,4 +260,6 @@ private:
 public:
 	FORCEINLINE int32 GetGrenades() const { return Grenades; }
 	bool ShouldSwapWeapons();
+	UFUNCTION(BlueprintCallable, Category = "Weapon")
+	AWeapon* GetEquippedWeapon() const { return EquippedWeapon; }
 };

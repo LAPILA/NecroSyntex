@@ -24,10 +24,10 @@ public:
 	virtual void RequestRespawn(ACharacter* ElimmedCharacter, AController* ElimmedController);
 
 	UPROPERTY(EditDefaultsOnly)
-	float WarmUpTime = 5.0f;
+	float WarmUpTime = 1.0f;
 	
 	UPROPERTY(EditDefaultsOnly)
-	float MatchTime = 120.f;
+	float MatchTime = 180.f; //게임 시간 컨트롤 가능.
 
 	UPROPERTY(EditDefaultsOnly)
 	float CooldownTime = 10.f;
@@ -58,7 +58,7 @@ public:
 
 public:
 	// ������ �Ϸ��� �÷��̾� ��
-	int32 PlayersReadyCount = 2;
+	int32 PlayersReadyCount = 0;
 
 	// �� �÷��̾� ��
 	int32 TotalPlayers = 0; // �κ񿡼� ������ �� ����
@@ -66,8 +66,6 @@ public:
 	FTimerHandle CheckPlayerStateTimer;
 
 	void SetupPlayers();
-
-	void SetupPlayers2();
 
 	UPROPERTY()
 	FVector SpawnLocation;

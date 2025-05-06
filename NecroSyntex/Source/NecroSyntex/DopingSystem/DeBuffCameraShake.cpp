@@ -11,10 +11,10 @@ UDeBuffCameraShake::UDeBuffCameraShake()
     OscillationBlendOutTime = 0.05f; // 끝 부드럽게
 
     // 카메라 흔들림 (Pitch 방향)
-    RotOscillation.Pitch.Amplitude = 8.0f; // 흔들림 크기
-    RotOscillation.Pitch.Frequency = 10.0f; // 흔들림 속도
+    RotOscillation.Pitch.Amplitude = 6.0f; // 흔들림 크기
+    RotOscillation.Pitch.Frequency = 8.5f; // 흔들림 속도
 
     // 카메라 흔들림 (Yaw 방향)
-    RotOscillation.Yaw.Amplitude = 8.0f;
-    RotOscillation.Yaw.Frequency = 7.0f;
+    RotOscillation.Yaw.Amplitude = 5.0f;
+    RotOscillation.Yaw.Frequency = 6.0f;
 }

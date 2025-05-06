@@ -59,6 +59,8 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Mission")
 	FName RegionTag;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Mission")
+	FName MissionName;
 
 protected:
 	// Called when the game starts or when spawned

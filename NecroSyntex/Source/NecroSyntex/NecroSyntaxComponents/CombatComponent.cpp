@@ -17,7 +17,9 @@
 #include "NecroSyntex/Character/PlayerAnimInstance.h"
 #include "NecroSyntex/Weapon/Projectile.h"
 #include "NecroSyntex/Weapon/Shotgun.h"
+#include "NecroSyntex/Voice/VoiceComponent.h"
 
+#define TRY_PLAY_VOICE(Cue)  Character->GetVoiceComp()->PlayVoice(Cue)
 // Sets default values for this component's properties
 UCombatComponent::UCombatComponent()
 {
@@ -167,6 +169,11 @@ void UCombatComponent::FireShotgun()
 bool UCombatComponent::CanFire()
 {
 	if (!EquippedWeapon) return false;
+
+	if (EquippedWeapon->IsEmpty() && CarriedAmmo == 0 && Character && Character->GetVoiceComp())
+    {
+		TRY_PLAY_VOICE(EVoiceCue::NoAmmo);
+    }
 
 	// Special check for Shotgun reloading
 	if (!EquippedWeapon->IsEmpty() && bCanFire &&
@@ -672,6 +679,7 @@ void UCombatComponent::Reload()
 		ServerReload();
 		HandleReload();
 		bLocallyReloading = true;
+		TRY_PLAY_VOICE(EVoiceCue::Reload);
 	}
 }
 

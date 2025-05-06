@@ -16,7 +16,7 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "Kismet/GameplayStatics.h"
-#include "Components/Image.h"
+#include "Components/ProgressBar.h"
 
 void ANecroSyntexPlayerController::BeginPlay()
 {
@@ -172,14 +172,11 @@ void ANecroSyntexPlayerController::SetHUDHealth(float Health, float MaxHealth)
 	bool bHUDValid = NecroSyntexHUD &&
 		NecroSyntexHUD->CharacterOverlay &&
 		NecroSyntexHUD->CharacterOverlay->HealthBar;
+
 	if (bHUDValid)
 	{
 		const float HealthPercent = Health / MaxHealth;
-		UMaterialInstanceDynamic* HealthBarMaterial = Cast<UMaterialInstanceDynamic>(NecroSyntexHUD->CharacterOverlay->HealthBar->GetDynamicMaterial());
-		if (HealthBarMaterial)
-		{
-			HealthBarMaterial->SetScalarParameterValue(FName("Percentage"), HealthPercent);
-		}
+		NecroSyntexHUD->CharacterOverlay->HealthBar->SetPercent(HealthPercent);
 	}
 	else
 	{
@@ -188,20 +185,18 @@ void ANecroSyntexPlayerController::SetHUDHealth(float Health, float MaxHealth)
 		HUDMaxHealth = MaxHealth;
 	}
 }
+
 void ANecroSyntexPlayerController::SetHUDShield(float Shield, float MaxShield)
 {
 	NecroSyntexHUD = NecroSyntexHUD == nullptr ? Cast<ANecroSyntexHud>(GetHUD()) : NecroSyntexHUD;
 	bool bHUDValid = NecroSyntexHUD &&
 		NecroSyntexHUD->CharacterOverlay &&
 		NecroSyntexHUD->CharacterOverlay->ShieldBar;
+
 	if (bHUDValid)
 	{
 		const float ShieldPercent = Shield / MaxShield;
-		UMaterialInstanceDynamic* ShieldBarMaterial = Cast<UMaterialInstanceDynamic>(NecroSyntexHUD->CharacterOverlay->ShieldBar->GetDynamicMaterial());
-		if (ShieldBarMaterial)
-		{
-			ShieldBarMaterial->SetScalarParameterValue(FName("Percentage"), ShieldPercent);
-		}
+		NecroSyntexHUD->CharacterOverlay->ShieldBar->SetPercent(ShieldPercent);
 	}
 	else
 	{
@@ -210,6 +205,7 @@ void ANecroSyntexPlayerController::SetHUDShield(float Shield, float MaxShield)
 		HUDMaxShield = MaxShield;
 	}
 }
+
 
 void ANecroSyntexPlayerController::OnPossess(APawn* InPawn)
 {

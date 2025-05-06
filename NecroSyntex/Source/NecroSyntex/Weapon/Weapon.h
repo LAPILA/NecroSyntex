@@ -210,10 +210,12 @@ public:
 	FORCEINLINE float GetZoomedInterpedSpeed() const { return ZoomInterpSpeed; }
 	bool IsEmpty();
 	bool IsFull();
+	UFUNCTION(BlueprintPure, Category = "Weapon")
 	FORCEINLINE EWeaponType GetWeaponType() const { return WeaponType; }
 	FORCEINLINE int32 GetAmmo() const { return Ammo; }
 	FORCEINLINE int32 GetMagCapacity() const { return MagCapacity; }
 	FORCEINLINE float GetDamage() const { return Damage; }
 	FORCEINLINE float GetSubDamage() const { return SubDamage; }
 	FORCEINLINE float GetHeadShotDamage() const { return HeadShotDamage; }
+
 };

@@ -23,9 +23,14 @@ public:
 	float ChaseSpeed;
 
 	UPROPERTY(EditAnywhere, Category = "AI")
+	float DefaultChaseSpeed;
+
+	UPROPERTY(EditAnywhere, Category = "AI")
 	float SlowChaseSpeed;
 
 	FTimerHandle SpeedRestoreTimerHandle;
+
+	FTimerHandle AttackRestoreTimerHandle;
 
 	UPROPERTY(EditAnywhere, Category = "AI")
 	float SlowTime;
@@ -55,6 +60,9 @@ public:
 	void UpdateWalkSpeed(); //float NewWalkSpeed in parameter
 
 	UFUNCTION(BlueprintCallable)
+	void AttackCoolTime();
+
+	UFUNCTION(BlueprintCallable)
 	void Attack_Player();
 
 	UFUNCTION(BlueprintCallable)
@@ -71,9 +79,25 @@ public:
 	UFUNCTION(BlueprintImplementableEvent, Category = "Combat")
 	void OnWeaponHitEvent(const FHitResult& HitResult);
 
+	UPROPERTY()
+	TArray<AActor*> OverlappingPlayers;
+
+	TArray<AActor*>& GetOverlappingPlayers() { return OverlappingPlayers; }
+
+	UPROPERTY()
+	bool CanSkill;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI")
+	bool CanAttack;
+
+	void MonsterStopMove();
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Skill")
+	float SkillAttackCoolTime;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
 	UAnimMontage* HitReactionMontage;
@@ -90,9 +114,6 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
 	class UAnimMontage* AttackMontage;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI")
-	bool CanAttack;
-
 	//UFUNCTION(BlueprintCallable, Category = "AI")
 	//void SkillAttackPrepare();
 
@@ -101,6 +122,9 @@ protected:
 
 	UFUNCTION()
 	void OnSkillAreaOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+
+	UFUNCTION()
+	void OnSkillAreaOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 
 	void PlayHitAnimation();
 
@@ -111,6 +135,10 @@ protected:
 	void DestroyMonster();
 
 	void PlaySkillAttackAnimation();
+
+	FTimerHandle MonsterSkillCoolTime;
+
+	void SkillCoolTime();
 
 	FTimerHandle DeathDelayTimerHandle;
 	//Timer Function

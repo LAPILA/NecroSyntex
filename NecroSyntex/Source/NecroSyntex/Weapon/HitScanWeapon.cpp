@@ -16,7 +16,7 @@
 
 namespace
 {
-	static const TSet<FName> BodyBones =
+	static const TSet<FName> SCBodyBones =
 	{
 		TEXT("pelvis"), TEXT("spine_01"), TEXT("spine_02"), TEXT("spine_03"),
 		TEXT("clavicle_l"), TEXT("clavicle_r"),
@@ -24,8 +24,8 @@ namespace
 		TEXT("thigh_l"),   TEXT("thigh_r")
 	};
 
-	FORCEINLINE bool IsHeadBone(const FName& Bone) { return Bone == TEXT("head"); }
-	FORCEINLINE bool IsBodyBone(const FName& Bone) { return BodyBones.Contains(Bone); }
+	FORCEINLINE bool IsSCHeadBone(const FName& Bone) { return Bone == TEXT("head"); }
+	FORCEINLINE bool IsSCBodyBone(const FName& Bone) { return SCBodyBones.Contains(Bone); }
 }
 
 void AHitScanWeapon::Fire(const FVector& HitTarget)
@@ -53,8 +53,8 @@ void AHitScanWeapon::Fire(const FVector& HitTarget)
 	/* ------------------------------------------------------------------ */
 	auto CalcDamageForBone = [&](const FName& Bone) -> float
 		{
-			if (IsHeadBone(Bone)) return HeadShotDamage;
-			else if (IsBodyBone(Bone)) return Damage;
+			if (IsSCHeadBone(Bone)) return HeadShotDamage;
+			else if (IsSCBodyBone(Bone)) return Damage;
 			else                      return SubDamage;
 		};
 
