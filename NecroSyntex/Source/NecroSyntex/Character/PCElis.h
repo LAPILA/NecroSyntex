@@ -17,4 +17,8 @@ class NECROSYNTEX_API APCElis : public APlayerCharacter
 private:
 	APCElis();
 	
+
+protected:
+	virtual void BeginPlay() override;
+
 };

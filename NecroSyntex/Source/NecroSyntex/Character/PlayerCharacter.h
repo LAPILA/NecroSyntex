@@ -423,6 +423,9 @@ public:
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
 	void CallBlueprintBurningFurnaceDamage();
 
+	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
+	void PlayerDeathStopDopingEffect();
+
 	UFUNCTION()
 	void SPStrengthDeBuffON();
 

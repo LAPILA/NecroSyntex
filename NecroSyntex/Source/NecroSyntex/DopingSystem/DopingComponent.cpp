@@ -27,6 +27,7 @@ void UDopingComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 	DOREPLIFETIME(UDopingComponent, TwoKeyBool);
 
 	DOREPLIFETIME(UDopingComponent, Passive_Duration);
+	DOREPLIFETIME(UDopingComponent, passive_call);
 
 	DOREPLIFETIME(UDopingComponent, One_DopingItemNum);
 	DOREPLIFETIME(UDopingComponent, One_DopingCoolTime);
@@ -314,6 +315,7 @@ void UDopingComponent::FirstDopingUse() {
 	One_DopingItemNum--;
 	OwnerCharacter->PlayDopingEffect();
 	OwnerCharacter->PlayDopingMontage();
+	passive_call = true;
 	ClientPlayDopingEffect();
 	FirstDopingCoolStart();
 }
@@ -332,6 +334,7 @@ void UDopingComponent::SecondDopingUse() {
 	Two_DopingItemNum--;
 	OwnerCharacter->PlayDopingEffect();
 	OwnerCharacter->PlayDopingMontage();
+	passive_call = true;
 	ClientPlayDopingEffect();
 	SecondDopingCoolStart();
 

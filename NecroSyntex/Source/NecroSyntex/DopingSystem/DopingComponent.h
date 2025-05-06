@@ -62,6 +62,9 @@ public:
 	UPROPERTY(Replicated)
 	float Passive_Duration;
 
+	UPROPERTY(Replicated)
+	bool passive_call;
+
 	UFUNCTION()
 	virtual void Passive_Start();
 	
