@@ -47,6 +47,7 @@ ABasicMonsterAI::ABasicMonsterAI()
 	SlowChaseSpeed = 70.0f;
 	SlowTime = 3.0f;
 	SkillAttackCoolTime = 15.0f;
+	MonsterDistance = 50.0f;
 	CanAttack = true;
 	MeleeAttack = false;
 	CanSkill = true;
@@ -295,11 +296,12 @@ void ABasicMonsterAI::MoveToPlayer()
 		AAIController* AIController = Cast<AAIController>(GetController());
 		if (AIController)
 		{
-			//UE_LOG(LogTemp, Warning, TEXT("Moving to Player"));
 			if (MeleeAttack) {//비교적 근접 공격을 하는 경우.
-				AIController->MoveToActor(Player, 100.0f, true, true, true, 0, true);
+				UE_LOG(LogTemp, Warning, TEXT("Moving to Player1"));
+				AIController->MoveToActor(Player, MonsterDistance, true, true, true, 0, true);
 			}
 			else {
+				UE_LOG(LogTemp, Warning, TEXT("Moving to Player2"));
 				AIController->MoveToActor(Player, 150.0f, true, true, true, 0, true);
 			}
 		}
@@ -309,6 +311,11 @@ void ABasicMonsterAI::MoveToPlayer()
 void ABasicMonsterAI::OnSkillAreaOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 	//isSkillAttackTime = true;
+	if (MonsterHP <= 0) {
+		UE_LOG(LogTemp, Warning, TEXT("No Skill"));
+		return;
+	}
+
 	if (OtherActor && OtherActor != this && OtherActor->ActorHasTag("Player"))
 	{
 		if (!OverlappingPlayers.Contains(OtherActor))
