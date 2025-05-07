@@ -4,7 +4,11 @@
 #include "DopingComponent.h"
 #include "Camera/CameraComponent.h"
 #include "NecroSyntex/PlayerState/NecroSyntexPlayerState.h"
+#include "NecroSyntex/Character/PlayerCharacter.h"
 #include "Net/UnrealNetwork.h"
+#include "NecroSyntex/Voice/VoiceComponent.h"
+
+#define TRY_PLAY_VOICE(Cue)  Cast<APlayerCharacter>(GetOwner())->GetVoiceComp()->PlayVoice(Cue)
 
 // Sets default values for this component's properties
 UDopingComponent::UDopingComponent()
@@ -131,9 +135,8 @@ void UDopingComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 
 void UDopingComponent::OnRep_OneAble()
 {
-
 	APlayerCharacter* OwnerCharacter = Cast<APlayerCharacter>(GetOwner());
-
+	
 	if (!OwnerCharacter) return;
 	
 	if (One_Able) {
@@ -240,6 +243,7 @@ void UDopingComponent::PressedFirstDopingKey()
 	if (GetOwner()->HasAuthority())
 	{
 		if (One_Able && One_DopingItemNum > 0) {
+			TRY_PLAY_VOICE(EVoiceCue::Skill1);
 			if (DopingforAllyMode) {
 				FirstDopingForAlly();
 			}
@@ -256,6 +260,7 @@ void UDopingComponent::PressedFirstDopingKey()
 void UDopingComponent::ServerPressedFirstDopingKey_Implementation()
 {
 	if (One_Able && One_DopingItemNum > 0) {
+		TRY_PLAY_VOICE(EVoiceCue::Skill1);
 		if (DopingforAllyMode) {
 			FirstDopingForAlly();
 		}
@@ -271,6 +276,7 @@ void UDopingComponent::PressedSecondDopingKey()
 	if (GetOwner()->HasAuthority())
 	{
 		if (Two_Able && Two_DopingItemNum > 0) {
+			TRY_PLAY_VOICE(EVoiceCue::Skill2);
 			if (DopingforAllyMode) {
 				SecondDopingForAlly();
 			}
@@ -289,6 +295,7 @@ void UDopingComponent::ServerPressedSecondDopingKey_Implementation()
 {
 
 	if (Two_Able && Two_DopingItemNum > 0) {
+		TRY_PLAY_VOICE(EVoiceCue::Skill2);
 		if (DopingforAllyMode) {
 			SecondDopingForAlly();
 		}

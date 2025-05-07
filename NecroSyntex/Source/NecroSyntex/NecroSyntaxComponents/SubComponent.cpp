@@ -1,6 +1,9 @@
 
 #include "SubComponent.h"
 #include "NecroSyntex\Character\PlayerCharacter.h"
+#include "NecroSyntex/Voice/VoiceComponent.h"
+
+#define TRY_PLAY_VOICE(Cue)  Character->GetVoiceComp()->PlayVoice(Cue)
 
 USubComponent::USubComponent()
 {
@@ -33,6 +36,7 @@ void USubComponent::Heal(float HealAmount, float HealingTime)
 	bHealing = true;
 	HealingRate = HealAmount / HealingTime;
 	AmountToHeal += HealAmount;
+	TRY_PLAY_VOICE(EVoiceCue::Heal);
 }
 
 void USubComponent::HealRampUp(float DeltaTime)

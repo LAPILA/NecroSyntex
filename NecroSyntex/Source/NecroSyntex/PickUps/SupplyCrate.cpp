@@ -10,8 +10,10 @@
 #include "NecroSyntex/NecroSyntaxComponents/CombatComponent.h"
 #include "NecroSyntex/Weapon/Weapon.h"
 #include "EngineUtils.h"
+#include "NecroSyntex/Voice/VoiceComponent.h"
 
 #define SC_LOG(Format, ...) UE_LOG(LogTemp, Warning, TEXT("[SupplyCrate] " Format), ##__VA_ARGS__)
+#define TRY_PLAY_VOICE(Cue)  Cast<APlayerCharacter>(GetOwner())->GetVoiceComp()->PlayVoice(Cue)
 
 ASupplyCrate::ASupplyCrate()
 {
@@ -84,6 +86,8 @@ bool ASupplyCrate::ServerOpenCrate_Validate(APlayerCharacter*) { return true; }
 void ASupplyCrate::ServerOpenCrate_Implementation(APlayerCharacter*)
 {
     if (bAlreadyProcessed) return;
+
+    TRY_PLAY_VOICE(EVoiceCue::Pickup_Supply);
     bAlreadyProcessed = true;
 
     SpawnRandomWeapon();

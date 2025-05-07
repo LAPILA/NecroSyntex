@@ -113,6 +113,7 @@ void UCombatComponent::Fire()
 {
 	if (CanFire())
 	{
+		TRY_PLAY_VOICE(EVoiceCue::Fire);
 		bCanFire = false;
 		if (EquippedWeapon)
 		{
@@ -345,7 +346,7 @@ void UCombatComponent::ThrowGrenade()
 {
 	if (Grenades == 0) return;
 	if (CombatState != ECombatState::ECS_Unoccupied || !EquippedWeapon) return;
-
+	TRY_PLAY_VOICE(EVoiceCue::ThrowGrenade);
 	CombatState = ECombatState::ECS_ThrowingGrenade;
 	if (Character)
 	{
