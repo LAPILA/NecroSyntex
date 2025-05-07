@@ -43,7 +43,7 @@ ABasicMonsterAI::ABasicMonsterAI()
 
 	MonsterHP = 100.0f;
 	MonsterAD = 20.0f;
-	ChaseSpeed = 500.0f;
+	ChaseSpeed = 0.0f;
 	SlowChaseSpeed = 70.0f;
 	SlowTime = 3.0f;
 	SkillAttackCoolTime = 15.0f;
@@ -56,6 +56,11 @@ ABasicMonsterAI::ABasicMonsterAI()
 void ABasicMonsterAI::BeginPlay()
 {
 	Super::BeginPlay();
+
+	DefaultChaseSpeed = ChaseSpeed;
+
+	FString SpeedMsg = FString::Printf(TEXT("DefaultChaseSpeed : %f"), DefaultChaseSpeed);
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, SpeedMsg);
 
 	//SkillBoxComponent overlab event bind.
 	if (SkillAttackArea) {
@@ -84,10 +89,11 @@ void ABasicMonsterAI::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
 void ABasicMonsterAI::UpdateWalkSpeed()
 {
 	//CanAttack = true;
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("UpdateWalkSpeed"));
 	if (GetCharacterMovement())
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Chase Speed %f"), ChaseSpeed);
-		GetCharacterMovement()->MaxWalkSpeed = ChaseSpeed;
+		UE_LOG(LogTemp, Warning, TEXT("Chase Speed %f"), DefaultChaseSpeed);
+		GetCharacterMovement()->MaxWalkSpeed = DefaultChaseSpeed;
 	}
 }
 
@@ -152,8 +158,8 @@ float ABasicMonsterAI::TakeDamage_Implementation(float DamageAmount, FDamageEven
 
 		//CanAttack = false;
 		PlayDeathAnimation();
-		ChaseSpeed = 0.0f;
-		UpdateWalkSpeed();
+
+		MonsterStopMove();
 
 		UE_LOG(LogTemp, Warning, TEXT("Monster is Dead!"));
 
@@ -177,10 +183,7 @@ void ABasicMonsterAI::TakeDopingDamage(float DopingDamageAmount)
 		return;
 	}
 
-	if (GetCharacterMovement())
-	{
-		GetCharacterMovement()->MaxWalkSpeed = 0.0f;
-	}
+	MonsterStopMove();
 
 	MonsterHP -= DopingDamageAmount;//if doping take damage setting speed slowly? 
 	PlayHitAnimation();
@@ -198,16 +201,27 @@ void ABasicMonsterAI::TakeDopingDamage(float DopingDamageAmount)
 		}
 
 		PlayDeathAnimation();
-		ChaseSpeed = 0.0f;
-		UpdateWalkSpeed();
+
+		MonsterStopMove();
+
 		//UE_LOG(LogTemp, Warning, TEXT("Monster is Dead! Cause Doping"));
 		DelayedFunction(3.5f); // 일정 시간 후 제거 또는 리스폰
 	}
 	return;
 }
 
+void ABasicMonsterAI::MonsterStopMove()
+{
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("MonsterStopMove"));
+	if (GetCharacterMovement())
+	{
+		GetCharacterMovement()->MaxWalkSpeed = 0.0f;
+	}
+}
+
 void ABasicMonsterAI::AttackCoolTime()
 {
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("CanAttack"));
 	CanAttack = true;
 }
 
@@ -309,14 +323,14 @@ void ABasicMonsterAI::OnSkillAreaOverlapBegin(UPrimitiveComponent* OverlappedCom
 
 			if (MonsterAnim->isSkillAttackTime) {
 				CanAttack = false;
-				//UE_LOG(LogTemp, Warning, TEXT("Skill!!!!!!!!!!!!"));
-				ChaseSpeed = 0;//Monster Stop.
-				UpdateWalkSpeed();
+				
+				MonsterStopMove();
+
 				UGameplayStatics::PlaySoundAtLocation(this, AttackSound, GetActorLocation());
 				SkillAttack();
 
-				ChaseSpeed = 300;//Monster can move.
-				GetWorld()->GetTimerManager().SetTimer(SpeedRestoreTimerHandle, this, &ABasicMonsterAI::UpdateWalkSpeed, SlowTime, false);
+				GetWorld()->GetTimerManager().SetTimer(SpeedRestoreTimerHandle, this, &ABasicMonsterAI::UpdateWalkSpeed, 2.3f, false);
+				GetWorld()->GetTimerManager().SetTimer(AttackRestoreTimerHandle, this, &ABasicMonsterAI::AttackCoolTime, 2.0f, false);
 			}
 		}
 		else {
