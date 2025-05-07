@@ -42,7 +42,7 @@ AWeapon::AWeapon()
 
 	PickupWidget = CreateDefaultSubobject<UWidgetComponent>(TEXT("PickupWidget"));
 	PickupWidget->SetupAttachment(RootComponent);
-	
+	WeaponImage = nullptr;
 }
 
 void AWeapon::EnableCustomDepth(bool bEnable)

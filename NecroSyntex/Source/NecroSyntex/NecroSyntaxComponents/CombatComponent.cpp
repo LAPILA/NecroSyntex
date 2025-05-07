@@ -260,9 +260,9 @@ void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 	{
 		EquipPrimaryWeapon(WeaponToEquip);
 	}
-
 	Character->GetCharacterMovement()->bOrientRotationToMovement = false;
 	Character->bUseControllerRotationYaw = true;
+	NotifyWeaponChanged(EquippedWeapon);
 }
 
 void UCombatComponent::EquipPrimaryWeapon(AWeapon* WeaponToEquip)
@@ -540,6 +540,11 @@ void UCombatComponent::OnRep_EquippedWeapon()
 		Character->bUseControllerRotationYaw = true;
 		PlayEquipWeaponSound(EquippedWeapon);
 
+		if (Character->IsLocallyControlled())
+		{
+			NotifyWeaponChanged(EquippedWeapon);
+		}
+
 		EquippedWeapon->EnableCustomDepth(false);
 		EquippedWeapon->SetHUDAmmo();
 	}
@@ -569,11 +574,19 @@ void UCombatComponent::CycleWeapons()
 {
 	if (!Character || !EquippedWeapon) return;
 
+	if (!Character->HasAuthority())
+	{
+		ServerCycleWeapons();
+		return;
+	}
+
 	if (CombatState != ECombatState::ECS_Unoccupied) return;
 	if (!ShouldSwapWeapons()) return;
 
 	CombatState = ECombatState::ECS_SwappingWeapons;
 	Character->bFinishedSwapping = false;
+
+	CycleWeaponsLogic();
 
 	if (Character->IsLocallyControlled())
 	{
@@ -581,27 +594,25 @@ void UCombatComponent::CycleWeapons()
 	}
 
 	MulticastPlaySwapMontage();
-
-	if (Character->HasAuthority())
-	{
-		CycleWeaponsLogic();
-	}
 }
 
 void UCombatComponent::MulticastPlaySwapMontage_Implementation()
 {
 	if (!Character) return;
 
-	if (!Character->IsLocallyControlled() || Character->HasAuthority())
+	// 클라이언트 전용 애니메이션 호출
+	if (!Character->HasAuthority())
 	{
 		Character->PlaySwapMontage();
 	}
 }
 
-
 void UCombatComponent::ServerCycleWeapons_Implementation()
 {
-	CycleWeapons();
+	if (Character && Character->HasAuthority())
+	{
+		CycleWeaponsLogic();
+	}
 }
 
 void UCombatComponent::CycleWeaponsLogic()
@@ -651,23 +662,25 @@ void UCombatComponent::CycleWeaponsLogic()
 			AttachActorToBackPack(SecondaryWeapon);
 		}
 	}
-	else
-	{
-		UE_LOG(LogTemp, Warning, TEXT("No valid weapon to cycle."));
-		return;
-	}
 
 	bCanFire = true;
 	bLocallyReloading = false;
 	GetWorld()->GetTimerManager().ClearTimer(FireTimer);
-
-	PlayEquipWeaponSound(EquippedWeapon);
-	UpdateCarriedAmmo();
-	ReloadEmptyWeapon();
-
-	// 무기 스왑 상태 해제
 	CombatState = ECombatState::ECS_Unoccupied;
 }
+
+void UCombatComponent::NotifyWeaponChanged(AWeapon* NewWeapon)
+{
+	if (!Character || !NewWeapon) return;
+
+	ANecroSyntexPlayerController* PC = Cast<ANecroSyntexPlayerController>(Character->Controller);
+	if (PC)
+	{
+		// 무기 이미지 업데이트 요청
+		PC->SetHUDWeaponImage(NewWeapon->GetWeaponImage());
+	}
+}
+
 
 void UCombatComponent::Reload()
 {
@@ -717,26 +730,26 @@ void UCombatComponent::FinishSwap()
 	{
 		CombatState = ECombatState::ECS_Unoccupied;
 	}
-	if (Character) Character->bFinishedSwapping = true;
+	if (Character)
+	{
+		Character->bFinishedSwapping = true;
+		NotifyWeaponChanged(EquippedWeapon);
+	}
 }
 
 void UCombatComponent::FinishSwapAttachWeapons()
 {
 	if (!EquippedWeapon || !Character) return;
 
-	// EquippedWeapon 기준으로 무기 순환 처리
 	if (EquippedWeapon == PrimaryWeapon && SecondaryWeapon)
 	{
-		// Primary → BackPack
 		PrimaryWeapon->SetWeaponState(EWeaponState::EWS_EquippedSecondary);
 		AttachActorToBackPack(PrimaryWeapon);
 
-		// Secondary → Equipped (RightHand)
 		EquippedWeapon = SecondaryWeapon;
 		EquippedWeapon->SetWeaponState(EWeaponState::EWS_Equipped);
 		AttachActorToRightHand(EquippedWeapon);
 
-		// Third → BackPack2
 		if (ThirdWeapon)
 		{
 			ThirdWeapon->SetWeaponState(EWeaponState::EWS_EquippedThird);
@@ -745,16 +758,13 @@ void UCombatComponent::FinishSwapAttachWeapons()
 	}
 	else if (EquippedWeapon == SecondaryWeapon && ThirdWeapon)
 	{
-		// Secondary → BackPack
 		SecondaryWeapon->SetWeaponState(EWeaponState::EWS_EquippedSecondary);
 		AttachActorToBackPack(SecondaryWeapon);
 
-		// Third → Equipped (RightHand)
 		EquippedWeapon = ThirdWeapon;
 		EquippedWeapon->SetWeaponState(EWeaponState::EWS_Equipped);
 		AttachActorToRightHand(EquippedWeapon);
 
-		// Primary → BackPack2
 		if (PrimaryWeapon)
 		{
 			PrimaryWeapon->SetWeaponState(EWeaponState::EWS_EquippedThird);
@@ -763,16 +773,13 @@ void UCombatComponent::FinishSwapAttachWeapons()
 	}
 	else if (EquippedWeapon == ThirdWeapon && PrimaryWeapon)
 	{
-		// Third → BackPack2
 		ThirdWeapon->SetWeaponState(EWeaponState::EWS_EquippedThird);
 		AttachActorToBackPack2(ThirdWeapon);
 
-		// Primary → Equipped (RightHand)
 		EquippedWeapon = PrimaryWeapon;
 		EquippedWeapon->SetWeaponState(EWeaponState::EWS_Equipped);
 		AttachActorToRightHand(EquippedWeapon);
 
-		// Secondary → BackPack
 		if (SecondaryWeapon)
 		{
 			SecondaryWeapon->SetWeaponState(EWeaponState::EWS_EquippedSecondary);
@@ -789,8 +796,10 @@ void UCombatComponent::FinishSwapAttachWeapons()
 	EquippedWeapon->SetHUDAmmo();
 	UpdateCarriedAmmo();
 	PlayEquipWeaponSound(EquippedWeapon);
-}
 
+	// 무기 교체 후 HUD 업데이트
+	NotifyWeaponChanged(EquippedWeapon);
+}
 
 void UCombatComponent::ServerReload_Implementation()
 {
@@ -802,7 +811,6 @@ void UCombatComponent::ServerReload_Implementation()
 		HandleReload();
 	}
 }
-
 
 void UCombatComponent::HandleReload()
 {
@@ -1237,7 +1245,6 @@ void UCombatComponent::SetAiming(bool bIsAiming)
 		}
 	}
 }
-
 
 void UCombatComponent::ServerSetAiming_Implementation(bool bIsAiming)
 {
