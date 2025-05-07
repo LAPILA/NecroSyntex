@@ -9,20 +9,6 @@ void UDCElis::BeginPlay()
 {
 	Super::BeginPlay();
 
-	APlayerCharacter* OwnerCharacter = Cast<APlayerCharacter>(GetOwner());
-	if (!OwnerCharacter) return;
-
-	if (OwnerCharacter->HasAuthority())
-	{
-		OwnerCharacter->MaxHealth = 200;
-		OwnerCharacter->Health = OwnerCharacter->MaxHealth;
-		OwnerCharacter->WalkSpeed = 550.0f;
-		OwnerCharacter->RunningSpeed = 1000.0f;
-		OwnerCharacter->MLAtaackPoint = 60.0f;
-		OwnerCharacter->Defense = 20;
-	}
-
-
 }
 
 void UDCElis::Elis_Passive_Start(APlayerCharacter* HitCharacter)

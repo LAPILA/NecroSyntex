@@ -14,19 +14,9 @@ UDPHallucinationShield::UDPHallucinationShield()
 
 void UDPHallucinationShield::UseDopingItem(APlayerCharacter* DopedPC)
 {
-	if (Able && DopingItemNum > 0)
-	{
-		--DopingItemNum;
-		Able = false;
-
-
-		UE_LOG(LogTemp, Warning, TEXT("HallucinationShield Use"));
-		//효과
-		BuffOn(DopedPC);
-
-		//
-		StartCooldown();
-	}
+	UE_LOG(LogTemp, Warning, TEXT("HallucinationShield Use"));
+	//효과
+	BuffOn(DopedPC);
 }
 
 void UDPHallucinationShield::BuffOn(APlayerCharacter* DopedPC)

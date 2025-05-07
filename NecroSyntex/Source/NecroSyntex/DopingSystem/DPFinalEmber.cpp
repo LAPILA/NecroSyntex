@@ -11,6 +11,16 @@ UDPFinalEmber::UDPFinalEmber()
 	CheckDeBuff = false;
 }
 
+void UDPFinalEmber::UseDopingItem(APlayerCharacter* DopedPC)
+{
+
+	UE_LOG(LogTemp, Warning, TEXT("FinalEmber Use"));
+	//효과
+	BuffOn(DopedPC);
+
+}
+
+
 void UDPFinalEmber::BuffOn(APlayerCharacter* DopedPC)
 {
 	if (CheckBuff == false) {
@@ -80,21 +90,4 @@ void UDPFinalEmber::DeBuffOn(APlayerCharacter* DopedPC)
 void UDPFinalEmber::DeBuffOff(APlayerCharacter* DopedPC)
 {
 
-}
-
-
-void UDPFinalEmber::UseDopingItem(APlayerCharacter* DopedPC)
-{
-	if (Able && DopingItemNum > 0)
-	{
-		--DopingItemNum;
-		Able = false;
-
-
-		UE_LOG(LogTemp, Warning, TEXT("FinalEmber Use"));
-		//효과
-		BuffOn(DopedPC);
-		//
-		StartCooldown();
-	}
 }

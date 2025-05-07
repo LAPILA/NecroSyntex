@@ -728,7 +728,7 @@ void APlayerCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, const U
 
 	if (Shield > 0)
 	{
-		float NewShieldValue = FMath::Clamp(Shield - Damage, 0.f, MaxShield);
+		float NewShieldValue = FMath::Clamp(Shield - (Damage - Defense), 0.f, MaxShield);
 
 		if (NewShieldValue == 0 && Shield != 0)
 		{
@@ -743,13 +743,17 @@ void APlayerCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, const U
 	}
 	else
 	{
-		Health = FMath::Clamp(Health - Damage, 0.f, MaxHealth);
+		Health = FMath::Clamp(Health - (Damage - Defense), 0.f, MaxHealth);
 		UpdateHUDHealth();
 
 		if (Health <= Health / 20) TRY_PLAY_VOICE(EVoiceCue::LowHP);
 
 		if (Health == 0.0f)
 		{
+			PlayerDeathStopDopingEffect();
+			UDC->One_Able = false;
+			UDC->Two_Able = false;
+
 			ANecroSyntexGameMode* NecroSyntexGameMode = GetWorld()->GetAuthGameMode<ANecroSyntexGameMode>();
 			if (NecroSyntexGameMode)
 			{
@@ -1102,13 +1106,6 @@ void APlayerCharacter::DopingModeChange()
 	}
 }
 
-float APlayerCharacter::GetTotalDamage()
-{
-	TotalDamage = UDC->TotalDamage;
-
-	return TotalDamage;
-
-}
 
 UDopingComponent* APlayerCharacter::GetDopingComponent()
 {
