@@ -17,8 +17,6 @@ enum class EVoiceCue : uint8
 	Fire,
 	Reload,
 	NoAmmo,
-	EquipWeapon_Generic,
-	EquipWeapon_Sniper,
 	ThrowGrenade,
 	LowHP,
 	TakeHit,
@@ -29,10 +27,6 @@ enum class EVoiceCue : uint8
 	/* --- 스킬&특수 --- */
 	Skill1,
 	Skill2,
-
-	/* --- AI/환경 --- */
-	MonsterFirstSight,
-	ObjectiveFail,
 
 	Count        UMETA(Hidden)
 };
