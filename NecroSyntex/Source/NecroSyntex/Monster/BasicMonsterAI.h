@@ -23,6 +23,9 @@ public:
 	float ChaseSpeed;
 
 	UPROPERTY(EditAnywhere, Category = "AI")
+	float DefaultChaseSpeed;
+
+	UPROPERTY(EditAnywhere, Category = "AI")
 	float SlowChaseSpeed;
 
 	FTimerHandle SpeedRestoreTimerHandle;
@@ -86,6 +89,11 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI")
 	bool CanAttack;
+
+	void MonsterStopMove();
+
+	UPROPERTY()
+	float MonsterDistance;
 
 protected:
 	// Called when the game starts or when spawned

@@ -17,6 +17,7 @@ class NECROSYNTEX_API UDopingParent : public UObject
 public:
 	UDopingParent();
 
+	// 해당 속성들은 도핑 컴포넌트에 스킬을 생성할시 초기화용
 	// 아이템 개수
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	int DopingItemNum;

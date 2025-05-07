@@ -12,6 +12,17 @@ UDPForcedHealing::UDPForcedHealing() : Super()
 	CheckDeBuff = false;
 }
 
+void UDPForcedHealing::UseDopingItem(APlayerCharacter* DopedPC)
+{
+
+	UE_LOG(LogTemp, Warning, TEXT("ForcedHealing Use"));
+	//효과
+	BuffOn(DopedPC);
+
+}
+
+
+
 void UDPForcedHealing::HealCharacter(APlayerCharacter* DopedPC)
 {
 	if (DopedPC->Health < DopedPC->MaxHealth) {
@@ -83,21 +94,3 @@ void UDPForcedHealing::DeBuffOff(APlayerCharacter* DopedPC)
 	}
 
 }
-
-void UDPForcedHealing::UseDopingItem(APlayerCharacter* DopedPC)
-{
-	if (Able && DopingItemNum > 0)
-	{
-		--DopingItemNum;
-		Able = false;
-
-
-		UE_LOG(LogTemp, Warning, TEXT("ForcedHealing Use"));
-		//효과
-		BuffOn(DopedPC);
-
-		//
-		StartCooldown();
-	}
-}
-

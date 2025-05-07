@@ -16,20 +16,9 @@ UDopingParent::UDopingParent()
 
 void UDopingParent::UseDopingItem(APlayerCharacter* DopedPC)
 {
-	if (Able && DopingItemNum > 0)
-	{
-		--DopingItemNum;
-		Able = false;
-
-		// Buff 시작
-		BuffOn(DopedPC);
-		StartBuff(DopedPC);
-
-		// 쿨타임 시작
-		StartCooldown();
-
-		DopedPC->PlayDopingEffect();
-	}
+	// Buff 시작
+	BuffOn(DopedPC);
+	DeBuffOn(DopedPC);
 }
 
 void UDopingParent::BuffOn(APlayerCharacter* DopedPC)

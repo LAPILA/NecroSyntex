@@ -13,6 +13,14 @@ UDPPainless::UDPPainless()
 	CheckDeBuff = false;
 }
 
+void UDPPainless::UseDopingItem(APlayerCharacter* DopedPC)
+{
+	UE_LOG(LogTemp, Warning, TEXT("Painless Use"));
+	//효과
+	BuffOn(DopedPC);
+}
+
+
 void UDPPainless::BuffOn(APlayerCharacter* DopedPC)
 {
 	if (CheckBuff == false) {
@@ -65,21 +73,5 @@ void UDPPainless::DeBuffOff(APlayerCharacter* DopedPC)
 	if (CheckDeBuff == true) {
 		DopedPC->CurrentDoped -= 1;
 		CheckDeBuff = false;
-	}
-}
-
-void UDPPainless::UseDopingItem(APlayerCharacter* DopedPC)
-{
-	if (Able && DopingItemNum > 0)
-	{
-		--DopingItemNum;
-		Able = false;
-
-
-		UE_LOG(LogTemp, Warning, TEXT("Painless Use"));
-		//효과
-		BuffOn(DopedPC);
-		//
-		StartCooldown();
 	}
 }

@@ -27,6 +27,7 @@ void UDopingComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 	DOREPLIFETIME(UDopingComponent, TwoKeyBool);
 
 	DOREPLIFETIME(UDopingComponent, Passive_Duration);
+	DOREPLIFETIME(UDopingComponent, passive_call);
 
 	DOREPLIFETIME(UDopingComponent, One_DopingItemNum);
 	DOREPLIFETIME(UDopingComponent, One_DopingCoolTime);
@@ -126,40 +127,12 @@ void UDopingComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
-
-	if (GetOwner()->HasAuthority())
-	{
-		/*if (OneKeyBool) {
-			One_DopingCoolTime = OneKeyDoping->DopingCoolTime;
-			One_DopingItemNum = OneKeyDoping->DopingItemNum;
-			One_BuffDuration = OneKeyDoping->BuffDuration;
-			One_DeBuffDuration = OneKeyDoping->DeBuffDuration;
-			One_CheckBuff = OneKeyDoping->CheckBuff;
-			One_CheckDeBuff = OneKeyDoping->CheckDeBuff;
-			One_Able = OneKeyDoping->Able;
-		}
-
-		if (TwoKeyBool) {
-			Two_DopingCoolTime = TwoKeyDoping->DopingCoolTime;
-			Two_DopingItemNum = TwoKeyDoping->DopingItemNum;
-			Two_BuffDuration = TwoKeyDoping->BuffDuration;
-			Two_DeBuffDuration = TwoKeyDoping->DeBuffDuration;
-			Two_CheckBuff = TwoKeyDoping->CheckBuff;
-			Two_CheckDeBuff = TwoKeyDoping->CheckDeBuff;
-			Two_Able = TwoKeyDoping->Able;
-		}*/
-		// Player 정보 갱신
-
-	}
-
 }
 
 void UDopingComponent::OnRep_OneAble()
 {
 
 	APlayerCharacter* OwnerCharacter = Cast<APlayerCharacter>(GetOwner());
-
-	UELOGCall();
 
 	if (!OwnerCharacter) return;
 	
@@ -266,7 +239,7 @@ void UDopingComponent::PressedFirstDopingKey()
 	//도핑 모드 확인
 	if (GetOwner()->HasAuthority())
 	{
-		if (One_Able) {
+		if (One_Able && One_DopingItemNum > 0) {
 			if (DopingforAllyMode) {
 				FirstDopingForAlly();
 			}
@@ -282,7 +255,7 @@ void UDopingComponent::PressedFirstDopingKey()
 
 void UDopingComponent::ServerPressedFirstDopingKey_Implementation()
 {
-	if (One_Able) {
+	if (One_Able && One_DopingItemNum > 0) {
 		if (DopingforAllyMode) {
 			FirstDopingForAlly();
 		}
@@ -297,7 +270,7 @@ void UDopingComponent::PressedSecondDopingKey()
 	//도핑 모드 확인
 	if (GetOwner()->HasAuthority())
 	{
-		if (Two_Able) {
+		if (Two_Able && Two_DopingItemNum > 0) {
 			if (DopingforAllyMode) {
 				SecondDopingForAlly();
 			}
@@ -315,7 +288,7 @@ void UDopingComponent::PressedSecondDopingKey()
 void UDopingComponent::ServerPressedSecondDopingKey_Implementation()
 {
 
-	if (Two_Able) {
+	if (Two_Able && Two_DopingItemNum > 0) {
 		if (DopingforAllyMode) {
 			SecondDopingForAlly();
 		}
@@ -339,8 +312,10 @@ void UDopingComponent::FirstDopingUse() {
 	}
 
 	OneKeyDoping->UseDopingItem(OwnerCharacter);
+	One_DopingItemNum--;
 	OwnerCharacter->PlayDopingEffect();
 	OwnerCharacter->PlayDopingMontage();
+	passive_call = true;
 	ClientPlayDopingEffect();
 	FirstDopingCoolStart();
 }
@@ -356,8 +331,10 @@ void UDopingComponent::SecondDopingUse() {
 	}
 
 	TwoKeyDoping->UseDopingItem(OwnerCharacter);
+	Two_DopingItemNum--;
 	OwnerCharacter->PlayDopingEffect();
 	OwnerCharacter->PlayDopingMontage();
+	passive_call = true;
 	ClientPlayDopingEffect();
 	SecondDopingCoolStart();
 
@@ -423,24 +400,25 @@ void UDopingComponent::FirstDopingForAlly()
 
 			switch (FirstDopingCode)
 			{
-			case 1: HitCharacter->UDC->SupremeStrength->BuffOn(HitCharacter); UE_LOG(LogTemp, Warning, TEXT("7ㄴ")); break;
-			case 2: HitCharacter->UDC->BurningFurnace->BuffOn(HitCharacter); break;
-			case 3: HitCharacter->UDC->Painless->BuffOn(HitCharacter); break;
-			case 4: HitCharacter->UDC->FinalEmber->BuffOn(HitCharacter); break;
-			case 5: HitCharacter->UDC->ReducePain->BuffOn(HitCharacter); break;
-			case 6: HitCharacter->UDC->SolidFortress->BuffOn(HitCharacter); break;
-			case 7: HitCharacter->UDC->ParadoxofGuardianship->BuffOn(HitCharacter); break;
-			case 8: HitCharacter->UDC->HallucinationShield->BuffOn(HitCharacter); break;
-			case 9: HitCharacter->UDC->LegEnforce->BuffOn(HitCharacter); break;
-			case 10: HitCharacter->UDC->ForcedHealing->BuffOn(HitCharacter); break;
-			case 11: HitCharacter->UDC->HPconversion->BuffOn(HitCharacter); break;
-			case 12: HitCharacter->UDC->CurseofChaos->BuffOn(HitCharacter); break;
+			case 1: HitCharacter->UDC->SupremeStrength->UseDopingItem(HitCharacter); UE_LOG(LogTemp, Warning, TEXT("7ㄴ")); break;
+			case 2: HitCharacter->UDC->BurningFurnace->UseDopingItem(HitCharacter); break;
+			case 3: HitCharacter->UDC->Painless->UseDopingItem(HitCharacter); break;
+			case 4: HitCharacter->UDC->FinalEmber->UseDopingItem(HitCharacter); break;
+			case 5: HitCharacter->UDC->ReducePain->UseDopingItem(HitCharacter); break;
+			case 6: HitCharacter->UDC->SolidFortress->UseDopingItem(HitCharacter); break;
+			case 7: HitCharacter->UDC->ParadoxofGuardianship->UseDopingItem(HitCharacter); break;
+			case 8: HitCharacter->UDC->HallucinationShield->UseDopingItem(HitCharacter); break;
+			case 9: HitCharacter->UDC->LegEnforce->UseDopingItem(HitCharacter); break;
+			case 10: HitCharacter->UDC->ForcedHealing->UseDopingItem(HitCharacter); break;
+			case 11: HitCharacter->UDC->HPconversion->UseDopingItem(HitCharacter); break;
+			case 12: HitCharacter->UDC->CurseofChaos->UseDopingItem(HitCharacter); break;
 			default: UE_LOG(LogTemp, Warning, TEXT("Invalid Doping Key Set!")); break;
 			}
 
 			HitCharacter->PlayDopingEffect();
 			HitCharacter->UDC->ClientPlayDopingEffect();
 			FirstDopingCoolStart();
+			One_DopingItemNum--;
 
 			DopingforAllyMode = false;
 		}
@@ -478,18 +456,18 @@ void UDopingComponent::SecondDopingForAlly()
 		if (HitCharacter) {
 			switch (SecondDopingCode)
 			{
-			case 1: HitCharacter->UDC->SupremeStrength->BuffOn(HitCharacter); break;
-			case 2: HitCharacter->UDC->BurningFurnace->BuffOn(HitCharacter); break;
-			case 3: HitCharacter->UDC->Painless->BuffOn(HitCharacter); break;
-			case 4: HitCharacter->UDC->FinalEmber->BuffOn(HitCharacter); break;
-			case 5: HitCharacter->UDC->ReducePain->BuffOn(HitCharacter); break;
-			case 6: HitCharacter->UDC->SolidFortress->BuffOn(HitCharacter); break;
-			case 7: HitCharacter->UDC->ParadoxofGuardianship->BuffOn(HitCharacter); break;
-			case 8: HitCharacter->UDC->HallucinationShield->BuffOn(HitCharacter); break;
-			case 9: HitCharacter->UDC->LegEnforce->BuffOn(HitCharacter); break;
-			case 10: HitCharacter->UDC->ForcedHealing->BuffOn(HitCharacter); break;
-			case 11: HitCharacter->UDC->HPconversion->BuffOn(HitCharacter); break;
-			case 12: HitCharacter->UDC->CurseofChaos->BuffOn(HitCharacter); break;
+			case 1: HitCharacter->UDC->SupremeStrength->UseDopingItem(HitCharacter); break;
+			case 2: HitCharacter->UDC->BurningFurnace->UseDopingItem(HitCharacter); break;
+			case 3: HitCharacter->UDC->Painless->UseDopingItem(HitCharacter); break;
+			case 4: HitCharacter->UDC->FinalEmber->UseDopingItem(HitCharacter); break;
+			case 5: HitCharacter->UDC->ReducePain->UseDopingItem(HitCharacter); break;
+			case 6: HitCharacter->UDC->SolidFortress->UseDopingItem(HitCharacter); break;
+			case 7: HitCharacter->UDC->ParadoxofGuardianship->UseDopingItem(HitCharacter); break;
+			case 8: HitCharacter->UDC->HallucinationShield->UseDopingItem(HitCharacter); break;
+			case 9: HitCharacter->UDC->LegEnforce->UseDopingItem(HitCharacter); break;
+			case 10: HitCharacter->UDC->ForcedHealing->UseDopingItem(HitCharacter); break;
+			case 11: HitCharacter->UDC->HPconversion->UseDopingItem(HitCharacter); break;
+			case 12: HitCharacter->UDC->CurseofChaos->UseDopingItem(HitCharacter); break;
 			default: UE_LOG(LogTemp, Warning, TEXT("Invalid Doping Key Set!")); break;
 
 			}
@@ -497,6 +475,7 @@ void UDopingComponent::SecondDopingForAlly()
 			HitCharacter->PlayDopingEffect();
 			HitCharacter->UDC->ClientPlayDopingEffect();
 			SecondDopingCoolStart();
+			Two_DopingItemNum--;
 
 			DopingforAllyMode = false;
 		}
@@ -559,11 +538,6 @@ void UDopingComponent::SecondDopingCoolEnd()
 	Two_Able = true;
 
 	OwnerCharacter->SetHUDSecondDopingTrueicon();
-}
-
-void UDopingComponent::UELOGCall()
-{
-	UE_LOG(LogTemp, Warning, TEXT("OnRep_OneAble Call"));
 }
 
 void UDopingComponent::ClientPlayDopingEffect_Implementation()

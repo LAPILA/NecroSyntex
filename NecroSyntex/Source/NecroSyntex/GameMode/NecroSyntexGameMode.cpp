@@ -171,7 +171,7 @@ void ANecroSyntexGameMode::SetupPlayers()
 			}
 
 			// DefaultPawnClass 원복
-			DefaultPawnClass = OldDefault;
+			//DefaultPawnClass = OldDefault;
 
 			// GetPawn() null 체크 후 안전하게 처리
 			if (APlayerCharacter* NewCharacter = Cast<APlayerCharacter>(MyPC->GetPawn()))

@@ -8,18 +8,7 @@ void UDCDeks::BeginPlay()
 	Super::BeginPlay();
 
 
-	APlayerCharacter* OwnerCharacter = Cast<APlayerCharacter>(GetOwner());
-	if (!OwnerCharacter) return;
 
-	if (OwnerCharacter->HasAuthority())
-	{
-		OwnerCharacter->MaxHealth = 250;
-		OwnerCharacter->Health = OwnerCharacter->MaxHealth;
-		OwnerCharacter->WalkSpeed = 450.0f;
-		OwnerCharacter->RunningSpeed = 800.0f;
-		OwnerCharacter->MLAtaackPoint = 100.0f;
-		OwnerCharacter->Defense = 60.0f;
-	}
 
 
 }
@@ -53,13 +42,19 @@ void UDCDeks::FirstDopingUse()
 
 	Super::FirstDopingUse();
 
-	Passive_Start();
+	if (passive_call) {
+		Passive_Start();
+		passive_call = false;
+	}
 }
 
 void UDCDeks::SecondDopingUse() {
 
 	Super::SecondDopingUse();
 
-	Passive_Start();
+	if (passive_call) {
+		Passive_Start();
+		passive_call = false;
+	}
 
 }
