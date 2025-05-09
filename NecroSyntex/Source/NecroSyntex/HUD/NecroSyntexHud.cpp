@@ -21,8 +21,13 @@ void ANecroSyntexHud::AddCharacterOverlay()
 	if (PlayerController && CharacterOverlayClass)
 	{
 		CharacterOverlay = CreateWidget<UCharacterOverlay>(PlayerController, CharacterOverlayClass);
-		CharacterOverlay->AddToViewport(-1);
+		if (CharacterOverlay)
+		{
+			CharacterOverlay->AddToViewport(-1);
+			UE_LOG(LogTemp, Log, TEXT("CharacterOverlay successfully added to viewport"));
+		}
 	}
+	/*
 	//TEST CODE
 	if (CharacterOverlay && CharacterOverlay->BuffDebuffContainer)
 	{
@@ -60,6 +65,7 @@ void ANecroSyntexHud::AddCharacterOverlay()
 	{
 		UE_LOG(LogTemp, Error, TEXT("BuffDebuffContainer is null, cannot run test."));
 	}
+	*/
 }
 
 void ANecroSyntexHud::AddAnnouncement()

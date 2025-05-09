@@ -102,6 +102,8 @@ public:
 	UFUNCTION(Server, Reliable)
 	void Server_ApplyMonsterDamage(ABasicMonsterAI* Monster, float DamageMonster, AController* InstigatorController);
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon UI")
+	UTexture2D* WeaponImage;
 protected:
 	virtual void BeginPlay() override;
 	virtual void OnWeaponStateSet();
@@ -217,5 +219,5 @@ public:
 	FORCEINLINE float GetDamage() const { return Damage; }
 	FORCEINLINE float GetSubDamage() const { return SubDamage; }
 	FORCEINLINE float GetHeadShotDamage() const { return HeadShotDamage; }
-
+	FORCEINLINE UTexture2D* GetWeaponImage() const { return WeaponImage; }
 };

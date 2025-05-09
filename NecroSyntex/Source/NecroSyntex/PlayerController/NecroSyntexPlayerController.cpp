@@ -655,3 +655,14 @@ void ANecroSyntexPlayerController::CheckPSSetTimer()
 	GetWorldTimerManager().SetTimer(CheckPlayerStateTimer, this, &ANecroSyntexPlayerController::CheckPlayerState, 0.5f, true);
 
 }
+
+void ANecroSyntexPlayerController::SetHUDWeaponImage(UTexture2D* NewWeaponImage)
+{
+	NecroSyntexHUD = NecroSyntexHUD == nullptr ? Cast<ANecroSyntexHud>(GetHUD()) : NecroSyntexHUD;
+	if (NecroSyntexHUD && NecroSyntexHUD->CharacterOverlay && NecroSyntexHUD->CharacterOverlay->WeaponImage)
+	{
+		// HUD 무기 이미지 변경
+		NecroSyntexHUD->CharacterOverlay->WeaponImage->SetBrushFromTexture(NewWeaponImage);
+		UE_LOG(LogTemp, Log, TEXT("Weapon HUD Image updated"));
+	}
+}
