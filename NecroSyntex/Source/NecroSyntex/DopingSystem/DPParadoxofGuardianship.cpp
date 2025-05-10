@@ -66,19 +66,9 @@ void UDPParadoxofGuardianship::ShiledCalcu(APlayerCharacter* DopedPC)
 
 void UDPParadoxofGuardianship::UseDopingItem(APlayerCharacter* DopedPC)
 {
-	if (Able && DopingItemNum > 0)
-	{
-		--DopingItemNum;
-		Able = false;
+	// Buff 적용 및 타이머 시작
+	BuffOn(DopedPC);
 
-		// Buff 적용 및 타이머 시작
-		BuffOn(DopedPC);
-
-		// 쿨타임 시작
-		StartCooldown();
-
-		UE_LOG(LogTemp, Warning, TEXT("LegEnforce Use"));
-	}
 }
 
 void UDPParadoxofGuardianship::BuffOn(APlayerCharacter* DopedPC)

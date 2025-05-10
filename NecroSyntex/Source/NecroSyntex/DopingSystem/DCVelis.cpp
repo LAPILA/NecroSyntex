@@ -7,20 +7,6 @@ void UDCVelis::BeginPlay()
 {
 	Super::BeginPlay();
 
-	APlayerCharacter* OwnerCharacter = Cast<APlayerCharacter>(GetOwner());
-	if (!OwnerCharacter) return;
-
-	if (OwnerCharacter->HasAuthority())
-	{
-		OwnerCharacter->MaxHealth = 150;
-		OwnerCharacter->Health = OwnerCharacter->MaxHealth;
-		OwnerCharacter->WalkSpeed = 650.0f;
-		OwnerCharacter->RunningSpeed = 1200.0f;
-		OwnerCharacter->MLAtaackPoint = 50.0f;
-		OwnerCharacter->Defense = 0;
-	}
-	
-
 }
 
 void UDCVelis::Passive_Start()
@@ -52,13 +38,19 @@ void UDCVelis::FirstDopingUse()
 
 	Super::FirstDopingUse();
 
-	Passive_Start();
+	if (passive_call) {
+		Passive_Start();
+		passive_call = false;
+	}
 }
 
 void UDCVelis::SecondDopingUse() {
 
 	Super::SecondDopingUse();
 
-	Passive_Start();
+	if (passive_call) {
+		Passive_Start();
+		passive_call = false;
+	}
 
 }

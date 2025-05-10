@@ -31,7 +31,13 @@ public:
 	FName CurrentMission = " ";
 
 	UPROPERTY(Replicated, BlueprintReadOnly)
+	FName CurrentRegion = " ";
+
+	UPROPERTY(Replicated, BlueprintReadOnly)
 	bool OngoingMission = false;
+
+	UPROPERTY(Replicated, BlueprintReadOnly)
+	int32 MissionSequence = 0;  // zero is first mission state
 
 
 

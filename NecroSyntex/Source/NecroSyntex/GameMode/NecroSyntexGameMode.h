@@ -73,7 +73,7 @@ public:
 
 
 	// Mission
-	UPROPERTY()
+	UPROPERTY(BlueprintReadWrite)
 	UMissionManager* MissionManager;
 
 
