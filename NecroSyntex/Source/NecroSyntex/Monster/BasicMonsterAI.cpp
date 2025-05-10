@@ -11,6 +11,8 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "NecroSyntex/PlayerController/NecroSyntexPlayerController.h"
 #include "AIController.h"
+#include "NecroSyntex/Mission/DefenseTarget.h"
+#include "NecroSyntex/NecroSyntexGameState.h"
 #include "NecroSyntex/Monster/MonsterAnimInstance.h"
 #include "NecroSyntex/Character/PlayerCharacter.h"
 #include "M_Spawner.h"
@@ -61,7 +63,7 @@ void ABasicMonsterAI::BeginPlay()
 	DefaultChaseSpeed = ChaseSpeed;
 
 	FString SpeedMsg = FString::Printf(TEXT("DefaultChaseSpeed : %f"), DefaultChaseSpeed);
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, SpeedMsg);
+	//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, SpeedMsg);
 
 	//SkillBoxComponent overlab event bind.
 	if (SkillAttackArea) {
@@ -90,7 +92,7 @@ void ABasicMonsterAI::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
 void ABasicMonsterAI::UpdateWalkSpeed()
 {
 	//CanAttack = true;
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("UpdateWalkSpeed"));
+	//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("UpdateWalkSpeed"));
 	if (GetCharacterMovement())
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Chase Speed %f"), DefaultChaseSpeed);
@@ -213,7 +215,7 @@ void ABasicMonsterAI::TakeDopingDamage(float DopingDamageAmount)
 
 void ABasicMonsterAI::MonsterStopMove()
 {
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("MonsterStopMove"));
+	//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("MonsterStopMove"));
 	if (GetCharacterMovement())
 	{
 		GetCharacterMovement()->MaxWalkSpeed = 0.0f;
@@ -222,7 +224,7 @@ void ABasicMonsterAI::MonsterStopMove()
 
 void ABasicMonsterAI::AttackCoolTime()
 {
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("CanAttack"));
+	//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("CanAttack"));
 	CanAttack = true;
 }
 
@@ -291,10 +293,31 @@ void ABasicMonsterAI::Attack_Player()//c++로 구현 시도했지만 블프로 이미 해둬서 
 void ABasicMonsterAI::MoveToPlayer()
 {
 	APlayerCharacter* Player = Cast<APlayerCharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
+	ANecroSyntexGameState* GameState = Cast<ANecroSyntexGameState>(UGameplayStatics::GetGameState(GetWorld()));
+	ADefenseTarget* DefenseTarget = nullptr;
+	for (TObjectIterator<ADefenseTarget> It; It; ++It)
+	{
+		DefenseTarget = *It;
+		if (DefenseTarget)
+		{
+			//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("find DefenseTarget"));
+			// DefenseTarget을 찾았으면
+			break;
+		}
+	}
+
 	if (Player)
 	{
 		AAIController* AIController = Cast<AAIController>(GetController());
-		if (AIController)
+
+		if (DefenseTarget && GameState) {
+			if (AIController && GameState->CurrentMission == "Defense") {
+				GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("move to DefenseTarget"));
+				AIController->MoveToActor(DefenseTarget, 10.0f, true, false, true, 0, true);
+			}
+		}
+		
+		if (AIController && GameState->CurrentMission != "Defense")
 		{
 			if (MeleeAttack) {//비교적 근접 공격을 하는 경우.
 				UE_LOG(LogTemp, Warning, TEXT("Moving to Player1"));
@@ -302,7 +325,7 @@ void ABasicMonsterAI::MoveToPlayer()
 			}
 			else {
 				UE_LOG(LogTemp, Warning, TEXT("Moving to Player2"));
-				AIController->MoveToActor(Player, 150.0f, true, true, true, 0, true);
+				AIController->MoveToActor(Player, 15.0f, true, true, true, 0, true);
 			}
 		}
 	}
