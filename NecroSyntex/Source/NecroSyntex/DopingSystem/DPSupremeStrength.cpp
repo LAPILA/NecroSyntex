@@ -15,19 +15,10 @@ UDPSupremeStrength::UDPSupremeStrength() :Super()
 
 void UDPSupremeStrength::UseDopingItem(APlayerCharacter* DopedPC)
 {
-	if (Able && DopingItemNum > 0)
-	{
-		--DopingItemNum;
-		Able = false;
+	UE_LOG(LogTemp, Warning, TEXT("SupremeStrength Use"));
+	//효과
+	BuffOn(DopedPC);
 
-
-		UE_LOG(LogTemp, Warning, TEXT("SupremeStrength Use"));
-		//효과
-		BuffOn(DopedPC);
-
-		//
-		StartCooldown();
-	}
 }
 
 void UDPSupremeStrength::BuffOn(APlayerCharacter* DopedPC)

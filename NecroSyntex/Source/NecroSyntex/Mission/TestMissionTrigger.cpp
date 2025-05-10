@@ -51,7 +51,7 @@ void ATestMissionTrigger::NotifyActorBeginOverlap(AActor* OtherActor)
 					GetWorld()->GetTimerManager().SetTimer(
 						TriggerTimer,
 						[this]() { TriggerDestroy(); },
-						GM->MissionManager->count,
+						GM->MissionManager->count + 0.3f,
 						false
 					);
 
@@ -91,4 +91,5 @@ void ATestMissionTrigger::NotifyActorEndOverlap(AActor* OtherActor) {
 void ATestMissionTrigger::TriggerDestroy()
 {
 	OnTrigger = false;
+	Destroy();
 }

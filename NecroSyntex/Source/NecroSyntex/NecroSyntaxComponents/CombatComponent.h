@@ -57,6 +57,8 @@ public:
 	void CycleWeapons();
 
 	void CycleWeaponsLogic();
+
+	void NotifyWeaponChanged(AWeapon* NewWeapon);
 protected:
 	virtual void BeginPlay() override;
 	void SetAiming(bool bIsAiming);

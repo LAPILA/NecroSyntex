@@ -142,4 +142,6 @@ public:
 	void CheckPlayerState();
 
 	void CheckPSSetTimer();
+
+	void SetHUDWeaponImage(UTexture2D* NewWeaponImage);
 };

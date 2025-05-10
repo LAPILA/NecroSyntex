@@ -110,12 +110,16 @@ void UMissionManager::StartSurvivalMission()
 
 void UMissionManager::SurvivalMissionSuccess()
 {
+    MissionSuccess.Broadcast();
+
     EndSurvivlvalMission();
+
 }
 
 void UMissionManager::SurvivalMissionFail()
 {
     GetWorld()->GetTimerManager().ClearTimer(SurvivalTimerhandle);
+
     EndSurvivlvalMission();
 }
 
@@ -187,6 +191,7 @@ void UMissionManager::GameStateAndUIUpdate( bool MissionBool)
     if (GS)
     {
         GS->CurrentMission = CurrentMissionName;
+        GS->CurrentRegion = CurrentRegionTag;
         GS->MissionRemainTime = CurrentDuration;
         GS->OngoingMission = MissionBool;
     }

@@ -405,12 +405,6 @@ public:
 	UFUNCTION(BlueprintCallable)
 	UDopingComponent* GetDopingComponent();
 
-	UPROPERTY(EditAnywhere)
-	float TotalDamage;
-
-	UFUNCTION()
-	float GetTotalDamage();
-
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
 	void PlayDopingEffect();
 
@@ -428,6 +422,9 @@ public:
 
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
 	void CallBlueprintBurningFurnaceDamage();
+
+	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
+	void PlayerDeathStopDopingEffect();
 
 	UFUNCTION()
 	void SPStrengthDeBuffON();

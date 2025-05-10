@@ -16,5 +16,8 @@ class NECROSYNTEX_API APCDeks : public APlayerCharacter
 
 private:
 	APCDeks();
+
+protected:
+	virtual void BeginPlay() override;
 	
 };

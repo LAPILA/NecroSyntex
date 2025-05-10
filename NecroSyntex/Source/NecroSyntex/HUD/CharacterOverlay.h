@@ -39,6 +39,9 @@ public:
 	UPROPERTY(meta = (BindWidget))
 	UTextBlock* CarriedAmmoAmount;
 
+	UPROPERTY(meta = (BindWidget))
+	UImage* WeaponImage;
+
 	// Score UI
 	UPROPERTY(meta = (BindWidget))
 	UTextBlock* ScoreAmount;
