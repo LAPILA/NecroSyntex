@@ -8,6 +8,7 @@
 #include "NecroSyntex/GameMode/NecroSyntexGameMode.h"
 #include "NecroSyntex/NecroSyntexGameState.h"
 #include "NecroSyntex/Character/PlayerCharacter.h"
+#include "Net/UnrealNetwork.h"
 
 void UMissionManager::Init(class ANecroSyntexGameMode* InGameMode)
 {
@@ -98,6 +99,8 @@ void UMissionManager::StartSurvivalMission()
 
     GameStateAndUIUpdate(true);
 
+    MissionStart.Broadcast();
+
     // 생존 미션 타이머 작동
     GetWorld()->GetTimerManager().SetTimer(
         SurvivalTimerhandle,
@@ -120,6 +123,8 @@ void UMissionManager::SurvivalMissionFail()
     GetWorld()->GetTimerManager().ClearTimer(SurvivalTimerhandle);
 
     EndSurvivlvalMission();
+
+    MissionFail.Broadcast();
 }
 
 void UMissionManager::EndSurvivlvalMission()
@@ -152,6 +157,8 @@ void UMissionManager::StartDefenseMission()
 
     GameStateAndUIUpdate(true);
 
+    MissionStart.Broadcast();
+
     GetWorld()->GetTimerManager().SetTimer(
         DefenseTimerHandle,
         [this]() { DefenseMissionSuccess(); },
@@ -162,6 +169,8 @@ void UMissionManager::StartDefenseMission()
 
 void UMissionManager::DefenseMissionSuccess()
 {
+    MissionSuccess.Broadcast();
+
     EndSurvivlvalMission();
 }
 
@@ -169,8 +178,9 @@ void UMissionManager::DefenseMissionFail()
 {
     GetWorld()->GetTimerManager().ClearTimer(DefenseTimerHandle);
     GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Mission Fail"));
-    UE_LOG(LogTemp, Warning, TEXT("Mission Fail"));
     EndSurvivlvalMission();
+
+    MissionFail.Broadcast();
 }
 
 void UMissionManager::EndDefenseMission()
