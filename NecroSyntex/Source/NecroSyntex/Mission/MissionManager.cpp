@@ -4,7 +4,6 @@
 #include "MissionManager.h"
 #include "Kismet/GameplayStatics.h"
 #include "NecroSyntex/Monster/M_Spawner.h"
-#include "NecroSyntex/Mission/DefenseObject.h"
 #include "NecroSyntex/Mission/DefenseTarget.h"
 #include "NecroSyntex/GameMode/NecroSyntexGameMode.h"
 #include "NecroSyntex/NecroSyntexGameState.h"
