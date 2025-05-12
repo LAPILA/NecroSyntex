@@ -28,7 +28,7 @@ ABasicMonsterAI::ABasicMonsterAI()
 	SkillAttackArea->SetupAttachment(RootComponent);
 	SkillAttackArea->SetRelativeLocation(FVector(168.f, 0.f, 0.f));
 	SkillAttackArea->SetBoxExtent(FVector(100.f, 50.f, 50.f));
-	SkillAttackArea->SetCollisionProfileName(TEXT("Trigger"));
+	SkillAttackArea->SetCollisionProfileName(TEXT("Trigger")); 
 	SkillAttackArea->SetGenerateOverlapEvents(true);
 
 	SkillAttackArea->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
@@ -132,7 +132,7 @@ float ABasicMonsterAI::TakeDamage_Implementation(float DamageAmount, FDamageEven
 	GetWorld()->GetTimerManager().SetTimer(AttackRestoreTimerHandle, this, &ABasicMonsterAI::AttackCoolTime, 0.02f, false);
 
 	MonsterHP -= DamageAmount + DPA->DopingDamageBuff;
-
+	
 	if (DamageAmount < 50) {//Refactoring Need..
 		UGameplayStatics::PlaySoundAtLocation(this, HitSound, GetActorLocation());
 		PlayHitAnimation();
@@ -246,7 +246,7 @@ void ABasicMonsterAI::PlayHitHighDamageAnimation()//강한 데미지인 경우 hit 애니�
 
 void ABasicMonsterAI::PlayDeathAnimation()//죽음 애니메이션 재생
 {
-
+	
 	if (DeathReactionMontage && GetMesh() && GetMesh()->GetAnimInstance())
 	{
 		GetMesh()->GetAnimInstance()->Montage_Play(DeathReactionMontage);
@@ -292,6 +292,7 @@ void ABasicMonsterAI::Attack_Player()//c++로 구현 시도했지만 블프로 이미 해둬서 
 
 void ABasicMonsterAI::MoveToPlayer()
 {
+	UE_LOG(LogTemp, Warning, TEXT("Moving to Player Start 0511"));
 	APlayerCharacter* Player = Cast<APlayerCharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
 	ANecroSyntexGameState* GameState = Cast<ANecroSyntexGameState>(UGameplayStatics::GetGameState(GetWorld()));
 	ADefenseTarget* DefenseTarget = nullptr;
@@ -312,20 +313,22 @@ void ABasicMonsterAI::MoveToPlayer()
 
 		if (DefenseTarget && GameState) {
 			if (AIController && GameState->CurrentMission == "Defense") {
-				GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("move to DefenseTarget"));
+				//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("move to DefenseTarget"));
 				AIController->MoveToActor(DefenseTarget, 10.0f, true, true, true, 0, true);
+				return;
 			}
 		}
-
+		
 		if (AIController && GameState->CurrentMission != "Defense")
 		{
 			if (MeleeAttack) {//비교적 근접 공격을 하는 경우.
-				UE_LOG(LogTemp, Warning, TEXT("Moving to Player1"));
+				UE_LOG(LogTemp, Warning, TEXT("Moving to Player 0511"));
 				AIController->MoveToActor(Player, MonsterDistance, true, true, true, 0, true);
 			}
 			else {
-				UE_LOG(LogTemp, Warning, TEXT("Moving to Player2"));
-				AIController->MoveToActor(Player, 15.0f, true, true, true, 0, true);
+				UE_LOG(LogTemp, Warning, TEXT("Moving to Player 0511 2"));
+				AIController->MoveToActor(Player, 150.0f, true, true, true, 0, true);
+				//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("move to end~~~~~~~~~~~~~"));
 			}
 		}
 	}
@@ -353,7 +356,7 @@ void ABasicMonsterAI::OnSkillAreaOverlapBegin(UPrimitiveComponent* OverlappedCom
 
 			if (MonsterAnim->isSkillAttackTime) {
 				CanAttack = false;
-
+				
 				MonsterStopMove();
 
 				UGameplayStatics::PlaySoundAtLocation(this, AttackSound, GetActorLocation());
