@@ -28,7 +28,7 @@ ABasicMonsterAI::ABasicMonsterAI()
 	SkillAttackArea->SetupAttachment(RootComponent);
 	SkillAttackArea->SetRelativeLocation(FVector(168.f, 0.f, 0.f));
 	SkillAttackArea->SetBoxExtent(FVector(100.f, 50.f, 50.f));
-	SkillAttackArea->SetCollisionProfileName(TEXT("Trigger")); 
+	SkillAttackArea->SetCollisionProfileName(TEXT("Trigger"));
 	SkillAttackArea->SetGenerateOverlapEvents(true);
 
 	SkillAttackArea->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
@@ -132,7 +132,7 @@ float ABasicMonsterAI::TakeDamage_Implementation(float DamageAmount, FDamageEven
 	GetWorld()->GetTimerManager().SetTimer(AttackRestoreTimerHandle, this, &ABasicMonsterAI::AttackCoolTime, 0.02f, false);
 
 	MonsterHP -= DamageAmount + DPA->DopingDamageBuff;
-	
+
 	if (DamageAmount < 50) {//Refactoring Need..
 		UGameplayStatics::PlaySoundAtLocation(this, HitSound, GetActorLocation());
 		PlayHitAnimation();
@@ -246,7 +246,7 @@ void ABasicMonsterAI::PlayHitHighDamageAnimation()//강한 데미지인 경우 hit 애니�
 
 void ABasicMonsterAI::PlayDeathAnimation()//죽음 애니메이션 재생
 {
-	
+
 	if (DeathReactionMontage && GetMesh() && GetMesh()->GetAnimInstance())
 	{
 		GetMesh()->GetAnimInstance()->Montage_Play(DeathReactionMontage);
@@ -313,10 +313,10 @@ void ABasicMonsterAI::MoveToPlayer()
 		if (DefenseTarget && GameState) {
 			if (AIController && GameState->CurrentMission == "Defense") {
 				GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("move to DefenseTarget"));
-				AIController->MoveToActor(DefenseTarget, 10.0f, true, false, true, 0, true);
+				AIController->MoveToActor(DefenseTarget, 10.0f, true, true, true, 0, true);
 			}
 		}
-		
+
 		if (AIController && GameState->CurrentMission != "Defense")
 		{
 			if (MeleeAttack) {//비교적 근접 공격을 하는 경우.
@@ -353,7 +353,7 @@ void ABasicMonsterAI::OnSkillAreaOverlapBegin(UPrimitiveComponent* OverlappedCom
 
 			if (MonsterAnim->isSkillAttackTime) {
 				CanAttack = false;
-				
+
 				MonsterStopMove();
 
 				UGameplayStatics::PlaySoundAtLocation(this, AttackSound, GetActorLocation());
