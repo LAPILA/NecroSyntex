@@ -85,8 +85,7 @@ void ABasicMonsterAI::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
 
 void ABasicMonsterAI::UpdateWalkSpeed()
 {
-	if (GetCharacterMovement())
-	{
+	if (GetCharacterMovement()) {
 		GetCharacterMovement()->MaxWalkSpeed = DefaultChaseSpeed;
 	}
 }
@@ -129,11 +128,22 @@ float ABasicMonsterAI::TakeDamage_Implementation(float DamageAmount, FDamageEven
 
 	// 사망 처리
 	if (MonsterHP <= 0.0f) {
-		AController* AIController = GetController();
+		UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+		UMonsterAnimInstance* MonsterAnim = Cast<UMonsterAnimInstance>(AnimInstance);
+		AController* TempController = GetController();
+		AAIController* AIController = Cast<AAIController>(TempController);
+
+		MonsterAnim->DieTime = true;
 
 		if (AIController) {
+			//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("AI Controller UnPossess()"));
 			AIController->UnPossess();  // AIController 해제
 		}
+		else {
+			//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("AI Controller Nope"));
+		}
+
+		//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("PlayDeath"));
 
 		PlayDeathAnimation();
 
@@ -164,11 +174,22 @@ void ABasicMonsterAI::TakeDopingDamage(float DopingDamageAmount)
 
 
 	if (MonsterHP <= 0.0f) {
-		AController* AIController = GetController();
+		UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+		UMonsterAnimInstance* MonsterAnim = Cast<UMonsterAnimInstance>(AnimInstance);
+		AController* TempController = GetController();
+		AAIController* AIController = Cast<AAIController>(TempController);
+
+		MonsterAnim->DieTime = true;
 
 		if (AIController) {
+			//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("AI Controller UnPossess()"));
 			AIController->UnPossess();  // AIController 해제
 		}
+		else {
+			//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("AI Controller Nope"));
+		}
+
+		//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("PlayDeath"));
 
 		PlayDeathAnimation();
 
@@ -208,6 +229,7 @@ void ABasicMonsterAI::PlayHitHighDamageAnimation()//강한 데미지인 경우 hit 애니�
 void ABasicMonsterAI::PlayDeathAnimation()//죽음 애니메이션 재생
 {
 	if (DeathReactionMontage && GetMesh() && GetMesh()->GetAnimInstance()) {
+		//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("DeathReaction Start"));
 		GetMesh()->GetAnimInstance()->Montage_Play(DeathReactionMontage);
 	}
 }
