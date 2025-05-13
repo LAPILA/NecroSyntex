@@ -10,7 +10,9 @@
 /**
  * 
  */
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FMissionStart);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FMissionSuccess);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FMissionFail);
 
 UCLASS()
 class NECROSYNTEX_API UMissionManager : public UObject
@@ -45,6 +47,12 @@ public:
 
 	UPROPERTY(BlueprintAssignable)
 	FMissionSuccess MissionSuccess;
+
+	UPROPERTY(BlueprintAssignable)
+	FMissionStart MissionStart;
+
+	UPROPERTY(BlueprintAssignable)
+	FMissionFail MissionFail;
 
 	/*UFUNCTION()
 	void ActivateSpawners(FName MissionName, FName Region);*/

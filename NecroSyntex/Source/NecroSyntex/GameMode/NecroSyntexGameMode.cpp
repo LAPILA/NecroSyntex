@@ -89,12 +89,12 @@ void ANecroSyntexGameMode::PlayerEliminated(APlayerCharacter* ElimmedCharacter, 
 
 	// 점수 추가
 	ANecroSyntexGameState* NecroSyntexGameState = GetGameState<ANecroSyntexGameState>();
+	NecroSyntexGameState->PlayerDeathUpdate();
 
 	if (AttackerPlayerState && AttackerPlayerState != VictimPlayerState && NecroSyntexGameState)
 	{
 		AttackerPlayerState->AddToScore(1.f);
 		NecroSyntexGameState->UpdateTopScore(AttackerPlayerState);
-		NecroSyntexGameState->PlayerDeathUpdate();
 	}
 	if (VictimPlayerState)
 	{
