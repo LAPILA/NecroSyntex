@@ -17,10 +17,14 @@ class NECROSYNTEX_API UDPSupremeStrength : public UDopingParent
 public:
 	UDPSupremeStrength();
 
+	//UPROPERTY()
+	//float MLAttackBuffNum;
+	
+	//UPROPERTY()
+	//float BlurredDeBuffNum;
+
 	UPROPERTY()
-	float MLAttackBuffNum;
-	UPROPERTY()
-	float BlurredDeBuffNum;
+	float DopingDamageBuffNum;
 
 	void UseDopingItem(APlayerCharacter* DopedPC) override;
 
