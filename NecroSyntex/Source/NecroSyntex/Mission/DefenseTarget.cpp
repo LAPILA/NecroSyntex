@@ -47,7 +47,6 @@ void ADefenseTarget::DefenseObjectActive_Implementation()
 {
 	Survive = true;
 	Active = true;
-	Health = 100.0f;
 }
 
 void ADefenseTarget::DefenseObjectDestroy_Implementation()
@@ -60,10 +59,13 @@ void ADefenseTarget::DefenseObjectDestroy_Implementation()
 	NecroSyntexGameMode->MissionManager->DefenseMissionFail();
 }
 
+void ADefenseTarget::DefenseObjectDeactive_Implementation()
+{
+	Active = false;
+}
+
 void ADefenseTarget::TakedDamage_Implementation(AActor* DamagedActor, float Damage)
 {
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Damaged Function Call"));
-
 	if (!Active || !Survive)
 	{
 		return;

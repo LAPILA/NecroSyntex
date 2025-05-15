@@ -187,6 +187,20 @@ void UMissionManager::EndDefenseMission()
 {
     StopMonsterSpawner();
 
+    TArray<AActor*> FoundDefenseTarget;
+    UGameplayStatics::GetAllActorsOfClass(GetWorld(), ADefenseTarget::StaticClass(), FoundDefenseTarget);
+
+    for (AActor* Actor : FoundDefenseTarget)
+    {
+        ADefenseTarget* DefenseTarget = Cast<ADefenseTarget>(Actor);
+        if (DefenseTarget && DefenseTarget->RegionName == CurrentRegionTag)
+        {
+            DefenseTarget->DefenseObjectDeactive();
+        }
+    }
+
+
+
     MissionSet("None", "None", 0.0f);
 
     GameStateAndUIUpdate(false);
