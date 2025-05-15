@@ -26,8 +26,8 @@ public:
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
-	UPROPERTY(Replicated)
-	float Health;
+	UPROPERTY(Replicated, EditAnywhere)
+	float Health = 500.0f;
 
 	UPROPERTY(Replicated)
 	bool Survive;
@@ -43,6 +43,9 @@ public:
 
 	UFUNCTION(Server, Reliable)
 	void DefenseObjectDestroy();
+
+	UFUNCTION(Server, Reliable)
+	void DefenseObjectDeactive();
 
 	UFUNCTION(Server, Reliable, BlueprintCallable)
 	void TakedDamage(AActor* DamagedActor, float Damage);

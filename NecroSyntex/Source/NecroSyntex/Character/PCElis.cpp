@@ -20,8 +20,8 @@ void APCElis::BeginPlay()
 		Health = MaxHealth;
 		MaxShield = MaxShield + 100.0f;
 		Shield = MaxShield;
-		WalkSpeed = 300.0f;
-		RunningSpeed = 500.0f;
+		//WalkSpeed = 300.0f;
+		//RunningSpeed = 500.0f;
 		MLAtaackPoint = 20.0f;
 		Defense = 5.0f;
 	}
