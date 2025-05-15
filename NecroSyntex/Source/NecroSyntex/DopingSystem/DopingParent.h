@@ -45,13 +45,13 @@ public:
 	APlayerCharacter* APC;
 
 	// Buff/DeBuff 처리 함수 (오버라이드 가능)
-	UFUNCTION(BlueprintCallable, Category = "Doping")
+	UFUNCTION(Category = "Doping")
 	virtual void BuffOn(APlayerCharacter* DopedPC);
-	UFUNCTION(BlueprintCallable, Category = "Doping")
+	UFUNCTION(Category = "Doping")
 	virtual void BuffOff(APlayerCharacter* DopedPC);
-	UFUNCTION(BlueprintCallable, Category = "Doping")
+	UFUNCTION(Category = "Doping")
 	virtual void DeBuffOn(APlayerCharacter* DopedPC);
-	UFUNCTION(BlueprintCallable, Category = "Doping")
+	UFUNCTION(Category = "Doping")
 	virtual void DeBuffOff(APlayerCharacter* DopedPC);
 
 	// 내부 타이머 관리
@@ -68,4 +68,6 @@ public:
 	void EndBuff(APlayerCharacter* DopedPC);
 	void EndDeBuff(APlayerCharacter* DopedPC);
 	void EndCooldown();
+
+	void TimerEnd();
 };
