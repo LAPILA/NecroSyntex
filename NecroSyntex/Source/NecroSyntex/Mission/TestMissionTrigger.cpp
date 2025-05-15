@@ -13,6 +13,7 @@ ATestMissionTrigger::ATestMissionTrigger()
 	MissionDuration = 50.0f;
 	MissionRegion = "Survival";
 	MissionName = "Survival";
+	OnTrigger = false;
 }
 
 void ATestMissionTrigger::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -66,6 +67,9 @@ void ATestMissionTrigger::NotifyActorBeginOverlap(AActor* OtherActor)
 void ATestMissionTrigger::NotifyActorEndOverlap(AActor* OtherActor) {
 	if (!HasAuthority()) return;
 
+
+	if (!OnTriggerTimer) return;
+
 	if (APlayerCharacter* PC = Cast<APlayerCharacter>(OtherActor))
 	{
 		PlayerInTrigger--;
@@ -92,4 +96,9 @@ void ATestMissionTrigger::TriggerDestroy()
 {
 	OnTrigger = false;
 	Destroy();
+}
+
+void ATestMissionTrigger::MissionTriggerActivate_Implementation()
+{
+	OnTrigger = true;
 }

@@ -35,11 +35,14 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FName MissionName;
 
-	UPROPERTY(Replicated)
+	UPROPERTY(Replicated, BlueprintReadWrite)
 	bool OnTrigger = true;
 
 	UPROPERTY(Replicated)
 	bool OnTriggerTimer = false;
+
+	UFUNCTION(Server, Reliable, BlueprintCallable)
+	void MissionTriggerActivate();
 
 	FTimerHandle TriggerTimer;
 

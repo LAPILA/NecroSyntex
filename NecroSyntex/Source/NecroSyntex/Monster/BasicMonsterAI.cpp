@@ -11,6 +11,8 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "NecroSyntex/PlayerController/NecroSyntexPlayerController.h"
 #include "AIController.h"
+#include "NecroSyntex/Mission/DefenseTarget.h"
+#include "NecroSyntex/NecroSyntexGameState.h"
 #include "NecroSyntex/Monster/MonsterAnimInstance.h"
 #include "NecroSyntex/Character/PlayerCharacter.h"
 #include "M_Spawner.h"
@@ -34,7 +36,6 @@ ABasicMonsterAI::ABasicMonsterAI()
 	SkillAttackArea->SetCollisionResponseToAllChannels(ECR_Ignore);
 	SkillAttackArea->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
 	SkillAttackArea->SetGenerateOverlapEvents(true);
-	//SkillAttackArea->OnComponentBeginOverlap.AddDynamic(this, &ABasicMonsterAI::OnSkillAreaOverlapBegin);
 
 	//AttackPoint = CreateDefaultSubobject<USphereComponent>(TEXT("AttackPoint"));
 	//AttackPoint->SetupAttachment(RootComponent);
@@ -60,9 +61,6 @@ void ABasicMonsterAI::BeginPlay()
 
 	DefaultChaseSpeed = ChaseSpeed;
 
-	FString SpeedMsg = FString::Printf(TEXT("DefaultChaseSpeed : %f"), DefaultChaseSpeed);
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, SpeedMsg);
-
 	//SkillBoxComponent overlab event bind.
 	if (SkillAttackArea) {
 		SkillAttackArea->OnComponentBeginOverlap.AddDynamic(this, &ABasicMonsterAI::OnSkillAreaOverlapBegin);
@@ -77,23 +75,17 @@ void ABasicMonsterAI::BeginPlay()
 void ABasicMonsterAI::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
 }
 
 // Called to bind functionality to input
 void ABasicMonsterAI::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
-
 }
 
 void ABasicMonsterAI::UpdateWalkSpeed()
 {
-	//CanAttack = true;
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("UpdateWalkSpeed"));
-	if (GetCharacterMovement())
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Chase Speed %f"), DefaultChaseSpeed);
+	if (GetCharacterMovement()) {
 		GetCharacterMovement()->MaxWalkSpeed = DefaultChaseSpeed;
 	}
 }
@@ -104,10 +96,6 @@ float ABasicMonsterAI::TakeDamage_Implementation(float DamageAmount, FDamageEven
 	CanAttack = false;
 	// 이미 죽은 상태면 처리하지 않음
 	if (MonsterHP <= 0.0f) {
-		if (GEngine)
-		{
-			//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Already Dead"));
-		}
 		return 0.0f;
 	}
 
@@ -120,9 +108,7 @@ float ABasicMonsterAI::TakeDamage_Implementation(float DamageAmount, FDamageEven
 		return 0.0f;
 	}
 
-
-	if (GetCharacterMovement())//스킬 사용 시 데미지를 받으면 이동속도가 업데이트되어 생기게 되고 이로 인해 슬라이딩하는 모션이 발생.
-	{
+	if (GetCharacterMovement()) {//스킬 사용 시 데미지를 받으면 이동속도가 업데이트되어 생기게 되고 이로 인해 슬라이딩하는 모션이 발생.
 		GetCharacterMovement()->MaxWalkSpeed = SlowChaseSpeed;
 	}
 
@@ -140,33 +126,31 @@ float ABasicMonsterAI::TakeDamage_Implementation(float DamageAmount, FDamageEven
 		PlayHitHighDamageAnimation();
 	}
 
-	// 디버그 메시지
-	if (GEngine)
-	{
-		FString DamageMsg = FString::Printf(TEXT("Hit! Damage: %.1f | HP: %.1f"), DamageAmount + DPA->DopingDamageBuff, MonsterHP);
-		//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, DamageMsg);
-	}
-
 	// 사망 처리
-	if (MonsterHP <= 0.0f)
-	{
-		AController* AIController = GetController();
+	if (MonsterHP <= 0.0f) {
+		UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+		UMonsterAnimInstance* MonsterAnim = Cast<UMonsterAnimInstance>(AnimInstance);
+		AController* TempController = GetController();
+		AAIController* AIController = Cast<AAIController>(TempController);
 
-		if (AIController)
-		{
+		MonsterAnim->DieTime = true;
+
+		if (AIController) {
+			//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("AI Controller UnPossess()"));
 			AIController->UnPossess();  // AIController 해제
 		}
+		else {
+			//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("AI Controller Nope"));
+		}
 
-		//CanAttack = false;
+		//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("PlayDeath"));
+
 		PlayDeathAnimation();
 
 		MonsterStopMove();
 
-		UE_LOG(LogTemp, Warning, TEXT("Monster is Dead!"));
-
 		DelayedFunction(3.5f); // 일정 시간 후 제거 또는 리스폰
 	}
-
 	return DamageAmount;
 }
 
@@ -177,10 +161,6 @@ void ABasicMonsterAI::TakeDopingDamage(float DopingDamageAmount)
 	//UE_LOG(LogTemp, Warning, TEXT("TakeDopingDamage1"));
 
 	if (MonsterHP <= 0.0f) {
-		if (GEngine)
-		{
-			//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Death"));
-		}
 		return;
 	}
 
@@ -194,18 +174,27 @@ void ABasicMonsterAI::TakeDopingDamage(float DopingDamageAmount)
 
 
 	if (MonsterHP <= 0.0f) {
-		AController* AIController = GetController();
+		UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+		UMonsterAnimInstance* MonsterAnim = Cast<UMonsterAnimInstance>(AnimInstance);
+		AController* TempController = GetController();
+		AAIController* AIController = Cast<AAIController>(TempController);
 
-		if (AIController)
-		{
+		MonsterAnim->DieTime = true;
+
+		if (AIController) {
+			//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("AI Controller UnPossess()"));
 			AIController->UnPossess();  // AIController 해제
 		}
+		else {
+			//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("AI Controller Nope"));
+		}
+
+		//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("PlayDeath"));
 
 		PlayDeathAnimation();
 
 		MonsterStopMove();
 
-		//UE_LOG(LogTemp, Warning, TEXT("Monster is Dead! Cause Doping"));
 		DelayedFunction(3.5f); // 일정 시간 후 제거 또는 리스폰
 	}
 	return;
@@ -213,47 +202,40 @@ void ABasicMonsterAI::TakeDopingDamage(float DopingDamageAmount)
 
 void ABasicMonsterAI::MonsterStopMove()
 {
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("MonsterStopMove"));
-	if (GetCharacterMovement())
-	{
+	if (GetCharacterMovement()) {
 		GetCharacterMovement()->MaxWalkSpeed = 0.0f;
 	}
 }
 
 void ABasicMonsterAI::AttackCoolTime()
 {
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("CanAttack"));
 	CanAttack = true;
 }
 
 void ABasicMonsterAI::PlayHitAnimation()//약한 데미지인 경우 hit 애니메이션 재생
 {
-	if (HitReactionMontage && GetMesh() && GetMesh()->GetAnimInstance())
-	{
+	if (HitReactionMontage && GetMesh() && GetMesh()->GetAnimInstance()) {
 		GetMesh()->GetAnimInstance()->Montage_Play(HitReactionMontage);
 	}
 }
 
 void ABasicMonsterAI::PlayHitHighDamageAnimation()//강한 데미지인 경우 hit 애니메이션 재생
 {
-	if (HitReactionMontage && GetMesh() && GetMesh()->GetAnimInstance())
-	{
+	if (HitReactionMontage && GetMesh() && GetMesh()->GetAnimInstance()) {
 		GetMesh()->GetAnimInstance()->Montage_Play(HitHighDamageReactionMontage);
 	}
 }
 
 void ABasicMonsterAI::PlayDeathAnimation()//죽음 애니메이션 재생
 {
-	
-	if (DeathReactionMontage && GetMesh() && GetMesh()->GetAnimInstance())
-	{
+	if (DeathReactionMontage && GetMesh() && GetMesh()->GetAnimInstance()) {
+		//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("DeathReaction Start"));
 		GetMesh()->GetAnimInstance()->Montage_Play(DeathReactionMontage);
 	}
 }
 
 void ABasicMonsterAI::PlaySkillAttackAnimation()//스킬 공격 애니메이션 재생
 {
-	//UE_LOG(LogTemp, Warning, TEXT("Playing SkillAttack Montage"));
 	if (SkillAttackMontage && GetMesh() && GetMesh()->GetAnimInstance()) {
 		GetMesh()->GetAnimInstance()->Montage_Play(SkillAttackMontage);
 	}
@@ -263,7 +245,6 @@ void ABasicMonsterAI::DelayedFunction(float DelayTime)//일정 시간 동안 비동기적�
 {
 	FTimerHandle handle;
 	GetWorld()->GetTimerManager().SetTimer(handle, this, &ABasicMonsterAI::DestroyMonster, DelayTime, false);
-	//GetWorld()->GetTimerManager().SetTimer(handle, FTimerDelegate::CreateLambda([this]() { PlayDeathAnimation();}), DelayTime, false);
 }
 
 void ABasicMonsterAI::DestroyMonster()
@@ -273,36 +254,49 @@ void ABasicMonsterAI::DestroyMonster()
 
 void ABasicMonsterAI::Attack_Player()//c++로 구현 시도했지만 블프로 이미 해둬서 패스 playx4 이후로 삭제 예정.
 {
-	UE_LOG(LogTemp, Warning, TEXT("Monster Attack Triggered"));
-
-	if (AttackMontage)
-	{
+	if (AttackMontage) {
 		UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
-		if (AnimInstance)
-		{
+		if (AnimInstance) {
 			AnimInstance->Montage_Play(AttackMontage);
 			UE_LOG(LogTemp, Warning, TEXT("Playing Attack Montage"));
 		}
 	}
-
 	MoveToPlayer();
 }
 
 void ABasicMonsterAI::MoveToPlayer()
 {
 	APlayerCharacter* Player = Cast<APlayerCharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
-	if (Player)
-	{
+	ANecroSyntexGameState* GameState = Cast<ANecroSyntexGameState>(UGameplayStatics::GetGameState(GetWorld()));
+	ADefenseTarget* DefenseTarget = nullptr;
+
+	for (TObjectIterator<ADefenseTarget> It; It; ++It) {
+		DefenseTarget = *It;
+		if (DefenseTarget) {
+			// DefenseTarget을 찾았으면
+			break;
+		}
+	}
+
+	if (Player) {
 		AAIController* AIController = Cast<AAIController>(GetController());
-		if (AIController)
-		{
+
+		if (DefenseTarget && GameState) {
+			if (AIController && GameState->CurrentMission == "Defense") {
+				AIController->MoveToActor(DefenseTarget, 10.0f, true, true, true, 0, true);
+				return;
+			}
+		}
+		
+		if (AIController && GameState->CurrentMission != "Defense") {
 			if (MeleeAttack) {//비교적 근접 공격을 하는 경우.
-				UE_LOG(LogTemp, Warning, TEXT("Moving to Player1"));
+				UE_LOG(LogTemp, Warning, TEXT("Moving to Player 0511"));
 				AIController->MoveToActor(Player, MonsterDistance, true, true, true, 0, true);
 			}
 			else {
-				UE_LOG(LogTemp, Warning, TEXT("Moving to Player2"));
+				UE_LOG(LogTemp, Warning, TEXT("Moving to Player 0511 2"));
 				AIController->MoveToActor(Player, 150.0f, true, true, true, 0, true);
+				//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("move to end~~~~~~~~~~~~~"));
 			}
 		}
 	}
@@ -316,12 +310,9 @@ void ABasicMonsterAI::OnSkillAreaOverlapBegin(UPrimitiveComponent* OverlappedCom
 		return;
 	}
 
-	if (OtherActor && OtherActor != this && OtherActor->ActorHasTag("Player"))
-	{
-		if (!OverlappingPlayers.Contains(OtherActor))
-		{
+	if (OtherActor && OtherActor != this && OtherActor->ActorHasTag("Player")) {
+		if (!OverlappingPlayers.Contains(OtherActor)) {
 			OverlappingPlayers.Add(OtherActor);
-			//UE_LOG(LogTemp, Warning, TEXT("Player entered skill area: %s"), *OtherActor->GetName());
 		}
 		if (CanSkill) {
 			UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
@@ -334,42 +325,34 @@ void ABasicMonsterAI::OnSkillAreaOverlapBegin(UPrimitiveComponent* OverlappedCom
 				MonsterStopMove();
 
 				UGameplayStatics::PlaySoundAtLocation(this, AttackSound, GetActorLocation());
-				SkillAttack();
+				//SkillAttack();
+				PlaySkillAttackAnimation();
 
 				GetWorld()->GetTimerManager().SetTimer(SpeedRestoreTimerHandle, this, &ABasicMonsterAI::UpdateWalkSpeed, 2.3f, false);
 				GetWorld()->GetTimerManager().SetTimer(AttackRestoreTimerHandle, this, &ABasicMonsterAI::AttackCoolTime, 2.0f, false);
 			}
 		}
 		else {
-			//UE_LOG(LogTemp, Warning, TEXT("Return OnOverLap"));
 			return;
 		}
 		CanSkill = false;
-		//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Cool Time Start"));
 		GetWorld()->GetTimerManager().SetTimer(MonsterSkillCoolTime, this, &ABasicMonsterAI::SkillCoolTime, SkillAttackCoolTime, false);
 	}
 }
 
 void ABasicMonsterAI::OnSkillAreaOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
-	//isSkillAttackTime = false;
-	if (OverlappingPlayers.Contains(OtherActor))
-	{
+	if (OverlappingPlayers.Contains(OtherActor)) {
 		OverlappingPlayers.Remove(OtherActor);
-		//UE_LOG(LogTemp, Warning, TEXT("Player left skill area: %s"), *OtherActor->GetName());
 	}
 }
 
 void ABasicMonsterAI::SkillAttack()
 {
 	PlaySkillAttackAnimation();
-	//apply damage check code..
-	//damage apply code..
 }
 
 void ABasicMonsterAI::SkillCoolTime()
 {
-	//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Skill Cool Complete"));
 	CanSkill = true;
-	//GetWorld()->GetTimerManager().ClearTimer(MonsterSkillCoolTime);
 }

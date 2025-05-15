@@ -68,11 +68,18 @@ void ANecroSyntexGameState::UpdateMissionStartCountdown(float newTimer)
 
 void ANecroSyntexGameState::PlayerDeathUpdate_Implementation()
 {
+
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Player DIe!"));
 	SurvivingPlayer--;
 	if (SurvivingPlayer == 0)
 	{
-		ANecroSyntexGameMode* NecroSyntexGameMode = GetWorld()->GetAuthGameMode<ANecroSyntexGameMode>();
-		NecroSyntexGameMode->MissionManager->CurrentMissionFail();
+		if (OngoingMission) {
+			ANecroSyntexGameMode* NecroSyntexGameMode = GetWorld()->GetAuthGameMode<ANecroSyntexGameMode>();
+			NecroSyntexGameMode->MissionManager->CurrentMissionFail();
+		}
+		else {
+
+		}
 	}
 }
 

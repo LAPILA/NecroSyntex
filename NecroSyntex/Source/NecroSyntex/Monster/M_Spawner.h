@@ -16,6 +16,8 @@ public:
 	// Sets default values for this actor's properties
 	AM_Spawner();
 
+	ABasicMonsterAI* SpawnRandomMonster(UWorld* World, FVector Location, FRotator Rotation);
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	int MaxMonster;
 
@@ -31,14 +33,17 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Monster")
 	class UBoxComponent* Spawner;
 
-	UPROPERTY(EditAnywhere, Category = "Monster")
-	TSubclassOf<AActor>ActorToSpawn;
+	//UPROPERTY(EditAnywhere, Category = "Monster")
+	//TSubclassOf<AActor>ActorToSpawn;
 
 	UPROPERTY(EditAnywhere, Category = "Monster")
-	TArray<TSubclassOf<AActor>>MyMonster;
+	TArray<TSubclassOf<ABasicMonsterAI>>MyMonsters;
 
-	UPROPERTY(EditAnywhere, Category = "Monster")
-	TArray<ABasicMonsterAI*> SpawnMonster;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Monster")
+	TArray<float> MonsterSpawnRates;
+
+	/*UPROPERTY(EditAnywhere, Category = "Monster")
+	TArray<ABasicMonsterAI*> SpawnMonster;*/
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float WaveIntervalTime;
