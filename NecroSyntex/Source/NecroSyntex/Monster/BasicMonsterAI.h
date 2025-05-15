@@ -5,6 +5,9 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "Animation/AnimMontage.h"
+#include "NiagaraComponent.h"
+#include "NiagaraSystem.h"
+#include "NiagaraFunctionLibrary.h"
 #include "BasicMonsterAI.generated.h"
 
 UCLASS()
@@ -56,6 +59,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI")
 	USoundBase* AttackSound;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effects")
+	UNiagaraSystem* GasBombEffect;
+
 	UFUNCTION(BlueprintCallable)
 	void UpdateWalkSpeed(); //float NewWalkSpeed in parameter
 
@@ -94,6 +100,9 @@ public:
 
 	UPROPERTY()
 	float MonsterDistance;
+
+	UFUNCTION(BlueprintCallable)
+	void SpawnNiagaraEffect(FVector SpawnLocation);
 
 protected:
 	// Called when the game starts or when spawned

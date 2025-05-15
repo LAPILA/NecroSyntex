@@ -356,3 +356,9 @@ void ABasicMonsterAI::SkillCoolTime()
 {
 	CanSkill = true;
 }
+
+void ABasicMonsterAI::SpawnNiagaraEffect(FVector SpawnLocation)
+{
+	//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Spawn Niagara"));
+	UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), GasBombEffect, SpawnLocation);
+}
