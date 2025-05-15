@@ -15,7 +15,7 @@ UDopingComponent::UDopingComponent()
 {
 	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
 	// off to improve performance if you don't need them.
-	PrimaryComponentTick.bCanEverTick = true;
+	PrimaryComponentTick.bCanEverTick = false;
 	SetIsReplicatedByDefault(true);
 	// ...
 }
@@ -554,4 +554,12 @@ void UDopingComponent::ClientPlayDopingEffect_Implementation()
 	if (!OwnerCharacter) return;
 
 	OwnerCharacter->PlayDopingEffect();
+}
+
+void UDopingComponent::EndGameDopingFinish_Implementation()
+{
+	OneKeyDoping->TimerEnd();
+	TwoKeyDoping->TimerEnd();
+	One_Able = false;
+	Two_Able = false;
 }

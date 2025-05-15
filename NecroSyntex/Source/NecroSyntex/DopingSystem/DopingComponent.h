@@ -230,4 +230,10 @@ public:
 	UFUNCTION()
 	virtual void SecondDopingForAlly();
 
+
+
+	UFUNCTION(Server, Reliable, BlueprintCallable)
+	void EndGameDopingFinish();
+
+
 };

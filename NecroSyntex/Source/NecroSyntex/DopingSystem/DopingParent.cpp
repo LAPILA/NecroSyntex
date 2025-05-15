@@ -101,3 +101,10 @@ void UDopingParent::EndCooldown()
 {
 	Able = true;
 }
+
+void UDopingParent::TimerEnd()
+{
+	GetWorld()->GetTimerManager().ClearTimer(BuffTimerHandle);
+	GetWorld()->GetTimerManager().ClearTimer(DeBuffTimerHandle);
+	GetWorld()->GetTimerManager().ClearTimer(CooldownTimerHandle);
+}
