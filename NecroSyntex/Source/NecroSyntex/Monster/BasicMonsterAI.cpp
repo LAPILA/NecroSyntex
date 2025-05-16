@@ -143,8 +143,6 @@ float ABasicMonsterAI::TakeDamage_Implementation(float DamageAmount, FDamageEven
 			//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("AI Controller Nope"));
 		}
 
-		//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("PlayDeath"));
-
 		PlayDeathAnimation();
 
 		MonsterStopMove();
@@ -245,6 +243,11 @@ void ABasicMonsterAI::DelayedFunction(float DelayTime)//일정 시간 동안 비동기적�
 {
 	FTimerHandle handle;
 	GetWorld()->GetTimerManager().SetTimer(handle, this, &ABasicMonsterAI::DestroyMonster, DelayTime, false);
+}
+
+void ABasicMonsterAI::DelayedAnimationSound(float DelayTime)
+{
+	//GetWorld()->GetTimerManager().SetTimer(SetAnimationSound, this, &ABasicMonsterAI::, DelayTime, false);
 }
 
 void ABasicMonsterAI::DestroyMonster()
