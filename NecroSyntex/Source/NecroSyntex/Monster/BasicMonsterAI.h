@@ -126,9 +126,6 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
 	class UAnimMontage* AttackMontage;
 
-	//UFUNCTION(BlueprintCallable, Category = "AI")
-	//void SkillAttackPrepare();
-
 	UFUNCTION(BlueprintCallable, Category = "AI")
 	void SkillAttack();
 
@@ -148,14 +145,18 @@ protected:
 
 	void PlaySkillAttackAnimation();
 
-	FTimerHandle MonsterSkillCoolTime;
-
 	void SkillCoolTime();
 
-	FTimerHandle DeathDelayTimerHandle;
 	//Timer Function
 	void DelayedFunction(float DelayTime);
 
+	void DelayedAnimationSound(float DelayTime);
+
+	FTimerHandle SetAnimationSound;
+
+	FTimerHandle DeathDelayTimerHandle;
+
+	FTimerHandle MonsterSkillCoolTime;
 public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
