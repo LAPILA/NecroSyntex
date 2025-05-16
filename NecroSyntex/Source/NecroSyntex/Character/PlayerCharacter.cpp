@@ -264,6 +264,9 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 		EnhancedInputComponent->BindAction(UDCskill1, ETriggerEvent::Triggered, this, &APlayerCharacter::FirstDoping);
 		EnhancedInputComponent->BindAction(UDCskill2, ETriggerEvent::Triggered, this, &APlayerCharacter::SecondDoping);
 		EnhancedInputComponent->BindAction(UDCModeChange, ETriggerEvent::Triggered, this, &APlayerCharacter::DopingModeChange);
+		EnhancedInputComponent->BindAction(SwapFirstWeapon, ETriggerEvent::Triggered, this, &APlayerCharacter::SwapToFirstWeapon);
+		EnhancedInputComponent->BindAction(SwapSecondWeapon, ETriggerEvent::Triggered, this, &APlayerCharacter::SwapToSecondWeapon);
+		EnhancedInputComponent->BindAction(SwapThirdWeapon, ETriggerEvent::Triggered, this, &APlayerCharacter::SwapToThirdWeapon);
 	}
 }
 
@@ -527,7 +530,7 @@ void APlayerCharacter::SwapWeaponWheel()
 {
 	if (Combat)
 	{
-		Combat->CycleWeapons();
+		PlaySwapMontage();
 	}
 
 	if (!HasAuthority())
@@ -535,6 +538,7 @@ void APlayerCharacter::SwapWeaponWheel()
 		ServerSwapWeaponWheel();
 	}
 }
+
 
 bool APlayerCharacter::ServerSwapWeaponWheel_Validate()
 {
@@ -545,7 +549,31 @@ void APlayerCharacter::ServerSwapWeaponWheel_Implementation()
 {
 	if (Combat)
 	{
-		Combat->CycleWeapons();
+		PlaySwapMontage();
+	}
+}
+
+void APlayerCharacter::SwapToFirstWeapon()
+{
+	if (Combat && !bDisableGameplay && Combat->bCanSwapWeapon)
+	{
+		Combat->SwapWeaponByNumber(1);
+	}
+}
+
+void APlayerCharacter::SwapToSecondWeapon()
+{
+	if (Combat && !bDisableGameplay && Combat->bCanSwapWeapon)
+	{
+		Combat->SwapWeaponByNumber(2);
+	}
+}
+
+void APlayerCharacter::SwapToThirdWeapon()
+{
+	if (Combat && !bDisableGameplay && Combat->bCanSwapWeapon)
+	{
+		Combat->SwapWeaponByNumber(3);
 	}
 }
 
