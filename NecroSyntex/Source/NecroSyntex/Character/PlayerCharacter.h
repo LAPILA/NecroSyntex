@@ -71,6 +71,15 @@ private:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* UDCModeChange;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UInputAction* SwapFirstWeapon;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UInputAction* SwapSecondWeapon;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UInputAction* SwapThirdWeapon;
 public:
     APlayerCharacter();
 
@@ -86,6 +95,8 @@ public:
 	void PlayReloadMontage();
 	void PlayElimMontage();
 	void PlayThrowGrenadeMontage();
+	UFUNCTION()
+	void OnThrowGrenadeMontageEnded(UAnimMontage* Montage, bool bInterrupted);
 	void PlaySwapMontage();
 	void PlayDopingMontage();
 	virtual void OnRep_ReplicatedMovement() override;
@@ -100,6 +111,9 @@ public:
 
 	UFUNCTION(BluePrintImplementableEvent)
 	void ShowSniperScopeWidget(bool bShowScope);
+
+	UFUNCTION(BlueprintImplementableEvent, Category = "Damage")
+	void TakeDamageNotify(float DamageAmount);
 
 	UFUNCTION(BlueprintCallable)
 	void UpdateHUDHealth();
@@ -142,6 +156,14 @@ public:
 	UFUNCTION(BlueprintImplementableEvent, Category = "Combat")
 	void OnWeaponHitEvent(const FHitResult& HitResult);
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat")
+	bool bIsMontagePlaying = false;
+
+	FTimerHandle MontageEndTimer;
+
+	void SetMontagePlaying(bool bIsPlaying);
+
+	void ResetMontageState();
 protected:
     virtual void BeginPlay() override;
 
@@ -166,6 +188,15 @@ protected:
 	void FirstDoping();
 	void SecondDoping();
 	void DopingModeChange();
+	void SwapToFirstWeapon();
+	void SwapToSecondWeapon();
+	void SwapToThirdWeapon();
+
+	bool CanSwapWeapon() const;
+
+	void StartWeaponSwapCooldown();
+
+	void ResetWeaponSwapCooldown();
 
 	void DropOrDestroyWeapon(AWeapon* Weapon);
 	void DropOrDestroyWeapons();

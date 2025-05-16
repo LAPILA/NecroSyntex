@@ -1,6 +1,7 @@
 ﻿// VoiceComponent.cpp
 #include "VoiceComponent.h"
 #include "Kismet/GameplayStatics.h"
+#include "Components/AudioComponent.h"
 #include "Net/UnrealNetwork.h"
 
 UVoiceComponent::UVoiceComponent()
@@ -73,6 +74,28 @@ void UVoiceComponent::MulticastPlayVoice_Implementation(EVoiceCue Cue, float V, 
 	VoiceSet->GetVoice(Cue, Snd, Attn);
 	if (!Snd) return;
 
-	const FVector Loc = GetOwner()->GetActorLocation();
-	UGameplayStatics::PlaySoundAtLocation(this, Snd, Loc, V, P, 0.f, Attn);
+	AActor* Owner = GetOwner();
+	if (!Owner) return;
+
+	UAudioComponent* AudioComp = UGameplayStatics::SpawnSoundAttached(
+		Snd,                                  // 재생할 사운드
+		Owner->GetRootComponent(),             // 사운드를 붙일 컴포넌트
+		NAME_None,                            // 소켓 이름 (없을 경우 루트에 부착)
+		FVector::ZeroVector,                   // 상대 위치
+		FRotator::ZeroRotator,                 // 상대 회전
+		EAttachLocation::KeepRelativeOffset,   // 상대 위치/회전을 유지
+		true,                                 // 사운드가 이동할 때 같이 움직이도록
+		V,                                    // 볼륨
+		P                                     // 피치
+	);
+
+	if (AudioComp)
+	{
+		AudioComp->bAutoDestroy = true;  // 재생 후 자동 파괴
+		UE_LOG(LogTemp, Log, TEXT("Voice attached to %s"), *Owner->GetName());
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Failed to attach voice to %s"), *Owner->GetName());
+	}
 }

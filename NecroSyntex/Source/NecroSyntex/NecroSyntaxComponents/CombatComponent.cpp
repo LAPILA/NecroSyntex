@@ -27,6 +27,9 @@ UCombatComponent::UCombatComponent()
 	PrimaryComponentTick.bCanEverTick = true;
 	BaseWalkSpeed = 600.f;
 	AimWalkSpeed = 450.f;
+
+	SwapCooldownTime = 0.3f;
+	bCanSwapWeapon = true;
 }
 
 void UCombatComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -111,10 +114,16 @@ void UCombatComponent::ShotgunShellReload()
 
 void UCombatComponent::Fire()
 {
+	if (CombatState == ECombatState::ECS_ThrowingGrenade) return;
+
+	// 무기 전환 중에는 발사하지 않음
+	if (!bCanFire || CombatState == ECombatState::ECS_SwappingWeapons) return;
+
 	if (CanFire())
 	{
 		TRY_PLAY_VOICE(EVoiceCue::Fire);
 		bCanFire = false;
+
 		if (EquippedWeapon)
 		{
 			CrosshairShootingFactor = 0.75f;
@@ -134,6 +143,7 @@ void UCombatComponent::Fire()
 		StartFireTimer();
 	}
 }
+
 
 void UCombatComponent::FireProjectileWeapon()
 {
@@ -171,12 +181,16 @@ bool UCombatComponent::CanFire()
 {
 	if (!EquippedWeapon) return false;
 
-	if (EquippedWeapon->IsEmpty() && CarriedAmmo == 0 && Character && Character->GetVoiceComp())
-    {
-		TRY_PLAY_VOICE(EVoiceCue::NoAmmo);
-    }
+	// 첫 발사 이후에는 일반 발사 조건 체크
+	if (bFirstFireAfterSwap) return true;
 
-	// Special check for Shotgun reloading
+	// 탄약 부족 시 음성 출력
+	if (EquippedWeapon->IsEmpty() && CarriedAmmo == 0 && Character && Character->GetVoiceComp())
+	{
+		TRY_PLAY_VOICE(EVoiceCue::NoAmmo);
+	}
+
+	// 샷건 예외 처리
 	if (!EquippedWeapon->IsEmpty() && bCanFire &&
 		CombatState == ECombatState::ECS_Reloading &&
 		EquippedWeapon->GetWeaponType() == EWeaponType::EWT_Shotgun)
@@ -186,11 +200,10 @@ bool UCombatComponent::CanFire()
 
 	if (bLocallyReloading) return false;
 
-	// Normal check: must be Unoccupied, not empty, bCanFire = true
-	return (!EquippedWeapon->IsEmpty()
-		&& bCanFire
-		&& CombatState == ECombatState::ECS_Unoccupied);
+	// 일반 발사 조건 체크
+	return (!EquippedWeapon->IsEmpty() && bCanFire && CombatState == ECombatState::ECS_Unoccupied);
 }
+
 
 void UCombatComponent::OnRep_CarriedAmmo()
 {
@@ -309,6 +322,126 @@ void UCombatComponent::EquipThirdWeapon(AWeapon* WeaponToEquip)
 	PlayEquipWeaponSound(ThirdWeapon);
 }
 
+void UCombatComponent::SwapWeaponByNumber(int32 WeaponNumber)
+{
+	if (!Character || !bCanSwapWeapon) return;
+
+	AWeapon* NewWeapon = nullptr;
+
+	switch (WeaponNumber)
+	{
+	case 1:
+		NewWeapon = PrimaryWeapon;
+		break;
+	case 2:
+		NewWeapon = SecondaryWeapon;
+		break;
+	case 3:
+		NewWeapon = ThirdWeapon;
+		break;
+	default:
+		return;
+	}
+
+	// 무기 전환 중이거나 동일 무기 교체 시 무시
+	if (NewWeapon == EquippedWeapon || CombatState != ECombatState::ECS_Unoccupied) return;
+
+	// 무기 전환 전 상태 강제 초기화
+	ResetFireState();
+
+	if (Character->HasAuthority())
+	{
+		AttachActorToBackPack(EquippedWeapon);
+		EquippedWeapon = NewWeapon;
+		AttachActorToRightHand(EquippedWeapon);
+		EquippedWeapon->SetWeaponState(EWeaponState::EWS_Equipped);
+
+		// 무기 교체 후 발사 상태 초기화
+		ResetFireState();
+
+		// HUD 갱신
+		NotifyWeaponChanged(EquippedWeapon);
+		PlayEquipWeaponSound(EquippedWeapon);
+		UpdateCarriedAmmo();
+
+		// 무기 교체 쿨다운 시작
+		StartWeaponSwapCooldown();
+		bCanSwapWeapon = true;
+	}
+	else
+	{
+		ServerSwapWeaponByNumber(WeaponNumber);
+	}
+}
+
+void UCombatComponent::ServerSwapWeaponByNumber_Implementation(int32 WeaponNumber)
+{
+	SwapWeaponByNumber(WeaponNumber);
+}
+
+void UCombatComponent::MulticastSwapWeaponByNumber_Implementation(int32 WeaponNumber)
+{
+	if (!Character->IsLocallyControlled())
+	{
+		SwapWeaponByNumber(WeaponNumber);
+	}
+}
+
+void UCombatComponent::ResetFireState()
+{
+	bCanFire = true;
+	bFireButtonPressed = false;
+	bFirstFireAfterSwap = true;
+
+	if (Character)
+	{
+		Character->bFinishedSwapping = true;
+		if (Character->GetFollowCamera())
+		{
+			Character->GetFollowCamera()->SetFieldOfView(DefaultFOV);
+		}
+	}
+
+	if (EquippedWeapon)
+	{
+		LastServerFireTime = GetWorld()->GetTimeSeconds();
+		LastServerShotgunFireTime = GetWorld()->GetTimeSeconds();
+
+		if (GetWorld()->GetTimerManager().IsTimerActive(FireTimer))
+		{
+			GetWorld()->GetTimerManager().ClearTimer(FireTimer);
+		}
+	}
+}
+
+void UCombatComponent::StartWeaponSwapCooldown()
+{
+	bCanSwapWeapon = false;
+	GetWorld()->GetTimerManager().SetTimer(
+		SwapCooldownTimer,
+		this,
+		&UCombatComponent::ResetWeaponSwapCooldown,
+		SwapCooldownTime,
+		false
+	);
+}
+
+void UCombatComponent::ResetWeaponSwapCooldown()
+{
+	bCanSwapWeapon = true;
+}
+
+
+void UCombatComponent::FinishWeaponSwap()
+{
+	bCanFire = true;
+	bFireButtonPressed = false;
+
+	// 무기 교체 후 발사 상태 초기화
+	ResetFireState();
+}
+
+
 bool UCombatComponent::ShouldSwapWeapons()
 {
 	if (CombatState != ECombatState::ECS_Unoccupied) return false;
@@ -346,13 +479,17 @@ void UCombatComponent::ThrowGrenade()
 {
 	if (Grenades == 0) return;
 	if (CombatState != ECombatState::ECS_Unoccupied || !EquippedWeapon) return;
-	TRY_PLAY_VOICE(EVoiceCue::ThrowGrenade);
+
 	CombatState = ECombatState::ECS_ThrowingGrenade;
+	bCanFire = false;
+
+	TRY_PLAY_VOICE(EVoiceCue::ThrowGrenade);
+
 	if (Character)
 	{
 		Character->PlayThrowGrenadeMontage();
 		AttachActorToLeftHand(EquippedWeapon);
-		ShowAttachedGrenade(true);
+		ShowAttachedGrenade(true);  // 수류탄 던지기 시작 시 활성화
 		Character->GetCharacterMovement()->MaxWalkSpeed = Character->WalkSpeed * Character->GrenadeThrowSpeedMultiplier;
 	}
 
@@ -360,6 +497,16 @@ void UCombatComponent::ThrowGrenade()
 	{
 		ServerThrowGrenade();
 	}
+}
+
+void UCombatComponent::ThrowGrenadeFinished()
+{
+	CombatState = ECombatState::ECS_Unoccupied;
+	bCanFire = true;
+	AttachActorToRightHand(EquippedWeapon);
+
+	ShowAttachedGrenade(false);
+
 	if (Character && Character->HasAuthority())
 	{
 		Grenades = FMath::Clamp(Grenades - 1, 0, MaxGrenades);
@@ -570,103 +717,25 @@ void UCombatComponent::OnRep_ThirdWeapon()
 	}
 }
 
-void UCombatComponent::CycleWeapons()
-{
-	if (!Character || !EquippedWeapon) return;
-
-	if (!Character->HasAuthority())
-	{
-		ServerCycleWeapons();
-		return;
-	}
-
-	if (CombatState != ECombatState::ECS_Unoccupied) return;
-	if (!ShouldSwapWeapons()) return;
-
-	CombatState = ECombatState::ECS_SwappingWeapons;
-	Character->bFinishedSwapping = false;
-
-	CycleWeaponsLogic();
-
-	if (Character->IsLocallyControlled())
-	{
-		Character->PlaySwapMontage();
-	}
-
-	MulticastPlaySwapMontage();
-}
-
-void UCombatComponent::MulticastPlaySwapMontage_Implementation()
-{
-	if (!Character) return;
-
-	// 클라이언트 전용 애니메이션 호출
-	if (!Character->HasAuthority())
-	{
-		Character->PlaySwapMontage();
-	}
-}
-
-void UCombatComponent::ServerCycleWeapons_Implementation()
-{
-	if (Character && Character->HasAuthority())
-	{
-		CycleWeaponsLogic();
-	}
-}
-
 void UCombatComponent::CycleWeaponsLogic()
 {
-	if (EquippedWeapon == PrimaryWeapon && SecondaryWeapon)
-	{
-		PrimaryWeapon->SetWeaponState(EWeaponState::EWS_EquippedSecondary);
-		AttachActorToBackPack(PrimaryWeapon);
+	if (!EquippedWeapon) return;
 
-		EquippedWeapon = SecondaryWeapon;
-		SecondaryWeapon->SetWeaponState(EWeaponState::EWS_Equipped);
-		AttachActorToRightHand(SecondaryWeapon);
+	int32 NextWeaponNumber = 1;
 
-		if (ThirdWeapon)
-		{
-			ThirdWeapon->SetWeaponState(EWeaponState::EWS_EquippedThird);
-			AttachActorToBackPack2(ThirdWeapon);
-		}
-	}
-	else if (EquippedWeapon == SecondaryWeapon && ThirdWeapon)
-	{
-		SecondaryWeapon->SetWeaponState(EWeaponState::EWS_EquippedSecondary);
-		AttachActorToBackPack(SecondaryWeapon);
+	// 정확한 무기 순환 순서 설정
+	if (EquippedWeapon == PrimaryWeapon)
+		NextWeaponNumber = (SecondaryWeapon != nullptr) ? 2 : (ThirdWeapon != nullptr) ? 3 : 1;
+	else if (EquippedWeapon == SecondaryWeapon)
+		NextWeaponNumber = (ThirdWeapon != nullptr) ? 3 : (PrimaryWeapon != nullptr) ? 1 : 2;
+	else if (EquippedWeapon == ThirdWeapon)
+		NextWeaponNumber = (PrimaryWeapon != nullptr) ? 1 : (SecondaryWeapon != nullptr) ? 2 : 3;
 
-		EquippedWeapon = ThirdWeapon;
-		ThirdWeapon->SetWeaponState(EWeaponState::EWS_Equipped);
-		AttachActorToRightHand(ThirdWeapon);
+	// 무기 교체 호출
+	SwapWeaponByNumber(NextWeaponNumber);
 
-		if (PrimaryWeapon)
-		{
-			PrimaryWeapon->SetWeaponState(EWeaponState::EWS_EquippedThird);
-			AttachActorToBackPack2(PrimaryWeapon);
-		}
-	}
-	else if (EquippedWeapon == ThirdWeapon && PrimaryWeapon)
-	{
-		ThirdWeapon->SetWeaponState(EWeaponState::EWS_EquippedThird);
-		AttachActorToBackPack2(ThirdWeapon);
-
-		EquippedWeapon = PrimaryWeapon;
-		PrimaryWeapon->SetWeaponState(EWeaponState::EWS_Equipped);
-		AttachActorToRightHand(PrimaryWeapon);
-
-		if (SecondaryWeapon)
-		{
-			SecondaryWeapon->SetWeaponState(EWeaponState::EWS_EquippedSecondary);
-			AttachActorToBackPack(SecondaryWeapon);
-		}
-	}
-
+	// 교체 후 발사 가능 상태 설정
 	bCanFire = true;
-	bLocallyReloading = false;
-	GetWorld()->GetTimerManager().ClearTimer(FireTimer);
-	CombatState = ECombatState::ECS_Unoccupied;
 }
 
 void UCombatComponent::NotifyWeaponChanged(AWeapon* NewWeapon)
@@ -676,11 +745,16 @@ void UCombatComponent::NotifyWeaponChanged(AWeapon* NewWeapon)
 	ANecroSyntexPlayerController* PC = Cast<ANecroSyntexPlayerController>(Character->Controller);
 	if (PC)
 	{
-		// 무기 이미지 업데이트 요청
 		PC->SetHUDWeaponImage(NewWeapon->GetWeaponImage());
+		PC->SetHUDWeaponAmmo(NewWeapon->GetAmmo());
+		PC->SetHUDCarriedAmmo(CarriedAmmo);
 	}
 }
 
+void UCombatComponent::MulticastNotifyWeaponChanged_Implementation(AWeapon* NewWeapon)
+{
+	NotifyWeaponChanged(NewWeapon);
+}
 
 void UCombatComponent::Reload()
 {
@@ -723,24 +797,52 @@ void UCombatComponent::FinishReloading()
 	}
 }
 
-
 void UCombatComponent::FinishSwap()
 {
-	if (Character && Character->HasAuthority())
+	if (!Character || !Character->HasAuthority()) return;
+
+	if (!Character || !GetWorld())
 	{
-		CombatState = ECombatState::ECS_Unoccupied;
+		return;
 	}
+
+	CombatState = ECombatState::ECS_Unoccupied;
+
 	if (Character)
 	{
 		Character->bFinishedSwapping = true;
+
+		// 무기 변경 후 HUD 갱신
 		NotifyWeaponChanged(EquippedWeapon);
+
+		if (Character->IsLocallyControlled())
+		{
+			MulticastNotifyWeaponChanged(EquippedWeapon);
+		}
 	}
+
+	// 무기 교체 후 발사 상태 강제 초기화
+	ResetFireState();
+
+	// FireTimer 강제 초기화
+	if (GetWorld()->GetTimerManager().IsTimerActive(FireTimer))
+	{
+		GetWorld()->GetTimerManager().ClearTimer(FireTimer);
+	}
+
+	GetWorld()->GetTimerManager().SetTimer(
+		FireTimer,
+		this,
+		&UCombatComponent::FireTimerFinished,
+		0.0f,   // 즉시 발사 가능
+		false
+	);
 }
 
 void UCombatComponent::FinishSwapAttachWeapons()
 {
 	if (!EquippedWeapon || !Character) return;
-
+	ResetFireState();
 	if (EquippedWeapon == PrimaryWeapon && SecondaryWeapon)
 	{
 		PrimaryWeapon->SetWeaponState(EWeaponState::EWS_EquippedSecondary);
@@ -788,7 +890,6 @@ void UCombatComponent::FinishSwapAttachWeapons()
 	}
 	else
 	{
-		UE_LOG(LogTemp, Warning, TEXT("FinishSwapAttachWeapons() failed: invalid weapons state."));
 		return;
 	}
 
@@ -895,12 +996,6 @@ void UCombatComponent::JumpToShotgunEnd()
 	}
 }
 
-void UCombatComponent::ThrowGrenadeFinished()
-{
-	CombatState = ECombatState::ECS_Unoccupied;
-	AttachActorToRightHand(EquippedWeapon);
-}
-
 void UCombatComponent::LaunchGrenade()
 {
 	ShowAttachedGrenade(false);
@@ -994,12 +1089,21 @@ void UCombatComponent::ServerFire_Implementation(const FVector_NetQuantize& Trac
 	const float CurrentTime = GetWorld()->GetTimeSeconds();
 	const float FireDelaySec = EquippedWeapon->FireDelay;
 	const float Tolerance = 0.02f;
+	const float ClientTimeDifference = FMath::Abs(CurrentTime - LastServerFireTime);
 
-	if ((CurrentTime - LastServerFireTime + Tolerance) < FireDelaySec)
+	if (bFirstFireAfterSwap)
+	{
+		LastServerFireTime = CurrentTime;
+		bFirstFireAfterSwap = false;
+		MulticastFire(TraceHitTarget);
+		return;
+	}
+
+	if ((ClientTimeDifference + Tolerance) < FireDelaySec)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("[CHEAT DETECTED?] %s fired too quickly (%.3f s < %.3f s)"),
 			*Character->GetName(),
-			CurrentTime - LastServerFireTime,
+			ClientTimeDifference,
 			FireDelaySec
 		);
 		return;

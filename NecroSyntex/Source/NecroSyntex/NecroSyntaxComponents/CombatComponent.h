@@ -29,9 +29,6 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void FinishSwap();
 
-	UFUNCTION(NetMulticast, Reliable)
-	void MulticastPlaySwapMontage();
-
 	UFUNCTION(BlueprintCallable)
 	void FinishSwapAttachWeapons();
 
@@ -54,7 +51,13 @@ public:
 	void PickUpAmmo(EWeaponType WeaponType, int32 AmmoAmount);
 	bool bLocallyReloading = false;
 
-	void CycleWeapons();
+	void ResetFireState();
+
+	void StartWeaponSwapCooldown();
+
+	void ResetWeaponSwapCooldown();
+
+	void FinishWeaponSwap();
 
 	void CycleWeaponsLogic();
 
@@ -103,6 +106,8 @@ protected:
 	UFUNCTION(Server, Reliable)
 	void ServerReload();
 
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastNotifyWeaponChanged(AWeapon* NewWeapon);
 
 	void HandleReload();
 	int32 AmountToReload();
@@ -126,6 +131,11 @@ protected:
 	void EquipPrimaryWeapon(AWeapon* WeaponToEquip);
 	void EquipSecondaryWeapon(AWeapon* WeaponToEquip);
 	void EquipThirdWeapon(AWeapon* WeaponToEquip);
+	void SwapWeaponByNumber(int32 WeaponNumber);
+	UFUNCTION(Server, Reliable)
+	void ServerSwapWeaponByNumber(int32 WeaponNumber);
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastSwapWeaponByNumber(int32 WeaponNumber);
 private:
 	UPROPERTY()
 	class APlayerCharacter* Character;
@@ -150,6 +160,10 @@ private:
 	bool bAiming = false;
 
 	bool bAimButtonPressed = false;
+
+	FTimerHandle SwapCooldownTimer;
+	bool bCanSwapWeapon = true;
+	float SwapCooldownTime = 0.5f;
 
 	UFUNCTION()
 	void OnRep_Aiming();
@@ -256,11 +270,10 @@ private:
 
 	float LastServerFireTime = 0.f;
 	float LastServerShotgunFireTime = 0.f;
-
-	UFUNCTION(Server, Reliable)
-	void ServerCycleWeapons();
+	bool bFirstFireAfterSwap;
 public:
 	FORCEINLINE int32 GetGrenades() const { return Grenades; }
+	void ResetSwapCooldown();
 	bool ShouldSwapWeapons();
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
 	AWeapon* GetEquippedWeapon() const { return EquippedWeapon; }
