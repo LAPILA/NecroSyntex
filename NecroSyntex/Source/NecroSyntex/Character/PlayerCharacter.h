@@ -101,6 +101,9 @@ public:
 	UFUNCTION(BluePrintImplementableEvent)
 	void ShowSniperScopeWidget(bool bShowScope);
 
+	UFUNCTION(BlueprintImplementableEvent, Category = "Damage")
+	void TakeDamageNotify(float DamageAmount);
+
 	UFUNCTION(BlueprintCallable)
 	void UpdateHUDHealth();
 	UFUNCTION(BlueprintCallable)

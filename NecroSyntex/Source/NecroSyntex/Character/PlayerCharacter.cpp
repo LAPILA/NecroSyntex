@@ -719,6 +719,7 @@ void APlayerCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, const U
 	}
 
 	TRY_PLAY_VOICE(EVoiceCue::TakeHit);
+	TakeDamageNotify(Damage);
 	PlayerHitReactMontage();
 
 	if (Combat && Combat->CombatState == ECombatState::ECS_Reloading)
