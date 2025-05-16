@@ -181,12 +181,16 @@ bool UCombatComponent::CanFire()
 {
 	if (!EquippedWeapon) return false;
 
-	if (EquippedWeapon->IsEmpty() && CarriedAmmo == 0 && Character && Character->GetVoiceComp())
-    {
-		TRY_PLAY_VOICE(EVoiceCue::NoAmmo);
-    }
+	// 첫 발사 이후에는 일반 발사 조건 체크
+	if (bFirstFireAfterSwap) return true;
 
-	// Special check for Shotgun reloading
+	// 탄약 부족 시 음성 출력
+	if (EquippedWeapon->IsEmpty() && CarriedAmmo == 0 && Character && Character->GetVoiceComp())
+	{
+		TRY_PLAY_VOICE(EVoiceCue::NoAmmo);
+	}
+
+	// 샷건 예외 처리
 	if (!EquippedWeapon->IsEmpty() && bCanFire &&
 		CombatState == ECombatState::ECS_Reloading &&
 		EquippedWeapon->GetWeaponType() == EWeaponType::EWT_Shotgun)
@@ -196,11 +200,10 @@ bool UCombatComponent::CanFire()
 
 	if (bLocallyReloading) return false;
 
-	// Normal check: must be Unoccupied, not empty, bCanFire = true
-	return (!EquippedWeapon->IsEmpty()
-		&& bCanFire
-		&& CombatState == ECombatState::ECS_Unoccupied);
+	// 일반 발사 조건 체크
+	return (!EquippedWeapon->IsEmpty() && bCanFire && CombatState == ECombatState::ECS_Unoccupied);
 }
+
 
 void UCombatComponent::OnRep_CarriedAmmo()
 {
@@ -343,6 +346,9 @@ void UCombatComponent::SwapWeaponByNumber(int32 WeaponNumber)
 	// 무기 전환 중이거나 동일 무기 교체 시 무시
 	if (NewWeapon == EquippedWeapon || CombatState != ECombatState::ECS_Unoccupied) return;
 
+	// 무기 전환 전 상태 강제 초기화
+	ResetFireState();
+
 	if (Character->HasAuthority())
 	{
 		AttachActorToBackPack(EquippedWeapon);
@@ -350,9 +356,8 @@ void UCombatComponent::SwapWeaponByNumber(int32 WeaponNumber)
 		AttachActorToRightHand(EquippedWeapon);
 		EquippedWeapon->SetWeaponState(EWeaponState::EWS_Equipped);
 
-		// 무기 전환 상태 초기화
-		bCanSwapWeapon = false;
-		CombatState = ECombatState::ECS_SwappingWeapons;
+		// 무기 교체 후 발사 상태 초기화
+		ResetFireState();
 
 		// HUD 갱신
 		NotifyWeaponChanged(EquippedWeapon);
@@ -361,16 +366,13 @@ void UCombatComponent::SwapWeaponByNumber(int32 WeaponNumber)
 
 		// 무기 교체 쿨다운 시작
 		StartWeaponSwapCooldown();
-
 		bCanSwapWeapon = true;
-		CombatState = ECombatState::ECS_Unoccupied;
 	}
 	else
 	{
 		ServerSwapWeaponByNumber(WeaponNumber);
 	}
 }
-
 
 void UCombatComponent::ServerSwapWeaponByNumber_Implementation(int32 WeaponNumber)
 {
@@ -385,11 +387,12 @@ void UCombatComponent::MulticastSwapWeaponByNumber_Implementation(int32 WeaponNu
 	}
 }
 
-
 void UCombatComponent::ResetFireState()
 {
 	bCanFire = true;
 	bFireButtonPressed = false;
+	bFirstFireAfterSwap = true;
+
 	if (Character)
 	{
 		Character->bFinishedSwapping = true;
@@ -403,6 +406,11 @@ void UCombatComponent::ResetFireState()
 	{
 		LastServerFireTime = GetWorld()->GetTimeSeconds();
 		LastServerShotgunFireTime = GetWorld()->GetTimeSeconds();
+
+		if (GetWorld()->GetTimerManager().IsTimerActive(FireTimer))
+		{
+			GetWorld()->GetTimerManager().ClearTimer(FireTimer);
+		}
 	}
 }
 
@@ -793,10 +801,8 @@ void UCombatComponent::FinishSwap()
 {
 	if (!Character || !Character->HasAuthority()) return;
 
-	// Character와 World 유효성 확인
 	if (!Character || !GetWorld())
 	{
-		UE_LOG(LogTemp, Warning, TEXT("FinishSwap() failed: Character or World is invalid"));
 		return;
 	}
 
@@ -815,25 +821,28 @@ void UCombatComponent::FinishSwap()
 		}
 	}
 
-	// TimerManager 유효성 확인
+	// 무기 교체 후 발사 상태 강제 초기화
+	ResetFireState();
+
+	// FireTimer 강제 초기화
 	if (GetWorld()->GetTimerManager().IsTimerActive(FireTimer))
 	{
 		GetWorld()->GetTimerManager().ClearTimer(FireTimer);
 	}
-	else
-	{
-		UE_LOG(LogTemp, Warning, TEXT("FinishSwap() failed: FireTimer is not active"));
-	}
 
-	bCanFire = true;
+	GetWorld()->GetTimerManager().SetTimer(
+		FireTimer,
+		this,
+		&UCombatComponent::FireTimerFinished,
+		0.0f,   // 즉시 발사 가능
+		false
+	);
 }
-
-
 
 void UCombatComponent::FinishSwapAttachWeapons()
 {
 	if (!EquippedWeapon || !Character) return;
-
+	ResetFireState();
 	if (EquippedWeapon == PrimaryWeapon && SecondaryWeapon)
 	{
 		PrimaryWeapon->SetWeaponState(EWeaponState::EWS_EquippedSecondary);
@@ -881,7 +890,6 @@ void UCombatComponent::FinishSwapAttachWeapons()
 	}
 	else
 	{
-		UE_LOG(LogTemp, Warning, TEXT("FinishSwapAttachWeapons() failed: invalid weapons state."));
 		return;
 	}
 
@@ -1081,12 +1089,21 @@ void UCombatComponent::ServerFire_Implementation(const FVector_NetQuantize& Trac
 	const float CurrentTime = GetWorld()->GetTimeSeconds();
 	const float FireDelaySec = EquippedWeapon->FireDelay;
 	const float Tolerance = 0.02f;
+	const float ClientTimeDifference = FMath::Abs(CurrentTime - LastServerFireTime);
 
-	if ((CurrentTime - LastServerFireTime + Tolerance) < FireDelaySec)
+	if (bFirstFireAfterSwap)
+	{
+		LastServerFireTime = CurrentTime;
+		bFirstFireAfterSwap = false;
+		MulticastFire(TraceHitTarget);
+		return;
+	}
+
+	if ((ClientTimeDifference + Tolerance) < FireDelaySec)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("[CHEAT DETECTED?] %s fired too quickly (%.3f s < %.3f s)"),
 			*Character->GetName(),
-			CurrentTime - LastServerFireTime,
+			ClientTimeDifference,
 			FireDelaySec
 		);
 		return;

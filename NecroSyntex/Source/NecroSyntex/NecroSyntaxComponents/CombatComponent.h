@@ -270,7 +270,7 @@ private:
 
 	float LastServerFireTime = 0.f;
 	float LastServerShotgunFireTime = 0.f;
-
+	bool bFirstFireAfterSwap;
 public:
 	FORCEINLINE int32 GetGrenades() const { return Grenades; }
 	void ResetSwapCooldown();
