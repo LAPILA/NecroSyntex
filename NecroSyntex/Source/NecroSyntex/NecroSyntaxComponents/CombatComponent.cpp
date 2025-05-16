@@ -574,19 +574,41 @@ void UCombatComponent::CycleWeapons()
 {
 	if (!Character || !EquippedWeapon) return;
 
+	// 서버와 클라이언트 동기화
 	if (!Character->HasAuthority())
 	{
 		ServerCycleWeapons();
 		return;
 	}
 
+	// 무기 전환 가능 여부 확인
 	if (CombatState != ECombatState::ECS_Unoccupied) return;
 	if (!ShouldSwapWeapons()) return;
 
+	// 무기 상태 초기화
 	CombatState = ECombatState::ECS_SwappingWeapons;
 	Character->bFinishedSwapping = false;
 
+	ResetFireState();
+
+	// 무기 스왑 로직
 	CycleWeaponsLogic();
+
+	// HUD 무기 이미지 및 탄약 정보 갱신
+	if (Character->IsLocallyControlled())
+	{
+		NotifyWeaponChanged(EquippedWeapon);
+		UpdateCarriedAmmo();
+	}
+
+	// 서버와 클라이언트 모두 HUD 갱신
+	if (Character->HasAuthority())
+	{
+		MulticastNotifyWeaponChanged(EquippedWeapon);
+	}
+
+	GetWorld()->GetTimerManager().ClearTimer(FireTimer);
+	bCanFire = true;
 
 	if (Character->IsLocallyControlled())
 	{
@@ -596,6 +618,20 @@ void UCombatComponent::CycleWeapons()
 	MulticastPlaySwapMontage();
 }
 
+void UCombatComponent::ResetFireState()
+{
+	bCanFire = true;
+	bFireButtonPressed = false;
+	bAiming = false;
+	if (Character)
+	{
+		Character->bFinishedSwapping = true;
+		if (Character->GetFollowCamera())
+		{
+			Character->GetFollowCamera()->SetFieldOfView(DefaultFOV);
+		}
+	}
+}
 void UCombatComponent::MulticastPlaySwapMontage_Implementation()
 {
 	if (!Character) return;
@@ -611,7 +647,14 @@ void UCombatComponent::ServerCycleWeapons_Implementation()
 {
 	if (Character && Character->HasAuthority())
 	{
+		ResetFireState();
 		CycleWeaponsLogic();
+
+		// 서버 측에서도 HUD 갱신 명시적으로 호출
+		NotifyWeaponChanged(EquippedWeapon);
+
+		// 클라이언트도 갱신하도록 멀티캐스트 호출
+		MulticastNotifyWeaponChanged(EquippedWeapon);
 	}
 }
 
@@ -676,11 +719,16 @@ void UCombatComponent::NotifyWeaponChanged(AWeapon* NewWeapon)
 	ANecroSyntexPlayerController* PC = Cast<ANecroSyntexPlayerController>(Character->Controller);
 	if (PC)
 	{
-		// 무기 이미지 업데이트 요청
 		PC->SetHUDWeaponImage(NewWeapon->GetWeaponImage());
+		PC->SetHUDWeaponAmmo(NewWeapon->GetAmmo());
+		PC->SetHUDCarriedAmmo(CarriedAmmo);
 	}
 }
 
+void UCombatComponent::MulticastNotifyWeaponChanged_Implementation(AWeapon* NewWeapon)
+{
+	NotifyWeaponChanged(NewWeapon);
+}
 
 void UCombatComponent::Reload()
 {
@@ -723,19 +771,30 @@ void UCombatComponent::FinishReloading()
 	}
 }
 
-
 void UCombatComponent::FinishSwap()
 {
 	if (Character && Character->HasAuthority())
 	{
 		CombatState = ECombatState::ECS_Unoccupied;
 	}
+
 	if (Character)
 	{
 		Character->bFinishedSwapping = true;
+
+		// 무기 변경 후 HUD 갱신
 		NotifyWeaponChanged(EquippedWeapon);
+
+		if (Character->IsLocallyControlled())
+		{
+			MulticastNotifyWeaponChanged(EquippedWeapon);
+		}
 	}
+
+	GetWorld()->GetTimerManager().ClearTimer(FireTimer);
+	bCanFire = true;
 }
+
 
 void UCombatComponent::FinishSwapAttachWeapons()
 {

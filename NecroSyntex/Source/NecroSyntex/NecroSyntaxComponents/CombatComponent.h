@@ -56,6 +56,8 @@ public:
 
 	void CycleWeapons();
 
+	void ResetFireState();
+
 	void CycleWeaponsLogic();
 
 	void NotifyWeaponChanged(AWeapon* NewWeapon);
@@ -103,6 +105,8 @@ protected:
 	UFUNCTION(Server, Reliable)
 	void ServerReload();
 
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastNotifyWeaponChanged(AWeapon* NewWeapon);
 
 	void HandleReload();
 	int32 AmountToReload();
