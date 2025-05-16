@@ -111,10 +111,13 @@ void UCombatComponent::ShotgunShellReload()
 
 void UCombatComponent::Fire()
 {
+	if (CombatState == ECombatState::ECS_ThrowingGrenade) return;
+
 	if (CanFire())
 	{
 		TRY_PLAY_VOICE(EVoiceCue::Fire);
 		bCanFire = false;
+
 		if (EquippedWeapon)
 		{
 			CrosshairShootingFactor = 0.75f;
@@ -134,6 +137,7 @@ void UCombatComponent::Fire()
 		StartFireTimer();
 	}
 }
+
 
 void UCombatComponent::FireProjectileWeapon()
 {
@@ -346,8 +350,12 @@ void UCombatComponent::ThrowGrenade()
 {
 	if (Grenades == 0) return;
 	if (CombatState != ECombatState::ECS_Unoccupied || !EquippedWeapon) return;
-	TRY_PLAY_VOICE(EVoiceCue::ThrowGrenade);
+
 	CombatState = ECombatState::ECS_ThrowingGrenade;
+	bCanFire = false;
+
+	TRY_PLAY_VOICE(EVoiceCue::ThrowGrenade);
+
 	if (Character)
 	{
 		Character->PlayThrowGrenadeMontage();
@@ -360,12 +368,8 @@ void UCombatComponent::ThrowGrenade()
 	{
 		ServerThrowGrenade();
 	}
-	if (Character && Character->HasAuthority())
-	{
-		Grenades = FMath::Clamp(Grenades - 1, 0, MaxGrenades);
-		UpdateHUDGrenades();
-	}
 }
+
 
 void UCombatComponent::DropEquippedWeapon()
 {
@@ -957,7 +961,15 @@ void UCombatComponent::JumpToShotgunEnd()
 void UCombatComponent::ThrowGrenadeFinished()
 {
 	CombatState = ECombatState::ECS_Unoccupied;
+	bCanFire = true;
 	AttachActorToRightHand(EquippedWeapon);
+
+	// 몽타주 종료 후 수류탄 개수 감소
+	if (Character && Character->HasAuthority())
+	{
+		Grenades = FMath::Clamp(Grenades - 1, 0, MaxGrenades);
+		UpdateHUDGrenades();
+	}
 }
 
 void UCombatComponent::LaunchGrenade()

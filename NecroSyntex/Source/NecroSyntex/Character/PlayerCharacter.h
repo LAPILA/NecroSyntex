@@ -86,6 +86,7 @@ public:
 	void PlayReloadMontage();
 	void PlayElimMontage();
 	void PlayThrowGrenadeMontage();
+	void OnThrowGrenadeMontageEnded(UAnimMontage* Montage, bool bInterrupted);
 	void PlaySwapMontage();
 	void PlayDopingMontage();
 	virtual void OnRep_ReplicatedMovement() override;

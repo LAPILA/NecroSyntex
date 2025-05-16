@@ -416,7 +416,7 @@ bool APlayerCharacter::ServerSprintStop_Validate()
 
 void APlayerCharacter::CrouchButtonPressed()
 {
-	if (bDisableGameplay) return;
+	if (bDisableGameplay || Combat->CombatState != ECombatState::ECS_Unoccupied) return;
 
 	if (bIsCrouched)
 	{
@@ -434,10 +434,9 @@ void APlayerCharacter::CrouchButtonPressed()
 #pragma region Combat Actions
 void APlayerCharacter::FireButtonPressed(const FInputActionValue& Value)
 {
-	if (bElimed || bDisableGameplay)
-	{
-		return;
-	}
+	if (bElimed || bDisableGameplay) return;
+
+	if (Combat && Combat->CombatState == ECombatState::ECS_ThrowingGrenade) return;
 
 	if (Combat && Combat->EquippedWeapon)
 	{
@@ -447,16 +446,16 @@ void APlayerCharacter::FireButtonPressed(const FInputActionValue& Value)
 
 void APlayerCharacter::FireButtonReleased(const FInputActionValue& Value)
 {
-	if (bElimed || bDisableGameplay)
-	{
-		return;
-	}
+	if (bElimed || bDisableGameplay) return;
+
+	if (Combat && Combat->CombatState == ECombatState::ECS_ThrowingGrenade) return;
 
 	if (Combat && Combat->EquippedWeapon)
 	{
 		Combat->FireButtonPressed(false);
 	}
 }
+
 
 void APlayerCharacter::ReloadButtonPressed()
 {
@@ -605,9 +604,34 @@ void APlayerCharacter::PlayThrowGrenadeMontage()
 	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
 	if (AnimInstance && ThrowGrenadeMontage)
 	{
+		// 델리게이트 바인딩: 종료 시 호출
+		AnimInstance->OnMontageEnded.RemoveDynamic(this, &APlayerCharacter::OnThrowGrenadeMontageEnded);
+		AnimInstance->OnMontageEnded.AddDynamic(this, &APlayerCharacter::OnThrowGrenadeMontageEnded);
+
+		// 몽타주 재생
 		AnimInstance->Montage_Play(ThrowGrenadeMontage);
 	}
 }
+
+void APlayerCharacter::OnThrowGrenadeMontageEnded(UAnimMontage* Montage, bool bInterrupted)
+{
+	// 몽타주가 끝났을 때 처리
+	if (Montage == ThrowGrenadeMontage)
+	{
+		if (Combat)
+		{
+			Combat->ThrowGrenadeFinished();
+		}
+
+		// 델리게이트 제거
+		UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+		if (AnimInstance)
+		{
+			AnimInstance->OnMontageEnded.RemoveDynamic(this, &APlayerCharacter::OnThrowGrenadeMontageEnded);
+		}
+	}
+}
+
 
 void APlayerCharacter::PlaySwapMontage()
 {
@@ -725,8 +749,29 @@ void APlayerCharacter::ResetMontageState()
 	if (Combat)
 	{
 		Combat->CombatState = ECombatState::ECS_Unoccupied;
+		Combat->bCanFire = true;
+
+		// 무기 상태 복구
+		if (Combat->EquippedWeapon)
+		{
+			Combat->AttachActorToRightHand(Combat->EquippedWeapon);
+		}
+
+		// 모든 상태 초기화
+		bIsSprinting = false;
+		bWantsToSprint = false;
+		if (bIsCrouched)
+		{
+			UnCrouch();
+			GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
+		}
+		else
+		{
+			GetCharacterMovement()->MaxWalkSpeed = Combat->BaseWalkSpeed;
+		}
 	}
 }
+
 
 #pragma endregion
 
