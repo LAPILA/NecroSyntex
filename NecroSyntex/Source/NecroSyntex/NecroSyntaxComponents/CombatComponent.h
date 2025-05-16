@@ -29,9 +29,6 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void FinishSwap();
 
-	UFUNCTION(NetMulticast, Reliable)
-	void MulticastPlaySwapMontage();
-
 	UFUNCTION(BlueprintCallable)
 	void FinishSwapAttachWeapons();
 
@@ -55,6 +52,10 @@ public:
 	bool bLocallyReloading = false;
 
 	void ResetFireState();
+
+	void StartWeaponSwapCooldown();
+
+	void ResetWeaponSwapCooldown();
 
 	void FinishWeaponSwap();
 

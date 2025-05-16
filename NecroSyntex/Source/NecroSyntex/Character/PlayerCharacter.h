@@ -95,6 +95,7 @@ public:
 	void PlayReloadMontage();
 	void PlayElimMontage();
 	void PlayThrowGrenadeMontage();
+	UFUNCTION()
 	void OnThrowGrenadeMontageEnded(UAnimMontage* Montage, bool bInterrupted);
 	void PlaySwapMontage();
 	void PlayDopingMontage();
@@ -190,6 +191,12 @@ protected:
 	void SwapToFirstWeapon();
 	void SwapToSecondWeapon();
 	void SwapToThirdWeapon();
+
+	bool CanSwapWeapon() const;
+
+	void StartWeaponSwapCooldown();
+
+	void ResetWeaponSwapCooldown();
 
 	void DropOrDestroyWeapon(AWeapon* Weapon);
 	void DropOrDestroyWeapons();

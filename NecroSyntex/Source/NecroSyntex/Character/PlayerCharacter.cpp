@@ -555,26 +555,51 @@ void APlayerCharacter::ServerSwapWeaponWheel_Implementation()
 
 void APlayerCharacter::SwapToFirstWeapon()
 {
-	if (Combat && !bDisableGameplay && Combat->bCanSwapWeapon)
+	if (CanSwapWeapon())
 	{
 		Combat->SwapWeaponByNumber(1);
+		StartWeaponSwapCooldown();
 	}
 }
 
 void APlayerCharacter::SwapToSecondWeapon()
 {
-	if (Combat && !bDisableGameplay && Combat->bCanSwapWeapon)
+	if (CanSwapWeapon())
 	{
 		Combat->SwapWeaponByNumber(2);
+		StartWeaponSwapCooldown();
 	}
 }
 
 void APlayerCharacter::SwapToThirdWeapon()
 {
-	if (Combat && !bDisableGameplay && Combat->bCanSwapWeapon)
+	if (CanSwapWeapon())
 	{
 		Combat->SwapWeaponByNumber(3);
+		StartWeaponSwapCooldown();
 	}
+}
+
+bool APlayerCharacter::CanSwapWeapon() const
+{
+	return (Combat && !bDisableGameplay && Combat->bCanSwapWeapon);
+}
+
+void APlayerCharacter::StartWeaponSwapCooldown()
+{
+	Combat->bCanSwapWeapon = false;
+	GetWorld()->GetTimerManager().SetTimer(
+		Combat->SwapCooldownTimer,
+		this,
+		&APlayerCharacter::ResetWeaponSwapCooldown,
+		Combat->SwapCooldownTime,
+		false
+	);
+}
+
+void APlayerCharacter::ResetWeaponSwapCooldown()
+{
+	Combat->bCanSwapWeapon = true;
 }
 
 void APlayerCharacter::AimButtonPressed()
