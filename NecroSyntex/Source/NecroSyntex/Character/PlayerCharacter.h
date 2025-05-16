@@ -145,6 +145,14 @@ public:
 	UFUNCTION(BlueprintImplementableEvent, Category = "Combat")
 	void OnWeaponHitEvent(const FHitResult& HitResult);
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat")
+	bool bIsMontagePlaying = false;
+
+	FTimerHandle MontageEndTimer;
+
+	void SetMontagePlaying(bool bIsPlaying);
+
+	void ResetMontageState();
 protected:
     virtual void BeginPlay() override;
 

@@ -469,9 +469,16 @@ void APlayerCharacter::ReloadButtonPressed()
 
 void APlayerCharacter::GrenadeButtonPressed()
 {
+	if (bIsMontagePlaying || Combat->CombatState != ECombatState::ECS_Unoccupied)
+	{
+		return;
+	}
+
 	if (Combat)
 	{
+		SetMontagePlaying(true);
 		Combat->ThrowGrenade();
+		GetWorldTimerManager().SetTimer(MontageEndTimer, this, &APlayerCharacter::ResetMontageState, 0.5f, false);
 	}
 }
 
@@ -707,6 +714,19 @@ void APlayerCharacter::ReloadMontageEndedHandler(UAnimMontage* Montage, bool bIn
 	}
 }
 
+void APlayerCharacter::SetMontagePlaying(bool bIsPlaying)
+{
+	bIsMontagePlaying = bIsPlaying;
+}
+
+void APlayerCharacter::ResetMontageState()
+{
+	SetMontagePlaying(false);
+	if (Combat)
+	{
+		Combat->CombatState = ECombatState::ECS_Unoccupied;
+	}
+}
 
 #pragma endregion
 
@@ -1084,18 +1104,31 @@ float APlayerCharacter::CalculateSpeed()
 #pragma region Doping System
 void APlayerCharacter::FirstDoping()
 {
+	if (bIsMontagePlaying || Combat->CombatState != ECombatState::ECS_Unoccupied)
+	{
+		return;
+	}
+
 	if (UDC)
 	{
-	
+		SetMontagePlaying(true);
 		UDC->PressedFirstDopingKey();
+		GetWorldTimerManager().SetTimer(MontageEndTimer, this, &APlayerCharacter::ResetMontageState, 0.5f, false);
 	}
 }
 
 void APlayerCharacter::SecondDoping()
 {
+	if (bIsMontagePlaying || Combat->CombatState != ECombatState::ECS_Unoccupied)
+	{
+		return;
+	}
+
 	if (UDC)
 	{
+		SetMontagePlaying(true);
 		UDC->PressedSecondDopingKey();
+		GetWorldTimerManager().SetTimer(MontageEndTimer, this, &APlayerCharacter::ResetMontageState, 0.5f, false);
 	}
 }
 
