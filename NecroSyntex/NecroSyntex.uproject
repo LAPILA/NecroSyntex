@@ -1,85 +1,89 @@
 {
-   "FileVersion": 3,
-   "EngineAssociation": "5.3",
-   "Category": "",
-   "Description": "",
-   "Modules": [
-      {
-         "Name": "NecroSyntex",
-         "Type": "Runtime",
-         "LoadingPhase": "Default",
-         "AdditionalDependencies": [
-            "Engine",
-            "UMG",
-            "AIModule",
-            "GameplayCameras",
-            "CoreUObject"
-         ]
-      }
-   ],
-   "Plugins": [
-      {
-         "Name": "ModelingToolsEditorMode",
-         "Enabled": true,
-         "TargetAllowList": [
-            "Editor"
-         ]
-      },
-      {
-         "Name": "MultiplayerSessions",
-         "Enabled": false
-      },
-      {
-         "Name": "UltimateMultiplayerLobby",
-         "Enabled": true,
-         "MarketplaceURL": "com.epicgames.launcher://ue/Fab/product/74a15004-2adf-4fe3-abc6-16190fb582c5"
-      },
-      {
-         "Name": "AdvancedSteamSessions",
-         "Enabled": false
-      },
-      {
-         "Name": "SteamIntegrationKit",
-         "Enabled": true,
-         "MarketplaceURL": "com.epicgames.launcher://ue/marketplace/product/122c9894af2649c8a9c2a25452562547"
-      },
-      {
-         "Name": "AdvancedSessions",
-         "Enabled": false
-      },
-      {
-         "Name": "OnlineSubsystemNull",
-         "Enabled": false
-      },
-      {
-         "Name": "OnlineSubsystemUtils",
-         "Enabled": false
-      },
-      {
-         "Name": "OnlineSubsystem",
-         "Enabled": false
-      },
-      {
-         "Name": "OnlineSubsystemIOS",
-         "Enabled": false,
-         "SupportedTargetPlatforms": [
-            "IOS",
-            "TVOS"
-         ]
-      },
-      {
-         "Name": "OnlineSubsystemGooglePlay",
-         "Enabled": false,
-         "SupportedTargetPlatforms": [
-            "Android"
-         ]
-      },
-      {
-         "Name": "OnlineBase",
-         "Enabled": false
-      }
-   ],
-   "TargetPlatforms": [
-      "Windows"
-   ]
+	"FileVersion": 3,
+	"EngineAssociation": "5.3",
+	"Category": "",
+	"Description": "",
+	"Modules": [
+		{
+			"Name": "NecroSyntex",
+			"Type": "Runtime",
+			"LoadingPhase": "Default",
+			"AdditionalDependencies": [
+				"Engine",
+				"UMG",
+				"AIModule",
+				"GameplayCameras",
+				"CoreUObject"
+			]
+		}
+	],
+	"Plugins": [
+		{
+			"Name": "ModelingToolsEditorMode",
+			"Enabled": true,
+			"TargetAllowList": [
+				"Editor"
+			]
+		},
+		{
+			"Name": "MultiplayerSessions",
+			"Enabled": false
+		},
+		{
+			"Name": "UltimateMultiplayerLobby",
+			"Enabled": true,
+			"MarketplaceURL": "com.epicgames.launcher://ue/Fab/product/74a15004-2adf-4fe3-abc6-16190fb582c5"
+		},
+		{
+			"Name": "AdvancedSteamSessions",
+			"Enabled": false
+		},
+		{
+			"Name": "SteamIntegrationKit",
+			"Enabled": true,
+			"MarketplaceURL": "com.epicgames.launcher://ue/marketplace/product/122c9894af2649c8a9c2a25452562547"
+		},
+		{
+			"Name": "AdvancedSessions",
+			"Enabled": false
+		},
+		{
+			"Name": "OnlineSubsystemNull",
+			"Enabled": false
+		},
+		{
+			"Name": "OnlineSubsystemUtils",
+			"Enabled": false
+		},
+		{
+			"Name": "OnlineSubsystem",
+			"Enabled": false
+		},
+		{
+			"Name": "OnlineSubsystemIOS",
+			"Enabled": false,
+			"SupportedTargetPlatforms": [
+				"IOS",
+				"TVOS"
+			]
+		},
+		{
+			"Name": "OnlineSubsystemGooglePlay",
+			"Enabled": false,
+			"SupportedTargetPlatforms": [
+				"Android"
+			]
+		},
+		{
+			"Name": "OnlineBase",
+			"Enabled": false
+		},
+		{
+			"Name": "SunPosition",
+			"Enabled": true
+		}
+	],
+	"TargetPlatforms": [
+		"Windows"
+	]
 }
