@@ -52,6 +52,9 @@ ABasicMonsterAI::ABasicMonsterAI()
 	CanAttack = true;
 	MeleeAttack = false;
 	CanSkill = true;
+	stopAnimationSound = false;
+	isAttackArea = false;
+	isCanAttack = false;
 }
 
 // Called when the game starts or when spawned
@@ -108,24 +111,29 @@ float ABasicMonsterAI::TakeDamage_Implementation(float DamageAmount, FDamageEven
 		return 0.0f;
 	}
 
-	if (GetCharacterMovement()) {//스킬 사용 시 데미지를 받으면 이동속도가 업데이트되어 생기게 되고 이로 인해 슬라이딩하는 모션이 발생.
-		GetCharacterMovement()->MaxWalkSpeed = SlowChaseSpeed;
-	}
+	//if (GetCharacterMovement()) {//데미지를 받으면 이동속도가 업데이트되어 생기게 되고 이로 인해 슬라이딩하는 모션이 발생.
+	//	GetCharacterMovement()->MaxWalkSpeed = SlowChaseSpeed;
+	//}
 
-	GetWorld()->GetTimerManager().SetTimer(SpeedRestoreTimerHandle, this, &ABasicMonsterAI::UpdateWalkSpeed, SlowTime, false);
+	//GetWorld()->GetTimerManager().SetTimer(SpeedRestoreTimerHandle, this, &ABasicMonsterAI::UpdateWalkSpeed, SlowTime, false);
 	GetWorld()->GetTimerManager().SetTimer(AttackRestoreTimerHandle, this, &ABasicMonsterAI::AttackCoolTime, 0.02f, false);
 
 	MonsterHP -= DamageAmount + DPA->DopingDamageBuff;
 	
-	if (DamageAmount < 50) {//Refactoring Need..
-		UGameplayStatics::PlaySoundAtLocation(this, HitSound, GetActorLocation());
-		PlayHitAnimation();
+	if (!stopAnimationSound) {
+		stopAnimationSound = true;
+		if (DamageAmount > 0) {//Refactoring Need..
+			UGameplayStatics::PlaySoundAtLocation(this, HitSound, GetActorLocation());
+			PlayHitAnimation();
+			DelayedAnimationSound(2.0f);
+		}
+		/*else {
+			UGameplayStatics::PlaySoundAtLocation(this, HitSound, GetActorLocation());
+			PlayHitHighDamageAnimation();
+			DelayedAnimationSound(2.0f);
+		}*/
 	}
-	else {
-		UGameplayStatics::PlaySoundAtLocation(this, HitSound, GetActorLocation());
-		PlayHitHighDamageAnimation();
-	}
-
+	
 	// 사망 처리
 	if (MonsterHP <= 0.0f) {
 		UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
@@ -247,7 +255,12 @@ void ABasicMonsterAI::DelayedFunction(float DelayTime)//일정 시간 동안 비동기적�
 
 void ABasicMonsterAI::DelayedAnimationSound(float DelayTime)
 {
-	//GetWorld()->GetTimerManager().SetTimer(SetAnimationSound, this, &ABasicMonsterAI::, DelayTime, false);
+	GetWorld()->GetTimerManager().SetTimer(SetAnimationSound, this, &ABasicMonsterAI::StopAnimationSound, DelayTime, false);
+}
+
+void ABasicMonsterAI::StopAnimationSound()
+{
+	stopAnimationSound = false;
 }
 
 void ABasicMonsterAI::DestroyMonster()
