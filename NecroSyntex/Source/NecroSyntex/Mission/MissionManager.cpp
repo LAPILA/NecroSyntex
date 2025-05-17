@@ -150,6 +150,8 @@ void UMissionManager::StartDefenseMission()
         if (DefenseTarget && DefenseTarget->RegionName == CurrentRegionTag)
         {
             DefenseTarget->DefenseObjectActive();
+            CurrentDefenseTarget = DefenseTarget;
+            CurrentDefenseTarget->HealthBarVisible();
         }
     }
 
@@ -171,14 +173,14 @@ void UMissionManager::DefenseMissionSuccess()
 {
     MissionSuccess.Broadcast();
 
-    EndSurvivlvalMission();
+    EndDefenseMission();
 }
 
 void UMissionManager::DefenseMissionFail()
 {
     GetWorld()->GetTimerManager().ClearTimer(DefenseTimerHandle);
     GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Mission Fail"));
-    EndSurvivlvalMission();
+    EndDefenseMission();
 
     MissionFail.Broadcast();
 }
@@ -196,10 +198,9 @@ void UMissionManager::EndDefenseMission()
         if (DefenseTarget && DefenseTarget->RegionName == CurrentRegionTag)
         {
             DefenseTarget->DefenseObjectDeactive();
+            CurrentDefenseTarget->HealthBarHidden();
         }
     }
-
-
 
     MissionSet("None", "None", 0.0f);
 

@@ -3,13 +3,14 @@
 
 #include "DefenseTarget.h"
 #include "NecroSyntex/GameMode/NecroSyntexGameMode.h"
+#include "NecroSyntex/NecroSyntexGameState.h"
 #include "Net/UnrealNetwork.h"
 
 // Sets default values
 ADefenseTarget::ADefenseTarget()
 {
  	// Set this pawn to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
+	PrimaryActorTick.bCanEverTick = false;
 
 }
 
@@ -77,6 +78,7 @@ void ADefenseTarget::TakedDamage_Implementation(AActor* DamagedActor, float Dama
 	}
 
 	Health -= Damage;
+	HealthBarUpdate();
 
 	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Damaged"));
 

@@ -100,6 +100,8 @@ public:
 	UFUNCTION()
 	void EndDefenseMission();
 
+	class ADefenseTarget* CurrentDefenseTarget;
+
 	FTimerHandle DefenseTimerHandle;
 
 private:
