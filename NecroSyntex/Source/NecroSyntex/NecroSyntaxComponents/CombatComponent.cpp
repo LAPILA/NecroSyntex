@@ -1363,3 +1363,26 @@ void UCombatComponent::ServerSetAiming_Implementation(bool bIsAiming)
 			bIsAiming ? AimWalkSpeed : BaseWalkSpeed;
 	}
 }
+
+void UCombatComponent::GetOwnedWeaponTypes(TArray<EWeaponType>& OutWeaponTypes) const
+{
+	if (PrimaryWeapon) OutWeaponTypes.Add(PrimaryWeapon->GetWeaponType());
+	if (SecondaryWeapon) OutWeaponTypes.Add(SecondaryWeapon->GetWeaponType());
+	if (ThirdWeapon) OutWeaponTypes.Add(ThirdWeapon->GetWeaponType());
+}
+
+int32 UCombatComponent::GetMaxAmmoForWeaponType(EWeaponType WeaponType) const
+{
+	// 무기 타입에 따라 최대 탄약 수량 설정
+	switch (WeaponType)
+	{
+	case EWeaponType::EWT_AssaultRifle: return 30;
+	case EWeaponType::EWT_Pistol: return 15;
+	case EWeaponType::EWT_Shotgun: return 8;
+	case EWeaponType::EWT_SubmachineGun: return 25;
+	case EWeaponType::EWT_SniperRifle: return 5;
+	case EWeaponType::EWT_RocketLauncher: return 1;
+	case EWeaponType::EWT_GrenadeLauncher: return 3;
+	default: return 30;
+	}
+}
