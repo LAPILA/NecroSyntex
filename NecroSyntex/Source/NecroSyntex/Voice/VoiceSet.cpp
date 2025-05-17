@@ -1,4 +1,3 @@
-// VoiceSet.cpp
 #include "VoiceSet.h"
 
 UVoiceSet::UVoiceSet()
@@ -11,17 +10,20 @@ UVoiceSet::UVoiceSet()
 }
 
 void UVoiceSet::GetVoice(EVoiceCue Cue,
-	USoundBase*& OutSound,
-	USoundAttenuation*& OutAttenuation) const
+    USoundBase*& OutSound,
+    USoundAttenuation*& OutAttenuation,
+    USoundClass*& OutSoundClass) const
 {
-	if (const FVoiceLines* Entry = VoiceTable.Find(Cue))
-	{
-		OutSound = Entry->GetRandomClip();
-		OutAttenuation = SharedAttenuation;
-	}
-	else
-	{
-		OutSound = nullptr;
-		OutAttenuation = SharedAttenuation;
-	}
+    if (const FVoiceLines* Entry = VoiceTable.Find(Cue))
+    {
+        OutSound = Entry->GetRandomClip();
+        OutAttenuation = SharedAttenuation;
+        OutSoundClass = SharedSoundClass;
+    }
+    else
+    {
+        OutSound = nullptr;
+        OutAttenuation = SharedAttenuation;
+        OutSoundClass = SharedSoundClass;
+    }
 }
