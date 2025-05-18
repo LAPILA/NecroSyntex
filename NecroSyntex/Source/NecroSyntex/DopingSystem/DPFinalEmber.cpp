@@ -77,6 +77,7 @@ void UDPFinalEmber::BuffOff(APlayerCharacter* DopedPC)
 void UDPFinalEmber::DeBuffOn(APlayerCharacter* DopedPC)
 {
 	DopedPC->Health = 10.0f;
+	DopedPC->UpdateHUDHealth();
 
 	DopedPC->CurrentDoped -= 1;
 
