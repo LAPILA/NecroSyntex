@@ -111,6 +111,12 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Skill")
 	float SkillAttackCoolTime;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Area")
+	bool isAttackArea;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Area")
+	bool isCanAttack;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
 	UAnimMontage* HitReactionMontage;
 
@@ -151,6 +157,10 @@ protected:
 	void DelayedFunction(float DelayTime);
 
 	void DelayedAnimationSound(float DelayTime);
+
+	void StopAnimationSound();
+
+	bool stopAnimationSound;
 
 	FTimerHandle SetAnimationSound;
 
