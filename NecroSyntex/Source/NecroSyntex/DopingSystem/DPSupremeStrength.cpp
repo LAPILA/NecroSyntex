@@ -13,20 +13,23 @@ UDPSupremeStrength::UDPSupremeStrength() :Super()
 
 }
 
-void UDPSupremeStrength::UseDopingItem(APlayerCharacter* DopedPC)
+bool UDPSupremeStrength::UseDopingItem(APlayerCharacter* DopedPC)
 {
 	UE_LOG(LogTemp, Warning, TEXT("SupremeStrength Use"));
 	//효과
 	BuffOn(DopedPC);
 
+	return true;
 }
 
 void UDPSupremeStrength::BuffOn(APlayerCharacter* DopedPC)
 {
 	if (CheckBuff == false) {
-		MLAttackBuffNum = DopedPC->MLAtaackPoint;
+		//MLAttackBuffNum = DopedPC->MLAtaackPoint;
 
-		DopedPC->MLAtaackPoint = DopedPC->MLAtaackPoint + MLAttackBuffNum;
+		//DopedPC->MLAtaackPoint = DopedPC->MLAtaackPoint + MLAttackBuffNum;
+
+		DopedPC->DopingDamageBuff += 10.0f;
 
 		DopedPC->CurrentDoped += 1;
 
@@ -40,7 +43,8 @@ void UDPSupremeStrength::BuffOn(APlayerCharacter* DopedPC)
 void UDPSupremeStrength::BuffOff(APlayerCharacter* DopedPC)
 {
 	if (CheckBuff == true) {
-		DopedPC->MLAtaackPoint = DopedPC->MLAtaackPoint - MLAttackBuffNum;
+		//DopedPC->MLAtaackPoint = DopedPC->MLAtaackPoint - MLAttackBuffNum;
+		DopedPC->DopingDamageBuff -= 10.0f;
 
 		CheckBuff = false;
 	}

@@ -93,6 +93,7 @@ void UDPBurningFurnace::PCHPMinus(APlayerCharacter* DopedPC)
 		DopedPC->Health = 1.0f;
 		DeBuffOff(DopedPC);
 		BuffOff(DopedPC);
+		TimerEnd();
 	}
 	else {
 		DopedPC->Health -= DopedPC->MaxHealth * 0.04f;

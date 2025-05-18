@@ -19,6 +19,8 @@ bool UDopingParent::UseDopingItem(APlayerCharacter* DopedPC)
 	// Buff 시작
 	BuffOn(DopedPC);
 	DeBuffOn(DopedPC);
+
+	return true;
 }
 
 void UDopingParent::BuffOn(APlayerCharacter* DopedPC)

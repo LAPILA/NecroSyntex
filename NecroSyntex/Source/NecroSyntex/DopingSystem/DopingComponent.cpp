@@ -245,7 +245,6 @@ void UDopingComponent::PressedFirstDopingKey()
 	if (GetOwner()->HasAuthority())
 	{
 		if (One_Able && One_DopingItemNum > 0) {
-			TRY_PLAY_VOICE(EVoiceCue::Skill1);
 			if (DopingforAllyMode) {
 				FirstDopingForAlly();
 			}
@@ -262,7 +261,6 @@ void UDopingComponent::PressedFirstDopingKey()
 void UDopingComponent::ServerPressedFirstDopingKey_Implementation()
 {
 	if (One_Able && One_DopingItemNum > 0) {
-		TRY_PLAY_VOICE(EVoiceCue::Skill1);
 		if (DopingforAllyMode) {
 			FirstDopingForAlly();
 		}
@@ -278,7 +276,6 @@ void UDopingComponent::PressedSecondDopingKey()
 	if (GetOwner()->HasAuthority())
 	{
 		if (Two_Able && Two_DopingItemNum > 0) {
-			TRY_PLAY_VOICE(EVoiceCue::Skill2);
 			if (DopingforAllyMode) {
 				SecondDopingForAlly();
 			}
@@ -297,7 +294,6 @@ void UDopingComponent::ServerPressedSecondDopingKey_Implementation()
 {
 
 	if (Two_Able && Two_DopingItemNum > 0) {
-		TRY_PLAY_VOICE(EVoiceCue::Skill2);
 		if (DopingforAllyMode) {
 			SecondDopingForAlly();
 		}
@@ -322,6 +318,7 @@ void UDopingComponent::FirstDopingUse() {
 
 	if (OneKeyDoping->UseDopingItem(OwnerCharacter))
 	{
+		TRY_PLAY_VOICE(EVoiceCue::Skill1);
 		One_DopingItemNum--;
 		OwnerCharacter->PlayDopingEffect();
 		OwnerCharacter->PlayDopingMontage();
@@ -346,6 +343,7 @@ void UDopingComponent::SecondDopingUse() {
 
 	if (TwoKeyDoping->UseDopingItem(OwnerCharacter))
 	{
+		TRY_PLAY_VOICE(EVoiceCue::Skill2);
 		Two_DopingItemNum--;
 		OwnerCharacter->PlayDopingEffect();
 		OwnerCharacter->PlayDopingMontage();
@@ -437,6 +435,7 @@ void UDopingComponent::FirstDopingForAlly()
 
 			if (DopingUseSuccess)
 			{
+				TRY_PLAY_VOICE(EVoiceCue::Skill1);
 				HitCharacter->PlayDopingEffect();
 				HitCharacter->UDC->ClientPlayDopingEffect();
 				FirstDopingCoolStart();
@@ -500,10 +499,15 @@ void UDopingComponent::SecondDopingForAlly()
 
 			}
 
-			HitCharacter->PlayDopingEffect();
-			HitCharacter->UDC->ClientPlayDopingEffect();
-			SecondDopingCoolStart();
-			Two_DopingItemNum--;
+
+			if (DopingUseSuccess)
+			{
+				TRY_PLAY_VOICE(EVoiceCue::Skill2);
+				HitCharacter->PlayDopingEffect();
+				HitCharacter->UDC->ClientPlayDopingEffect();
+				SecondDopingCoolStart();
+				Two_DopingItemNum--;
+			}
 
 			DopingforAllyMode = false;
 		}
