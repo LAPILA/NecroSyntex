@@ -235,5 +235,8 @@ public:
 	UFUNCTION(Server, Reliable, BlueprintCallable)
 	void EndGameDopingFinish();
 
+	UFUNCTION(BlueprintCallable)
+	void SetDopingIconHUD();
+
 
 };
