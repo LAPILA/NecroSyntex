@@ -457,6 +457,9 @@ public:
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
 	void PlayerDeathStopDopingEffect();
 
+	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
+	void SetDopingIconHUD();
+
 	UFUNCTION()
 	void SPStrengthDeBuffON();
 

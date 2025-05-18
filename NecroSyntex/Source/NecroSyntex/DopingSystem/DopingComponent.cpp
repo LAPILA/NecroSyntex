@@ -123,6 +123,7 @@ void UDopingComponent::BeginPlay()
 			Two_Able = true;
 		}
 	}
+	
 
 }
 
@@ -554,6 +555,14 @@ void UDopingComponent::ClientPlayDopingEffect_Implementation()
 	if (!OwnerCharacter) return;
 
 	OwnerCharacter->PlayDopingEffect();
+}
+
+void UDopingComponent::SetDopingIconHUD()
+{
+	APlayerCharacter* OwnerCharacter = Cast<APlayerCharacter>(GetOwner());
+	if (!OwnerCharacter) return;
+
+	OwnerCharacter->SetDopingIconHUD();
 }
 
 void UDopingComponent::EndGameDopingFinish_Implementation()
