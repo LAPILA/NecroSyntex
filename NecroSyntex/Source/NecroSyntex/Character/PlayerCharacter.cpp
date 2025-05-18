@@ -354,7 +354,6 @@ void APlayerCharacter::Move(const FInputActionValue& Value)
 	}
 }
 
-
 void APlayerCharacter::SprintStart()
 {
 	if (bDisableGameplay) return;
@@ -459,7 +458,6 @@ void APlayerCharacter::FireButtonReleased(const FInputActionValue& Value)
 	}
 }
 
-
 void APlayerCharacter::ReloadButtonPressed()
 {
 	if (bDisableGameplay) return;
@@ -471,6 +469,7 @@ void APlayerCharacter::ReloadButtonPressed()
 
 void APlayerCharacter::GrenadeButtonPressed()
 {
+	if (bDisableGameplay) return;
 	if (bIsMontagePlaying || Combat->CombatState != ECombatState::ECS_Unoccupied)
 	{
 		return;
@@ -528,6 +527,7 @@ void APlayerCharacter::ServerEquipButtonPressed_Implementation()
 
 void APlayerCharacter::SwapWeaponWheel()
 {
+	if (bDisableGameplay) return;
 	if (Combat)
 	{
 		PlaySwapMontage();
@@ -538,7 +538,6 @@ void APlayerCharacter::SwapWeaponWheel()
 		ServerSwapWeaponWheel();
 	}
 }
-
 
 bool APlayerCharacter::ServerSwapWeaponWheel_Validate()
 {
@@ -555,6 +554,7 @@ void APlayerCharacter::ServerSwapWeaponWheel_Implementation()
 
 void APlayerCharacter::SwapToFirstWeapon()
 {
+	if (bDisableGameplay) return;
 	if (CanSwapWeapon())
 	{
 		Combat->SwapWeaponByNumber(1);
@@ -564,6 +564,7 @@ void APlayerCharacter::SwapToFirstWeapon()
 
 void APlayerCharacter::SwapToSecondWeapon()
 {
+	if (bDisableGameplay) return;
 	if (CanSwapWeapon())
 	{
 		Combat->SwapWeaponByNumber(2);
@@ -573,6 +574,7 @@ void APlayerCharacter::SwapToSecondWeapon()
 
 void APlayerCharacter::SwapToThirdWeapon()
 {
+	if (bDisableGameplay) return;
 	if (CanSwapWeapon())
 	{
 		Combat->SwapWeaponByNumber(3);
@@ -1202,6 +1204,7 @@ float APlayerCharacter::CalculateSpeed()
 #pragma region Doping System
 void APlayerCharacter::FirstDoping()
 {
+	if (bDisableGameplay) return;
 	if (bIsMontagePlaying || Combat->CombatState != ECombatState::ECS_Unoccupied)
 	{
 		return;
@@ -1217,6 +1220,7 @@ void APlayerCharacter::FirstDoping()
 
 void APlayerCharacter::SecondDoping()
 {
+	if (bDisableGameplay) return;
 	if (bIsMontagePlaying || Combat->CombatState != ECombatState::ECS_Unoccupied)
 	{
 		return;

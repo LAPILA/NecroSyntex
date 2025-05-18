@@ -107,7 +107,7 @@ public:
 	virtual void Destroyed() override;
 
 	UPROPERTY(Replicated)
-	bool bDisableGameplay = false;
+	bool bDisableGameplay = true;
 
 	UFUNCTION(BluePrintImplementableEvent)
 	void ShowSniperScopeWidget(bool bShowScope);
