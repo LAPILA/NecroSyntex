@@ -107,7 +107,7 @@ float ABasicMonsterAI::TakeDamage_Implementation(float DamageAmount, FDamageEven
 	APlayerCharacter* DPA = Cast<APlayerCharacter>(DPC->GetPawn());
 
 	if (!DPA) {
-		UE_LOG(LogTemp, Warning, TEXT("박두림 바보"));
+		UE_LOG(LogTemp, Warning, TEXT(""));
 		return 0.0f;
 	}
 
@@ -117,7 +117,11 @@ float ABasicMonsterAI::TakeDamage_Implementation(float DamageAmount, FDamageEven
 
 	//GetWorld()->GetTimerManager().SetTimer(SpeedRestoreTimerHandle, this, &ABasicMonsterAI::UpdateWalkSpeed, SlowTime, false);
 	GetWorld()->GetTimerManager().SetTimer(AttackRestoreTimerHandle, this, &ABasicMonsterAI::AttackCoolTime, 0.02f, false);
-
+	if (GEngine)
+	{
+		FString DamageText = FString::Printf(TEXT("몬스터가 %f 만큼 데미지를 받음"), DamageAmount);
+		GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, DamageText);
+	}
 	MonsterHP -= DamageAmount + DPA->DopingDamageBuff;
 	
 	if (!stopAnimationSound) {
