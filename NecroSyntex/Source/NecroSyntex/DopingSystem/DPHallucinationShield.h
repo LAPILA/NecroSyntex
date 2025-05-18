@@ -22,7 +22,7 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void CallCameraShake();
 
-	void UseDopingItem(APlayerCharacter* DopedPC) override;
+	bool UseDopingItem(APlayerCharacter* DopedPC) override;
 
 	void BuffOn(APlayerCharacter* DopedPC) override;
 

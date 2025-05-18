@@ -13,11 +13,13 @@ UDPPainless::UDPPainless()
 	CheckDeBuff = false;
 }
 
-void UDPPainless::UseDopingItem(APlayerCharacter* DopedPC)
+bool UDPPainless::UseDopingItem(APlayerCharacter* DopedPC)
 {
 	UE_LOG(LogTemp, Warning, TEXT("Painless Use"));
 	//효과
 	BuffOn(DopedPC);
+
+	return true;
 }
 
 
