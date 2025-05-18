@@ -40,7 +40,7 @@ public:
 
 	// 아이템 사용 함수
 	UFUNCTION(BlueprintCallable, Category = "Doping")
-	virtual void UseDopingItem(APlayerCharacter* DopedPC);
+	virtual bool UseDopingItem(APlayerCharacter* DopedPC);
 
 	APlayerCharacter* APC;
 

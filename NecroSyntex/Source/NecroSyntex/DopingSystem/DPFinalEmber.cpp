@@ -2,6 +2,7 @@
 
 
 #include "DPFinalEmber.h"
+#include "NecroSyntex/DopingSystem/DopingComponent.h"
 
 UDPFinalEmber::UDPFinalEmber()
 	:Super()
@@ -11,12 +12,14 @@ UDPFinalEmber::UDPFinalEmber()
 	CheckDeBuff = false;
 }
 
-void UDPFinalEmber::UseDopingItem(APlayerCharacter* DopedPC)
+bool UDPFinalEmber::UseDopingItem(APlayerCharacter* DopedPC)
 {
 
 	UE_LOG(LogTemp, Warning, TEXT("FinalEmber Use"));
 	//효과
 	BuffOn(DopedPC);
+
+	return true;
 
 }
 
@@ -76,7 +79,14 @@ void UDPFinalEmber::BuffOff(APlayerCharacter* DopedPC)
 
 void UDPFinalEmber::DeBuffOn(APlayerCharacter* DopedPC)
 {
-	DopedPC->Health = 10.0f;
+	DopedPC->Health = 0.0f;
+	DopedPC->UpdateHUDHealth();
+
+	DopedPC->PlayerDeathStopDopingEffect();
+	DopedPC->UDC->One_Able = false;
+	DopedPC->UDC->Two_Able = false;
+
+	DopedPC->Elim();
 
 	DopedPC->CurrentDoped -= 1;
 

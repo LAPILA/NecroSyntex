@@ -12,12 +12,13 @@ UDPReducePain::UDPReducePain()
 	CheckDeBuff = false;
 }
 
-void UDPReducePain::UseDopingItem(APlayerCharacter* DopedPC)
+bool UDPReducePain::UseDopingItem(APlayerCharacter* DopedPC)
 {
 	UE_LOG(LogTemp, Warning, TEXT("ReducePain Use"));
 	//효과
 	BuffOn(DopedPC);
 
+	return true;
 }
 
 void UDPReducePain::BuffOn(APlayerCharacter* DopedPC)

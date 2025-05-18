@@ -13,11 +13,13 @@ UDPSolidFortress::UDPSolidFortress()
 	CheckDeBuff = false;
 }
 
-void UDPSolidFortress::UseDopingItem(APlayerCharacter* DopedPC)
+bool UDPSolidFortress::UseDopingItem(APlayerCharacter* DopedPC)
 {
 	UE_LOG(LogTemp, Warning, TEXT("SolidFortress Use"));
 	//효과
 	BuffOn(DopedPC);
+
+	return true;
 }
 
 void UDPSolidFortress::BuffOn(APlayerCharacter* DopedPC)
