@@ -27,6 +27,8 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Voice")
 	TMap<EVoiceCue, float> CooldownTable;
 
+	void SetSoundClass(UAudioComponent* AudioComp, USoundClass* SoundClass);
+
 protected:
 	virtual void BeginPlay() override;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;

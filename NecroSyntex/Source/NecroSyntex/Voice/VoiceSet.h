@@ -42,11 +42,16 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Voice")
 	TObjectPtr<USoundAttenuation> SharedAttenuation = nullptr;
 
+	/* 전 Cue 공통 SoundClass */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Voice")
+	TObjectPtr<USoundClass> SharedSoundClass = nullptr;
+
 	/* 사운드 + Attenuation 반환     */
 	UFUNCTION(BlueprintCallable, Category = "Voice")
 	void GetVoice(EVoiceCue Cue,
 		USoundBase*& OutSound,
-		USoundAttenuation*& OutAttenuation) const;
+		USoundAttenuation*& OutAttenuation,
+		USoundClass*& OutSoundClass) const;
 
 private:
 	UVoiceSet();          // ← **선언만!**  (본문은 cpp)

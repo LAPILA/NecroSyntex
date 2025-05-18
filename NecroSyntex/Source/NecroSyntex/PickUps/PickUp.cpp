@@ -25,7 +25,7 @@ APickUp::APickUp()
 	PickupMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("PickupMesh"));
 	PickupMesh->SetupAttachment(OverlapSphere);
 	PickupMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-	PickupMesh->SetRenderCustomDepth(true);
+	PickupMesh->SetRenderCustomDepth(false);
 	PickupMesh->SetCustomDepthStencilValue(CUSTOM_DEPTH_TAN);
 
 }

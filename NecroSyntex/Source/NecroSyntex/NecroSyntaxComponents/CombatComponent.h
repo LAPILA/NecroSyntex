@@ -277,4 +277,7 @@ public:
 	bool ShouldSwapWeapons();
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
 	AWeapon* GetEquippedWeapon() const { return EquippedWeapon; }
+
+	void GetOwnedWeaponTypes(TArray<EWeaponType>& OutWeaponTypes) const;
+	int32 GetMaxAmmoForWeaponType(EWeaponType WeaponType) const;
 };

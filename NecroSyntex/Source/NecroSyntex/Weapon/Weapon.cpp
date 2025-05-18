@@ -30,7 +30,7 @@ AWeapon::AWeapon()
 	WeaponMesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Ignore);
 	WeaponMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
-	EnableCustomDepth(true);
+	EnableCustomDepth(false);
 	WeaponMesh->SetCustomDepthStencilValue(CUSTOM_DEPTH_BLUE);
 	WeaponMesh->MarkRenderStateDirty();
 	WeaponMesh->SetIsReplicated(true);
@@ -242,7 +242,7 @@ void AWeapon::OnDropped()
 
 	WeaponMesh->SetCustomDepthStencilValue(CUSTOM_DEPTH_BLUE);
 	WeaponMesh->MarkRenderStateDirty();
-	EnableCustomDepth(true);
+	EnableCustomDepth(false);
 	PlayerOwnerCharacter = PlayerOwnerCharacter == nullptr ? Cast<APlayerCharacter>(GetOwner()) : PlayerOwnerCharacter;
 	if (PlayerOwnerCharacter)
 	{
