@@ -12,11 +12,18 @@ UDPBurningFurnace::UDPBurningFurnace()
 	CheckDeBuff = false;
 }
 
-void UDPBurningFurnace::UseDopingItem(APlayerCharacter* DopedPC)
+bool UDPBurningFurnace::UseDopingItem(APlayerCharacter* DopedPC)
 {
 	UE_LOG(LogTemp, Warning, TEXT("BurningFurnace Use"));
 	//효과
-	BuffOn(DopedPC);
+	if (DopedPC->Health >= (DopedPC->MaxHealth * 0.4))
+	{
+		BuffOn(DopedPC);
+		return true;
+	}
+	else {
+		return false;
+	}
 }
 
 void UDPBurningFurnace::BuffOn(APlayerCharacter* DopedPC)
@@ -80,7 +87,16 @@ void UDPBurningFurnace::BFDamageApply(APlayerCharacter* DopedPC)
 
 void UDPBurningFurnace::PCHPMinus(APlayerCharacter* DopedPC)
 {
-	DopedPC->Health -= DopedPC->MaxHealth * 0.04f;
+
+	if ((DopedPC->Health - DopedPC->MaxHealth * 0.04f) <= 0.0f)
+	{
+		DopedPC->Health = 1.0f;
+		DeBuffOff(DopedPC);
+		BuffOff(DopedPC);
+	}
+	else {
+		DopedPC->Health -= DopedPC->MaxHealth * 0.04f;
+	}
 
 	DopedPC->UpdateHUDHealth();
 }
