@@ -3,21 +3,26 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "UObject/NoExportTypes.h"
+#include "Components/ActorComponent.h"
 #include "TimerManager.h"
-#include "MissionManager.generated.h"
+#include "MissionComp.generated.h"
 
-/**
- * 
- */
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FMissionStart22);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FMissionSuccess22);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FMissionFail22);
-
-UCLASS()
-class NECROSYNTEX_API UMissionManager : public UObject
+UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
+class NECROSYNTEX_API UMissionComp : public UActorComponent
 {
 	GENERATED_BODY()
+
+public:	
+	// Sets default values for this component's properties
+	UMissionComp();
+
+protected:
+	// Called when the game starts
+	virtual void BeginPlay() override;
+
+public:	
+	// Called every frame
+	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 public:
 	UFUNCTION()
@@ -45,15 +50,6 @@ public:
 	UFUNCTION()
 	void CurrentMissionFail();
 
-	UPROPERTY(BlueprintAssignable)
-	FMissionSuccess22 MissionSuccess;
-
-	UPROPERTY(BlueprintAssignable)
-	FMissionStart22 MissionStart;
-
-	UPROPERTY(BlueprintAssignable)
-	FMissionFail22 MissionFail;
-
 	/*UFUNCTION()
 	void ActivateSpawners(FName MissionName, FName Region);*/
 
@@ -64,7 +60,7 @@ public:
 	//count down
 	UFUNCTION()
 	void MissionCountdownStart();
-	
+
 	UFUNCTION()
 	void MissionCountdownCancel();
 
@@ -106,4 +102,5 @@ public:
 
 private:
 	TWeakObjectPtr<class ANecroSyntexGameMode> CurrentGameMode;
+		
 };
