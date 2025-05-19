@@ -26,7 +26,7 @@ void ANecroSyntexGameMode::BeginPlay()
 {
 	Super::BeginPlay();
 
-	MissionManager = NewObject<UMissionManager>(this, UMissionManager::StaticClass());
+	MissionManager = NewObject<UMissionComp>(this, UMissionComp::StaticClass());
 	MissionManager->Init(this);
 
 
@@ -199,6 +199,21 @@ void ANecroSyntexGameMode::SetupPlayers()
 	}
 }
 
+
+void ANecroSyntexGameMode::LevelMissionStart()
+{
+	MissionStart.Broadcast();
+}
+
+void ANecroSyntexGameMode::LevelMissionSuccess()
+{
+	MissionSuccess.Broadcast();
+}
+
+void ANecroSyntexGameMode::LevelMissionFail()
+{
+	MissionFail.Broadcast();
+}
 
 void ANecroSyntexGameMode::PostLogin(APlayerController* NewPlayer)
 {

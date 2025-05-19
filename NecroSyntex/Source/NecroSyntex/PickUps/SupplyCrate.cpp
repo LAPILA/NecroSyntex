@@ -8,6 +8,7 @@
 #include "NecroSyntex/Character/PlayerCharacter.h"
 #include "NecroSyntex/Weapon/Weapon.h"
 #include "NecroSyntex/NecroSyntaxComponents/CombatComponent.h"
+#include "NecroSyntex/DopingSystem/DopingComponent.h"
 #include "EngineUtils.h"
 
 ASupplyCrate::ASupplyCrate()
@@ -125,6 +126,9 @@ void ASupplyCrate::GiveAmmoToAllPlayers()
             int32 AmmoToGive = MaxAmmo * MagCount;
             PC->GetCombat()->PickUpAmmo(WeaponType, AmmoToGive);
         }
+
+        PC->UDC->One_DopingItemNum += 2;
+        PC->UDC->Two_DopingItemNum += 2;
     }
 }
 
