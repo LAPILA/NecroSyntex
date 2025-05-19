@@ -23,6 +23,9 @@ void APCAleks::BeginPlay()
 		//RunningSpeed = 500.0f;
 		MLAtaackPoint = 20.0f;
 		Defense = 5.0f;
+
+		UpdateHUDHealth();
+		UpdateHUDShield();
 	}
 
 }
