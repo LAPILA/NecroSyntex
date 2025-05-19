@@ -136,8 +136,6 @@ void APlayerCharacter::BeginPlay()
 		VoiceComp->VoiceSet = DefaultVoiceSet;
 	}
 
-	TRY_PLAY_VOICE(EVoiceCue::GameStart);
-
 	// Input mapping
 	if (APlayerController* PC = Cast<APlayerController>(GetController()))
 	{
