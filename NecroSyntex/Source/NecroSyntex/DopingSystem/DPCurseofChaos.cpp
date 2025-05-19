@@ -19,13 +19,15 @@ UDPCurseofChaos::UDPCurseofChaos()
 
 }
 
-void UDPCurseofChaos::UseDopingItem(APlayerCharacter* DopedPC)
+bool UDPCurseofChaos::UseDopingItem(APlayerCharacter* DopedPC)
 {
 	UE_LOG(LogTemp, Warning, TEXT("UDPCurseofChaos Use"));
 	// Buff 적용 및 타이머 시작
 	BuffOn(DopedPC);
 	// DeBuff 적용 및 타이머 시작
 	DeBuffOn(DopedPC);
+
+	return true;
 }
 
 void UDPCurseofChaos::BuffOn(APlayerCharacter* DopedPC)

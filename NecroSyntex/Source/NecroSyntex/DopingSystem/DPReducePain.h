@@ -20,7 +20,7 @@ public:
 
 	UDPReducePain();
 
-	void UseDopingItem(APlayerCharacter* DopedPC) override;
+	bool UseDopingItem(APlayerCharacter* DopedPC) override;
 
 	void BuffOn(APlayerCharacter* DopedPC) override;
 

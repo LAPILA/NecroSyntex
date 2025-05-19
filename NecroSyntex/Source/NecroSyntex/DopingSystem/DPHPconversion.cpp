@@ -15,10 +15,17 @@ UDPHPconversion::UDPHPconversion()
 
 }
 
-void UDPHPconversion::UseDopingItem(APlayerCharacter* DopedPC)
+bool UDPHPconversion::UseDopingItem(APlayerCharacter* DopedPC)
 {
 	// Buff 적용 및 타이머 시작
-	BuffOn(DopedPC);
+	if (DopedPC->Health - 20.0f > 0)
+	{
+		BuffOn(DopedPC);
+		return true;
+	}
+	else {
+		return false;
+	}
 }
 
 void UDPHPconversion::BuffOn(APlayerCharacter* DopedPC)

@@ -5,12 +5,15 @@
 #include "CoreMinimal.h"
 #include "GameFramework/GameMode.h"
 #include "NecroSyntex/Mission/MissionManager.h"
+#include "NecroSyntex/Mission/MissionComp.h"
 #include "NecroSyntexGameMode.generated.h"
 
 namespace MatchState
 {
 	extern NECROSYNTEX_API const FName Cooldown; // Match duration has been reached. Display winner and begin cooldown timer.
 }
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FMissionEvent);
 
 UCLASS()
 class NECROSYNTEX_API ANecroSyntexGameMode : public AGameMode
@@ -74,7 +77,25 @@ public:
 
 	// Mission
 	UPROPERTY(BlueprintReadWrite)
-	UMissionManager* MissionManager;
+	UMissionComp* MissionManager;
+
+	UPROPERTY(BlueprintAssignable)
+	FMissionEvent MissionStart;
+
+	UPROPERTY(BlueprintAssignable)
+	FMissionEvent MissionSuccess;
+
+	UPROPERTY(BlueprintAssignable)
+	FMissionEvent MissionFail;
+
+	UFUNCTION()
+	void LevelMissionStart();
+
+	UFUNCTION()
+	void LevelMissionSuccess();
+
+	UFUNCTION()
+	void LevelMissionFail();
 
 
 protected:

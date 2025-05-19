@@ -64,10 +64,12 @@ void UDPParadoxofGuardianship::ShiledCalcu(APlayerCharacter* DopedPC)
 	}
 }
 
-void UDPParadoxofGuardianship::UseDopingItem(APlayerCharacter* DopedPC)
+bool UDPParadoxofGuardianship::UseDopingItem(APlayerCharacter* DopedPC)
 {
 	// Buff 적용 및 타이머 시작
 	BuffOn(DopedPC);
+
+	return true;
 
 }
 

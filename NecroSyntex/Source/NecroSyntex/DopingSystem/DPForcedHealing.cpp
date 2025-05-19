@@ -12,13 +12,14 @@ UDPForcedHealing::UDPForcedHealing() : Super()
 	CheckDeBuff = false;
 }
 
-void UDPForcedHealing::UseDopingItem(APlayerCharacter* DopedPC)
+bool UDPForcedHealing::UseDopingItem(APlayerCharacter* DopedPC)
 {
 
 	UE_LOG(LogTemp, Warning, TEXT("ForcedHealing Use"));
 	//효과
 	BuffOn(DopedPC);
 
+	return true;
 }
 
 
