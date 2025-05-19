@@ -268,6 +268,8 @@ private:
 	int32 MaxGrenades = 5;
 	void UpdateHUDGrenades();
 
+	void RemoveGrenade(int32 Amount);
+
 	float LastServerFireTime = 0.f;
 	float LastServerShotgunFireTime = 0.f;
 	bool bFirstFireAfterSwap;

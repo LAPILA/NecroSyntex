@@ -467,6 +467,7 @@ void APlayerCharacter::ReloadButtonPressed()
 
 void APlayerCharacter::GrenadeButtonPressed()
 {
+	return;
 	if (bDisableGameplay) return;
 	if (bIsMontagePlaying || Combat->CombatState != ECombatState::ECS_Unoccupied)
 	{
@@ -1399,6 +1400,20 @@ void APlayerCharacter::PollInit()
 void APlayerCharacter::SetHealingStationActor(AHealingStation* Station)
 {
 	HealingStationActor = Station;
+}
+
+void APlayerCharacter::UseGrenade()
+{
+	Combat->RemoveGrenade(1);
+}
+
+int32 APlayerCharacter::GetCurrentGrenadeCount() const
+{
+	if (Combat)
+	{
+		return Combat->GetGrenades();
+	}
+	return 0;
 }
 
 void APlayerCharacter::SetOverlappingWeapon(AWeapon* Weapon)

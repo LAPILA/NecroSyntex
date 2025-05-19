@@ -733,6 +733,13 @@ void UCombatComponent::UpdateHUDGrenades()
 	}
 }
 
+void UCombatComponent::RemoveGrenade(int32 Amount)
+{
+	if (Grenades <= 0 || Amount <= 0) return;
+
+	Grenades = FMath::Max(Grenades - Amount, 0);
+	UpdateHUDGrenades();
+}
 
 void UCombatComponent::OnRep_EquippedWeapon()
 {
