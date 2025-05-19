@@ -151,9 +151,9 @@ void UMissionComp::SurvivalMissionFail()
 {
     GetWorld()->GetTimerManager().ClearTimer(SurvivalTimerhandle);
 
-    EndSurvivlvalMission();
     CurrentGameMode->LevelMissionFail();
 
+    EndSurvivlvalMission();
 }
 
 void UMissionComp::EndSurvivlvalMission()
