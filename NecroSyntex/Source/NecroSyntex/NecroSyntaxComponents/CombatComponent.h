@@ -280,4 +280,11 @@ public:
 
 	void GetOwnedWeaponTypes(TArray<EWeaponType>& OutWeaponTypes) const;
 	int32 GetMaxAmmoForWeaponType(EWeaponType WeaponType) const;
+
+	//duream code.
+	UFUNCTION()
+	int32 GetWeaponSlot() const;
+
+	UPROPERTY()
+	int32 weaponSlotNumber = 1;
 };

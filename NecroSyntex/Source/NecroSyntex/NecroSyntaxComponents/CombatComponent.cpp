@@ -265,14 +265,47 @@ void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 	if (!Character || !WeaponToEquip) return;
 	if (CombatState != ECombatState::ECS_Unoccupied) return;
 
-	if (EquippedWeapon && !SecondaryWeapon)
-	{
+	//duream code start.
+	weaponSlotNumber = GetWeaponSlot();
+
+	//GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Green, FString::Printf(TEXT("value: %d"), weaponSlotNumber));
+
+	if (weaponSlotNumber == 0) {
+		//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("ERROR~~~~~~~~~`"));
+		return;
+	}
+
+	if (EquippedWeapon && !SecondaryWeapon) {
+		//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("second"));
 		EquipSecondaryWeapon(WeaponToEquip);
 	}
-	else
-	{
+	else if (SecondaryWeapon && !ThirdWeapon) {
+		//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("third"));
+		EquipThirdWeapon(WeaponToEquip);
+	}
+	else if (PrimaryWeapon && SecondaryWeapon && ThirdWeapon) {
+		switch (weaponSlotNumber)
+		{
+		case 1:
+			EquipPrimaryWeapon(WeaponToEquip);
+			break;
+		case 2:
+			SecondaryWeapon->Dropped();
+			EquipSecondaryWeapon(WeaponToEquip);
+			break;
+		case 3:
+			ThirdWeapon->Dropped();
+			EquipThirdWeapon(WeaponToEquip);
+		default:
+			break;
+		}
+	}
+	else {
+		//debug message.
+		//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("not ~~~~~~~~~~~~ equippedweapon && !secondaryweapon"));
 		EquipPrimaryWeapon(WeaponToEquip);
 	}
+	//duream code end.
 	Character->GetCharacterMovement()->bOrientRotationToMovement = false;
 	Character->bUseControllerRotationYaw = true;
 	NotifyWeaponChanged(EquippedWeapon);
@@ -281,7 +314,10 @@ void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 void UCombatComponent::EquipPrimaryWeapon(AWeapon* WeaponToEquip)
 {
 	if (!WeaponToEquip) return;
-
+	
+	//debug message.
+	//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("equip primaryweapon"));
+	
 	DropEquippedWeapon();
 
 	PrimaryWeapon = WeaponToEquip;
@@ -304,7 +340,18 @@ void UCombatComponent::EquipSecondaryWeapon(AWeapon* WeaponToEquip)
 
 	SecondaryWeapon = WeaponToEquip;
 	SecondaryWeapon->SetWeaponState(EWeaponState::EWS_EquippedSecondary);
-
+	//duream code start.
+	if (PrimaryWeapon && SecondaryWeapon && ThirdWeapon) {
+		EquippedWeapon = SecondaryWeapon;
+		AttachActorToRightHand(EquippedWeapon);
+		EquippedWeapon->SetHUDAmmo();
+		UpdateCarriedAmmo();
+		PlayEquipWeaponSound(SecondaryWeapon);
+		SecondaryWeapon->SetOwner(Character);
+		
+		return;
+	}
+	//duream code end.
 	AttachActorToBackPack(SecondaryWeapon);
 	PlayEquipWeaponSound(SecondaryWeapon);
 	SecondaryWeapon->SetOwner(Character);
@@ -315,11 +362,22 @@ void UCombatComponent::EquipThirdWeapon(AWeapon* WeaponToEquip)
 	if (!WeaponToEquip) return;
 
 	ThirdWeapon = WeaponToEquip;
-	ThirdWeapon->SetOwner(Character);
 	ThirdWeapon->SetWeaponState(EWeaponState::EWS_EquippedThird);
+	//duream code start.
+	if (PrimaryWeapon && SecondaryWeapon && ThirdWeapon) {
+		EquippedWeapon = ThirdWeapon;
+		AttachActorToRightHand(EquippedWeapon);
+		EquippedWeapon->SetHUDAmmo();
+		UpdateCarriedAmmo();
+		PlayEquipWeaponSound(ThirdWeapon);
+		ThirdWeapon->SetOwner(Character);
+
+		return;
+	}
 
 	AttachActorToBackPack2(ThirdWeapon);
 	PlayEquipWeaponSound(ThirdWeapon);
+	ThirdWeapon->SetOwner(Character);
 }
 
 void UCombatComponent::SwapWeaponByNumber(int32 WeaponNumber)
@@ -1385,4 +1443,19 @@ int32 UCombatComponent::GetMaxAmmoForWeaponType(EWeaponType WeaponType) const
 	case EWeaponType::EWT_GrenadeLauncher: return 3;
 	default: return 30;
 	}
+}
+
+
+int32 UCombatComponent::GetWeaponSlot() const
+{
+	if (EquippedWeapon == PrimaryWeapon) {
+		return 1;
+	}
+	else if (EquippedWeapon == SecondaryWeapon) {
+		return 2;
+	}
+	else if (EquippedWeapon == ThirdWeapon) {
+		return 3;
+	}
+	return 0;
 }
