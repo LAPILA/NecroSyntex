@@ -59,4 +59,6 @@ public:
 
 	void TriggerDestroy();
 
+	UFUNCTION(BlueprintImplementableEvent)
+	void TriggerMakeNoise();
 };

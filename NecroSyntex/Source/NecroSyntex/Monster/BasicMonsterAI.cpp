@@ -310,11 +310,11 @@ void ABasicMonsterAI::MoveToPlayer()
 		
 		if (AIController && GameState->CurrentMission != "Defense") {
 			if (MeleeAttack) {//비교적 근접 공격을 하는 경우.
-				UE_LOG(LogTemp, Warning, TEXT("Moving to Player 0511"));
+				//UE_LOG(LogTemp, Warning, TEXT("Moving to Player 0511"));
 				AIController->MoveToActor(Player, MonsterDistance, true, true, true, 0, true);
 			}
 			else {
-				UE_LOG(LogTemp, Warning, TEXT("Moving to Player 0511 2"));
+				//UE_LOG(LogTemp, Warning, TEXT("Moving to Player 0511 2"));
 				AIController->MoveToActor(Player, 150.0f, true, true, true, 0, true);
 				//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("move to end~~~~~~~~~~~~~"));
 			}
@@ -381,4 +381,9 @@ void ABasicMonsterAI::SpawnNiagaraEffect(FVector SpawnLocation)
 {
 	//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Spawn Niagara"));
 	UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), GasBombEffect, SpawnLocation);
+}
+
+TArray<AActor*>& ABasicMonsterAI::GetOverlappingPlayers()
+{
+	return OverlappingPlayers;
 }

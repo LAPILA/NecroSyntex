@@ -339,20 +339,26 @@ void UCombatComponent::EquipSecondaryWeapon(AWeapon* WeaponToEquip)
 	SecondaryWeapon = WeaponToEquip;
 	SecondaryWeapon->SetWeaponState(EWeaponState::EWS_EquippedSecondary);
 	//duream code start.
-	if (PrimaryWeapon && SecondaryWeapon && ThirdWeapon) {
+	if (PrimaryWeapon && SecondaryWeapon && !ThirdWeapon) {
+		//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("equipsecondary"));
+		AttachActorToBackPack(SecondaryWeapon);
+		PlayEquipWeaponSound(SecondaryWeapon);
+		SecondaryWeapon->SetOwner(Character);
+	
+		return;
+	}
+	else if (PrimaryWeapon && SecondaryWeapon && ThirdWeapon) {
+		//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("equipsecondary22222222222"));
 		EquippedWeapon = SecondaryWeapon;
 		AttachActorToRightHand(EquippedWeapon);
 		EquippedWeapon->SetHUDAmmo();
 		UpdateCarriedAmmo();
 		PlayEquipWeaponSound(SecondaryWeapon);
 		SecondaryWeapon->SetOwner(Character);
-		
+
 		return;
 	}
 	//duream code end.
-	AttachActorToBackPack(SecondaryWeapon);
-	PlayEquipWeaponSound(SecondaryWeapon);
-	SecondaryWeapon->SetOwner(Character);
 }
 
 void UCombatComponent::EquipThirdWeapon(AWeapon* WeaponToEquip)
@@ -362,7 +368,17 @@ void UCombatComponent::EquipThirdWeapon(AWeapon* WeaponToEquip)
 	ThirdWeapon = WeaponToEquip;
 	ThirdWeapon->SetWeaponState(EWeaponState::EWS_EquippedThird);
 	//duream code start.
-	if (PrimaryWeapon && SecondaryWeapon && ThirdWeapon) {
+	if (PrimaryWeapon && SecondaryWeapon && ThirdWeapon && !isThirdWeapon) {
+		//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("equipthird"));
+		isThirdWeapon = true;
+		AttachActorToBackPack2(ThirdWeapon);
+		PlayEquipWeaponSound(ThirdWeapon);
+		ThirdWeapon->SetOwner(Character);
+
+		return;
+	}
+	else if (PrimaryWeapon && SecondaryWeapon && ThirdWeapon && isThirdWeapon) {
+		//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("equipthird33333333333333"));
 		EquippedWeapon = ThirdWeapon;
 		AttachActorToRightHand(EquippedWeapon);
 		EquippedWeapon->SetHUDAmmo();
@@ -373,9 +389,7 @@ void UCombatComponent::EquipThirdWeapon(AWeapon* WeaponToEquip)
 		return;
 	}
 
-	AttachActorToBackPack2(ThirdWeapon);
-	PlayEquipWeaponSound(ThirdWeapon);
-	ThirdWeapon->SetOwner(Character);
+	//duream code end.
 }
 
 void UCombatComponent::SwapWeaponByNumber(int32 WeaponNumber)

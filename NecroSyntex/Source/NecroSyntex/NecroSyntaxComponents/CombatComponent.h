@@ -288,4 +288,7 @@ public:
 
 	UPROPERTY()
 	int32 weaponSlotNumber = 1;
+
+	UPROPERTY()
+	bool isThirdWeapon = false;
 };

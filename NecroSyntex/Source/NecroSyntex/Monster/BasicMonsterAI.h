@@ -89,7 +89,8 @@ public:
 	UPROPERTY()
 	TArray<AActor*> OverlappingPlayers;
 
-	TArray<AActor*>& GetOverlappingPlayers() { return OverlappingPlayers; }
+	UFUNCTION()
+	TArray<AActor*>& GetOverlappingPlayers();
 
 	UPROPERTY()
 	bool CanSkill;
