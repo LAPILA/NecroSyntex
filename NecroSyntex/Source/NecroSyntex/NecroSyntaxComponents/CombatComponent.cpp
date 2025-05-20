@@ -543,9 +543,7 @@ void UCombatComponent::ThrowGrenade()
 
 	if (Character)
 	{
-		Character->PlayThrowGrenadeMontage();
 		AttachActorToLeftHand(EquippedWeapon);
-		ShowAttachedGrenade(true);  // 수류탄 던지기 시작 시 활성화
 		Character->GetCharacterMovement()->MaxWalkSpeed = Character->WalkSpeed * Character->GrenadeThrowSpeedMultiplier;
 	}
 
@@ -560,14 +558,6 @@ void UCombatComponent::ThrowGrenadeFinished()
 	CombatState = ECombatState::ECS_Unoccupied;
 	bCanFire = true;
 	AttachActorToRightHand(EquippedWeapon);
-
-	ShowAttachedGrenade(false);
-
-	if (Character && Character->HasAuthority())
-	{
-		Grenades = FMath::Clamp(Grenades - 1, 0, MaxGrenades);
-		UpdateHUDGrenades();
-	}
 }
 
 void UCombatComponent::DropEquippedWeapon()
@@ -700,26 +690,14 @@ void UCombatComponent::MulticastCancelReload_Implementation()
 	}
 }
 
-void UCombatComponent::ShowAttachedGrenade(bool bShowGrenade)
-{
-	if (Character && Character->GetAttachedGrenade())
-	{
-		Character->GetAttachedGrenade()->SetVisibility(bShowGrenade);
-	}
-}
-
 void UCombatComponent::ServerThrowGrenade_Implementation()
 {
 	if (Grenades == 0) return;
 	CombatState = ECombatState::ECS_ThrowingGrenade;
 	if (Character)
 	{
-		Character->PlayThrowGrenadeMontage();
 		AttachActorToLeftHand(EquippedWeapon);
-		ShowAttachedGrenade(true);
 	}
-	Grenades = FMath::Clamp(Grenades - 1, 0, MaxGrenades);
-	UpdateHUDGrenades();
 }
 
 void UCombatComponent::UpdateHUDGrenades()
@@ -1061,7 +1039,6 @@ void UCombatComponent::JumpToShotgunEnd()
 
 void UCombatComponent::LaunchGrenade()
 {
-	ShowAttachedGrenade(false);
 	if (Character->bIsCrouched)
 	{
 		Character->GetCharacterMovement()->MaxWalkSpeed = Character->CrouchSpeed;
@@ -1120,12 +1097,7 @@ void UCombatComponent::OnRep_CombatState()
 		}
 		break;
 	case ECombatState::ECS_ThrowingGrenade:
-		if (Character && !Character->IsLocallyControlled())
-		{
-			Character->PlayThrowGrenadeMontage();
-			AttachActorToLeftHand(EquippedWeapon);
-			ShowAttachedGrenade(true);
-		}
+		AttachActorToLeftHand(EquippedWeapon);
 		break;
 	case ECombatState::ECS_SwappingWeapons:
 		if (Character && !Character->IsLocallyControlled())
