@@ -42,11 +42,11 @@ void UDPFinalEmber::BuffOn(APlayerCharacter* DopedPC)
 		DopedPC->RunningSpeed = DopedPC->RunningSpeed + RunningBuffNum;
 
 		//근접 공격 50% 증가
-		MLAttackBuffNum = DopedPC->MLAtaackPoint * 0.5f;
-		DopedPC->MLAtaackPoint = DopedPC->MLAtaackPoint + MLAttackBuffNum;
+		//MLAttackBuffNum = DopedPC->MLAtaackPoint * 0.5f;
+		//DopedPC->MLAtaackPoint = DopedPC->MLAtaackPoint + MLAttackBuffNum;
 
 		//도핑 공격 데미지 추가
-		DopedPC->DopingDamageBuff += 20.0f;
+		DopedPC->DopingDamageBuff += 40.0f;
 
 		DopedPC->CurrentDoped += 1;
 
@@ -67,10 +67,10 @@ void UDPFinalEmber::BuffOff(APlayerCharacter* DopedPC)
 		DopedPC->RunningSpeed = DopedPC->RunningSpeed - RunningBuffNum;
 
 		//근접 공격 원상복귀
-		DopedPC->MLAtaackPoint = DopedPC->MLAtaackPoint - MLAttackBuffNum;
+		//DopedPC->MLAtaackPoint = DopedPC->MLAtaackPoint - MLAttackBuffNum;
 
 		//데미지 버프 원상복귀
-		DopedPC->DopingDamageBuff -= 20.0f;
+		DopedPC->DopingDamageBuff -= 40.0f;
 
 		CheckBuff = false;
 		DeBuffOn(DopedPC);
@@ -79,14 +79,14 @@ void UDPFinalEmber::BuffOff(APlayerCharacter* DopedPC)
 
 void UDPFinalEmber::DeBuffOn(APlayerCharacter* DopedPC)
 {
-	DopedPC->Health = 0.0f;
+	DopedPC->Health = 1.0f;
 	DopedPC->UpdateHUDHealth();
 
-	DopedPC->PlayerDeathStopDopingEffect();
-	DopedPC->UDC->One_Able = false;
-	DopedPC->UDC->Two_Able = false;
+	//DopedPC->PlayerDeathStopDopingEffect();
+	//DopedPC->UDC->One_Able = false;
+	//DopedPC->UDC->Two_Able = false;
 
-	DopedPC->Elim();
+	//DopedPC->Elim();
 
 	DopedPC->CurrentDoped -= 1;
 
