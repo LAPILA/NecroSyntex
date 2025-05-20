@@ -96,6 +96,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI")
 	bool CanAttack;
 
+	UFUNCTION()
 	void MonsterStopMove();
 
 	UPROPERTY()
@@ -141,31 +142,44 @@ protected:
 	UFUNCTION()
 	void OnSkillAreaOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 
+	UFUNCTION()
 	void PlayHitAnimation();
 
+	UFUNCTION()
 	void PlayHitHighDamageAnimation();
 
+	UFUNCTION()
 	void PlayDeathAnimation();
 
+	UFUNCTION()
 	void DestroyMonster();
 
+	UFUNCTION()
 	void PlaySkillAttackAnimation();
 
+	UFUNCTION()
 	void SkillCoolTime();
 
 	//Timer Function
+	UFUNCTION()
 	void DelayedFunction(float DelayTime);
 
+	UFUNCTION()
 	void DelayedAnimationSound(float DelayTime);
 
+	UFUNCTION()
 	void StopAnimationSound();
 
-	bool stopAnimationSound;
+	UPROPERTY()
+	bool valueStopAnimationSound;
 
+	UPROPERTY()
 	FTimerHandle SetAnimationSound;
 
+	UPROPERTY()
 	FTimerHandle DeathDelayTimerHandle;
 
+	UPROPERTY()
 	FTimerHandle MonsterSkillCoolTime;
 public:
 	// Called every frame
