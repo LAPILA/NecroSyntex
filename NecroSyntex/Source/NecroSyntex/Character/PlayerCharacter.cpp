@@ -1311,7 +1311,15 @@ void APlayerCharacter::SPStrengthDeBuffON()
 
 void APlayerCharacter::SPStrengthDeBuffOFF()
 {
-	FollowCamera->PostProcessBlendWeight = 0.0f;
+	FollowCamera->PostProcessBlendWeight = 1.0f;
+
+	// 블러 효과 추가
+	FollowCamera->PostProcessSettings.bOverride_MotionBlurAmount = true;
+	FollowCamera->PostProcessSettings.MotionBlurAmount = 0.0f; // 블러 강도 (0.0 ~ 1.0)
+
+	// 색수차(번짐) 효과 추가
+	FollowCamera->PostProcessSettings.bOverride_SceneFringeIntensity = true;
+	FollowCamera->PostProcessSettings.SceneFringeIntensity = 0.0f; // 색수차 강도
 }
 
 #pragma endregion
