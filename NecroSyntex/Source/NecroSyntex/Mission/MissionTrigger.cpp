@@ -95,7 +95,7 @@ void AMissionTrigger::OnBoxTriggerOverlapBegin(UPrimitiveComponent* OverlappedCo
 						GM->MissionManager->count + 0.3f,
 						false
 					);
-
+					TriggerMakeNoise();
 					OnTriggerTimer = true;
 
 				}

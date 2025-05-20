@@ -257,7 +257,8 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 		EnhancedInputComponent->BindAction(FireAction, ETriggerEvent::Completed, this, &APlayerCharacter::FireButtonReleased);
 		EnhancedInputComponent->BindAction(FlashAction, ETriggerEvent::Triggered, this, &APlayerCharacter::FlashButtonPressed);
 		EnhancedInputComponent->BindAction(ReloadAction, ETriggerEvent::Started, this, &APlayerCharacter::ReloadButtonPressed);
-		EnhancedInputComponent->BindAction(ThrowGrenade, ETriggerEvent::Triggered, this, &APlayerCharacter::GrenadeButtonPressed);
+		EnhancedInputComponent->BindAction(ThrowGrenade, ETriggerEvent::Started, this, &APlayerCharacter::GrenadeButtonPressed);
+		EnhancedInputComponent->BindAction(ThrowGrenade, ETriggerEvent::Completed, this, &APlayerCharacter::ResetGrenadeState);
 		EnhancedInputComponent->BindAction(SwapWeaponAction, ETriggerEvent::Triggered, this, &APlayerCharacter::SwapWeaponWheel);
 		EnhancedInputComponent->BindAction(UDCskill1, ETriggerEvent::Triggered, this, &APlayerCharacter::FirstDoping);
 		EnhancedInputComponent->BindAction(UDCskill2, ETriggerEvent::Triggered, this, &APlayerCharacter::SecondDoping);
@@ -467,20 +468,32 @@ void APlayerCharacter::ReloadButtonPressed()
 
 void APlayerCharacter::GrenadeButtonPressed()
 {
-	return;
 	if (bDisableGameplay) return;
-	if (bIsMontagePlaying || Combat->CombatState != ECombatState::ECS_Unoccupied)
+	if (bIsMontagePlaying || Combat == nullptr) return;
+
+	// 이미 던지는 중이면 무시
+	if (Combat->CombatState == ECombatState::ECS_ThrowingGrenade)
 	{
 		return;
 	}
 
+	// 상태 설정 및 몽타주 타이머 시작
+	Combat->CombatState = ECombatState::ECS_ThrowingGrenade;
+	SetMontagePlaying(true);
+
+	// 실제 수류탄 투척 함수 실행
+	Combat->ThrowGrenade();
+}
+
+void APlayerCharacter::ResetGrenadeState()
+{
 	if (Combat)
 	{
-		SetMontagePlaying(true);
-		Combat->ThrowGrenade();
-		GetWorldTimerManager().SetTimer(MontageEndTimer, this, &APlayerCharacter::ResetMontageState, 0.5f, false);
+		Combat->CombatState = ECombatState::ECS_Unoccupied;
 	}
+	SetMontagePlaying(false);
 }
+
 
 bool APlayerCharacter::IsLocallyReloading()
 {
@@ -636,6 +649,19 @@ void APlayerCharacter::PlayFireMontage(bool bAiming)
 		FName SectionName;
 		SectionName = bAiming ? FName("RifleAim") : FName("RifleHip");
 		AnimInstance->Montage_JumpToSection(SectionName);
+	}
+
+	if (IsLocallyControlled() && NecroSyntexPlayerController && NecroSyntexPlayerController->PlayerCameraManager)
+	{
+		if (WalkHeadBob)
+		{
+			NecroSyntexPlayerController->PlayerCameraManager->StartCameraShake(
+				WalkHeadBob,
+				1.0f,
+				ECameraShakePlaySpace::CameraLocal,
+				FRotator::ZeroRotator
+			);
+		}
 	}
 }
 
@@ -1254,6 +1280,23 @@ UDopingComponent* APlayerCharacter::GetDopingComponent()
 void APlayerCharacter::HandleHeadBob(float DeltaTime)
 {
 	if (!IsLocallyControlled()) return;
+	if (bElimed) return;
+
+	static float AimStartTime = 0.f;
+	static bool bWasAiming = false;
+	bool bNowAiming = IsAiming();
+
+	if (bNowAiming && !bWasAiming)
+	{
+		AimStartTime = GetWorld()->GetTimeSeconds();
+	}
+	bWasAiming = bNowAiming;
+
+	if (bNowAiming)
+	{
+		if (GetWorld()->GetTimeSeconds() - AimStartTime < 3.f)
+			return; // 조준 시작 후 3초까지는 헤드밥 억제
+	}
 
 	if (!NecroSyntexPlayerController || !NecroSyntexPlayerController->PlayerCameraManager)
 	{
@@ -1288,6 +1331,7 @@ void APlayerCharacter::HandleHeadBob(float DeltaTime)
 		);
 	}
 }
+
 
 void APlayerCharacter::HSDeBuffON()
 {

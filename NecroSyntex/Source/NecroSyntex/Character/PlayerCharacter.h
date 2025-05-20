@@ -184,6 +184,7 @@ protected:
 	void ReloadButtonPressed();
 	void PlayerHitReactMontage();
 	void GrenadeButtonPressed();
+	void ResetGrenadeState();
 	void SwapWeaponWheel();
 	void FirstDoping();
 	void SecondDoping();

@@ -127,7 +127,6 @@ protected:
 	void UpdateCarriedAmmo();
 	void PlayEquipWeaponSound(AWeapon* WeaponToEquip);
 	void ReloadEmptyWeapon();
-	void ShowAttachedGrenade(bool bShowGrenade);
 	void EquipPrimaryWeapon(AWeapon* WeaponToEquip);
 	void EquipSecondaryWeapon(AWeapon* WeaponToEquip);
 	void EquipThirdWeapon(AWeapon* WeaponToEquip);
@@ -289,4 +288,7 @@ public:
 
 	UPROPERTY()
 	int32 weaponSlotNumber = 1;
+
+	UPROPERTY()
+	bool isThirdWeapon = false;
 };
