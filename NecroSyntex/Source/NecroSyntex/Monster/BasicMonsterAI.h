@@ -8,10 +8,11 @@
 #include "NiagaraComponent.h"
 #include "NiagaraSystem.h"
 #include "NiagaraFunctionLibrary.h"
+#include "NecroSyntex/Interfaces/InteractWithCrossHairsInterface.h"
 #include "BasicMonsterAI.generated.h"
 
 UCLASS()
-class NECROSYNTEX_API ABasicMonsterAI : public ACharacter
+class NECROSYNTEX_API ABasicMonsterAI : public ACharacter, public IInteractWithCrossHairsInterface
 {
 	GENERATED_BODY()
 
