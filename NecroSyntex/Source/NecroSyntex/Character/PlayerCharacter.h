@@ -461,6 +461,12 @@ public:
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
 	void SetDopingIconHUD();
 
+	UFUNCTION(BlueprintImplementableEvent)
+	void SetHUDRemainFirstDoping();
+
+	UFUNCTION(BlueprintImplementableEvent)
+	void SetHUDRemainSecondDoping();
+
 	UFUNCTION()
 	void SPStrengthDeBuffON();
 
