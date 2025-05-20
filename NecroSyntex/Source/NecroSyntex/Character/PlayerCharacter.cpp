@@ -650,6 +650,19 @@ void APlayerCharacter::PlayFireMontage(bool bAiming)
 		SectionName = bAiming ? FName("RifleAim") : FName("RifleHip");
 		AnimInstance->Montage_JumpToSection(SectionName);
 	}
+
+	if (IsLocallyControlled() && NecroSyntexPlayerController && NecroSyntexPlayerController->PlayerCameraManager)
+	{
+		if (WalkHeadBob)
+		{
+			NecroSyntexPlayerController->PlayerCameraManager->StartCameraShake(
+				WalkHeadBob,
+				1.0f,
+				ECameraShakePlaySpace::CameraLocal,
+				FRotator::ZeroRotator
+			);
+		}
+	}
 }
 
 void APlayerCharacter::PlayElimMontage()
@@ -1267,6 +1280,23 @@ UDopingComponent* APlayerCharacter::GetDopingComponent()
 void APlayerCharacter::HandleHeadBob(float DeltaTime)
 {
 	if (!IsLocallyControlled()) return;
+	if (bElimed) return;
+
+	static float AimStartTime = 0.f;
+	static bool bWasAiming = false;
+	bool bNowAiming = IsAiming();
+
+	if (bNowAiming && !bWasAiming)
+	{
+		AimStartTime = GetWorld()->GetTimeSeconds();
+	}
+	bWasAiming = bNowAiming;
+
+	if (bNowAiming)
+	{
+		if (GetWorld()->GetTimeSeconds() - AimStartTime < 3.f)
+			return; // 조준 시작 후 3초까지는 헤드밥 억제
+	}
 
 	if (!NecroSyntexPlayerController || !NecroSyntexPlayerController->PlayerCameraManager)
 	{
@@ -1301,6 +1331,7 @@ void APlayerCharacter::HandleHeadBob(float DeltaTime)
 		);
 	}
 }
+
 
 void APlayerCharacter::HSDeBuffON()
 {
