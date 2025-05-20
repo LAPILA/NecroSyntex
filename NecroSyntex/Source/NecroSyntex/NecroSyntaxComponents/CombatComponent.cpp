@@ -268,8 +268,6 @@ void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 	//duream code start.
 	weaponSlotNumber = GetWeaponSlot();
 
-	//GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Green, FString::Printf(TEXT("value: %d"), weaponSlotNumber));
-
 	if (weaponSlotNumber == 0) {
 		//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("ERROR~~~~~~~~~`"));
 		return;
@@ -1451,7 +1449,6 @@ int32 UCombatComponent::GetMaxAmmoForWeaponType(EWeaponType WeaponType) const
 	default: return 30;
 	}
 }
-
 
 int32 UCombatComponent::GetWeaponSlot() const
 {

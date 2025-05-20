@@ -127,7 +127,7 @@ float ABasicMonsterAI::TakeDamage_Implementation(float DamageAmount, FDamageEven
 	if (!stopAnimationSound) {
 		stopAnimationSound = true;
 		if (DamageAmount > 0) {//Refactoring Need..
-			UGameplayStatics::PlaySoundAtLocation(this, HitSound, GetActorLocation());
+			//UGameplayStatics::PlaySoundAtLocation(this, HitSound, GetActorLocation());
 			PlayHitAnimation();
 			DelayedAnimationSound(2.0f);
 		}
@@ -344,7 +344,7 @@ void ABasicMonsterAI::OnSkillAreaOverlapBegin(UPrimitiveComponent* OverlappedCom
 				
 				MonsterStopMove();
 
-				UGameplayStatics::PlaySoundAtLocation(this, AttackSound, GetActorLocation());
+				//UGameplayStatics::PlaySoundAtLocation(this, AttackSound, GetActorLocation());
 				//SkillAttack();
 				PlaySkillAttackAnimation();
 
