@@ -320,6 +320,7 @@ void UDopingComponent::FirstDopingUse() {
 	{
 		TRY_PLAY_VOICE(EVoiceCue::Skill1);
 		One_DopingItemNum--;
+		OwnerCharacter->SetHUDRemainFirstDoping();
 		OwnerCharacter->PlayDopingEffect();
 		OwnerCharacter->PlayDopingMontage();
 		passive_call = true;
@@ -345,6 +346,7 @@ void UDopingComponent::SecondDopingUse() {
 	{
 		TRY_PLAY_VOICE(EVoiceCue::Skill2);
 		Two_DopingItemNum--;
+		OwnerCharacter->SetHUDRemainSecondDoping();
 		OwnerCharacter->PlayDopingEffect();
 		OwnerCharacter->PlayDopingMontage();
 		passive_call = true;
@@ -440,6 +442,7 @@ void UDopingComponent::FirstDopingForAlly()
 				HitCharacter->UDC->ClientPlayDopingEffect();
 				FirstDopingCoolStart();
 				One_DopingItemNum--;
+				OwnerCharacter->SetHUDRemainFirstDoping();
 			}
 			else {
 
@@ -507,6 +510,7 @@ void UDopingComponent::SecondDopingForAlly()
 				HitCharacter->UDC->ClientPlayDopingEffect();
 				SecondDopingCoolStart();
 				Two_DopingItemNum--;
+				OwnerCharacter->SetHUDRemainSecondDoping();
 			}
 
 			DopingforAllyMode = false;
