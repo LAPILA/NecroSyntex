@@ -504,6 +504,7 @@ void ANecroSyntexPlayerController::HandleMatchHasStarted()
 	if (MyCharacter)
 	{
 		MyCharacter->bDisableGameplay = false;
+		MyCharacter->GetVoiceComp()->PlayVoice(EVoiceCue::GameStart);
 	}
 }
 

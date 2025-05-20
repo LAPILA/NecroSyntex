@@ -541,7 +541,12 @@ public:
 	UPROPERTY()
 	int CurrentDoped;
 
+	UFUNCTION(BlueprintCallable, Category = "Combat")
+	void UseGrenade();
 	//Pahu end
+
+	UFUNCTION(BlueprintCallable, Category = "Grenade")
+	int32 GetCurrentGrenadeCount() const;
 
 	void SetOverlappingWeapon(AWeapon* Weapon);
 	bool IsWeaponEquipped();
