@@ -584,8 +584,7 @@ void UCombatComponent::AttachActorToLeftHand(AActor* ActorToAttach)
 	if (!Character || !Character->GetMesh() || !ActorToAttach || !EquippedWeapon) return;
 
 	bool bUsePistolSocket =
-		(EquippedWeapon->GetWeaponType() == EWeaponType::EWT_Pistol ||
-			EquippedWeapon->GetWeaponType() == EWeaponType::EWT_SubmachineGun);
+		(EquippedWeapon->GetWeaponType() == EWeaponType::EWT_Pistol);
 
 	FName SocketName = bUsePistolSocket ? FName("PistolSocket") : FName("LeftHandSocket");
 	const USkeletalMeshSocket* HandSocket = Character->GetMesh()->GetSocketByName(SocketName);
