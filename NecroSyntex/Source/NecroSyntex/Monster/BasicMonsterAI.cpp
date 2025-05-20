@@ -52,7 +52,7 @@ ABasicMonsterAI::ABasicMonsterAI()
 	CanAttack = true;
 	MeleeAttack = false;
 	CanSkill = true;
-	stopAnimationSound = false;
+	valueStopAnimationSound = false;
 	isAttackArea = false;
 	isCanAttack = false;
 }
@@ -124,8 +124,8 @@ float ABasicMonsterAI::TakeDamage_Implementation(float DamageAmount, FDamageEven
 	}
 	MonsterHP -= DamageAmount + DPA->DopingDamageBuff;
 	
-	if (!stopAnimationSound) {
-		stopAnimationSound = true;
+	if (!valueStopAnimationSound) {
+		valueStopAnimationSound = true;
 		if (DamageAmount > 0) {//Refactoring Need..
 			//UGameplayStatics::PlaySoundAtLocation(this, HitSound, GetActorLocation());
 			PlayHitAnimation();
@@ -264,7 +264,7 @@ void ABasicMonsterAI::DelayedAnimationSound(float DelayTime)
 
 void ABasicMonsterAI::StopAnimationSound()
 {
-	stopAnimationSound = false;
+	valueStopAnimationSound = false;
 }
 
 void ABasicMonsterAI::DestroyMonster()
