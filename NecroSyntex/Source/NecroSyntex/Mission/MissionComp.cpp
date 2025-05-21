@@ -69,7 +69,7 @@ void UMissionComp::ActiveMission()
 
     }
     else {
-        UE_LOG(LogTemp, Warning, TEXT("MissionName is Unavilable"));
+        
     }
 }
 
@@ -115,6 +115,7 @@ void UMissionComp::CurrentMissionFail()
 
     }
     else {
+        CurrentGameMode->LevelMissionFail();
         UE_LOG(LogTemp, Warning, TEXT("MissionName is Unavilable"));
     }
 }
