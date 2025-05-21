@@ -109,4 +109,6 @@ void UDPCurseofChaos::HealCharacter(APlayerCharacter* DopedPC)
 			DopedPC->Health += BuffRecoverAPS;
 		}
 	}
+
+	DopedPC->UpdateHUDHealth();
 }
