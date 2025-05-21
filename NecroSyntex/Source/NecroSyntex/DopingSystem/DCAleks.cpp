@@ -16,10 +16,12 @@ void UDCAleks::Passive_Start()
 	if (!OwnerCharacter) return;
 
 
+
 	if (OwnerCharacter->HasAuthority()) {
 		UE_LOG(LogTemp, Warning, TEXT("Aleks Passive On"));
 
 		OwnerCharacter->MaxHealth += 20.0f;
+		OwnerCharacter->UpdateHUDHealth();
 
 		GetWorld()->GetTimerManager().SetTimer(
 			PassiveTimerHandle,
@@ -39,6 +41,8 @@ void UDCAleks::Passive_End()
 		UE_LOG(LogTemp, Warning, TEXT("Aleks Passive OFF"));
 
 		OwnerCharacter->MaxHealth -= 20.0f;
+		OwnerCharacter->UpdateHUDHealth();
+		passive_call = true;
 	}
 }
 

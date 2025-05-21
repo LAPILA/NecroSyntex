@@ -28,6 +28,7 @@ void UDPSolidFortress::BuffOn(APlayerCharacter* DopedPC)
 		HPBuffNum = DopedPC->MaxHealth * 0.5f;
 
 		DopedPC->MaxHealth = DopedPC->MaxHealth + HPBuffNum;
+		DopedPC->UpdateHUDHealth();
 
 		DopedPC->CurrentDoped += 1;
 
@@ -43,6 +44,7 @@ void UDPSolidFortress::BuffOff(APlayerCharacter* DopedPC)
 {
 	if (CheckBuff == true) {
 		DopedPC->MaxHealth = DopedPC->MaxHealth - HPBuffNum;
+		DopedPC->UpdateHUDHealth();
 		CheckBuff = false;
 	}
 }

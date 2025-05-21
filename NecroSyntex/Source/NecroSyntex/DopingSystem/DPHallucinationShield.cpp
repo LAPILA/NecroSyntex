@@ -31,6 +31,8 @@ void UDPHallucinationShield::BuffOn(APlayerCharacter* DopedPC)
 		DopedPC->Shield += 50.0f;
 	}
 
+	DopedPC->UpdateHUDShield();
+
 	DeBuffOn(DopedPC);
 
 	StartBuff(DopedPC);

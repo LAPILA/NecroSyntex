@@ -79,6 +79,8 @@ void UDPForcedHealing::DeBuffOn(APlayerCharacter* DopedPC)
 		DebuffMaxHP = DopedPC->MaxHealth * 0.2;
 		DopedPC->MaxHealth = DopedPC->MaxHealth - DebuffMaxHP;
 
+		DopedPC->UpdateHUDHealth();
+
 		CheckDeBuff = true;
 	}
 
@@ -89,6 +91,8 @@ void UDPForcedHealing::DeBuffOff(APlayerCharacter* DopedPC)
 {
 	if (CheckDeBuff == true) {
 		DopedPC->MaxHealth = DopedPC->MaxHealth + DebuffMaxHP;
+
+		DopedPC->UpdateHUDHealth();
 		CheckDeBuff = false;
 
 		DopedPC->CurrentDoped -= 1;
