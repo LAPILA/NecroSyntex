@@ -20,6 +20,7 @@ AHealingStation::AHealingStation()
 
     //duream code start.
     //HealingMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("HealingMesh"));
+    //UStaticMeshComponent* ExistingMesh = Cast<UStaticMeshComponent>(RootComponent->GetChildComponent(0));
     //HealingMesh->SetupAttachment(RootComponent);
     //HealingMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
