@@ -34,6 +34,9 @@ void APickUp::BeginPlay()
 {
 	Super::BeginPlay();
 	
+	/*PickupMesh->SetRenderCustomDepth(true);
+	PickupMesh->SetCustomDepthStencilValue(CUSTOM_DEPTH_TAN);*/
+	
 	if (HasAuthority())
 	{
 		OverlapSphere->OnComponentBeginOverlap.AddDynamic(this, &APickUp::OnSphereOverlap);
