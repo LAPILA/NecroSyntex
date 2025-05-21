@@ -127,8 +127,10 @@ void ASupplyCrate::GiveAmmoToAllPlayers()
             PC->GetCombat()->PickUpAmmo(WeaponType, AmmoToGive);
         }
 
-        PC->UDC->One_DopingItemNum += 2;
-        PC->UDC->Two_DopingItemNum += 2;
+        PC->UDC->One_DopingItemNum += 1;
+        PC->UDC->Two_DopingItemNum += 1;
+        PC->SetHUDRemainFirstDoping();
+        PC->SetHUDRemainSecondDoping();
     }
 }
 
