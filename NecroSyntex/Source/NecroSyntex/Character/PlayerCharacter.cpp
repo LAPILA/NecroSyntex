@@ -177,6 +177,8 @@ void APlayerCharacter::BeginPlay()
 	if (HasAuthority())
 	{
 		GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
+		Health = MaxHealth;
+		Shield = MaxShield;
 	}
 }
 #pragma endregion

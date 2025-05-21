@@ -31,6 +31,7 @@ void UDCVelis::Passive_End()
 
 	OwnerCharacter->RunningSpeed = OwnerCharacter->RunningSpeed - 100;
 	UE_LOG(LogTemp, Warning, TEXT("Velis Passive OFF"));
+	passive_call = true;
 }
 
 void UDCVelis::FirstDopingUse()

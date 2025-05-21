@@ -60,7 +60,7 @@ public:
 
 	//패시브
 	UPROPERTY(Replicated)
-	float Passive_Duration;
+	float Passive_Duration = 5.0f;
 
 	UPROPERTY(Replicated)
 	bool passive_call;

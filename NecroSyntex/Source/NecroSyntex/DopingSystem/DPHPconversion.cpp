@@ -37,6 +37,7 @@ void UDPHPconversion::BuffOn(APlayerCharacter* DopedPC)
 	else {
 		DopedPC->Shield += 50.0f;
 	}
+	DopedPC->UpdateHUDShield();
 	DeBuffOn(DopedPC);
 
 	UE_LOG(LogTemp, Warning, TEXT("UDPHPconversion BuffOn"));
@@ -57,6 +58,7 @@ void UDPHPconversion::DeBuffOn(APlayerCharacter* DopedPC)
 	else {
 		DopedPC->Health -= 20.0f;
 	}
+	DopedPC->UpdateHUDHealth();
 
 
 	UE_LOG(LogTemp, Warning, TEXT("UDPHPconversion DeBuffOn."));
