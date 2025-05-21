@@ -1,0 +1,18 @@
+# Blender 3.6.1 MTL File: 'Sci-fi Compact-Radar.blend'
+# www.blender.org
+
+newmtl Material.001
+Ks 0.500000 0.500000 0.500000
+Ni 1.450000
+d 1.000000
+illum 2
+Ps 0.000000
+Pc 0.000000
+Pcr 0.030000
+aniso 0.000000
+anisor 0.000000
+map_Kd C:/Users/dovgo/OneDrive/Desktop/3D/Texture/Sci-fi Compact Radar/DefaultMaterial_Base_color.png
+map_Pm C:/Users/dovgo/OneDrive/Desktop/3D/Texture/Sci-fi Compact Radar/DefaultMaterial_Metallic.png
+map_Pr C:/Users/dovgo/OneDrive/Desktop/3D/Texture/Sci-fi Compact Radar/DefaultMaterial_Roughness.png
+map_Ke C:/Users/dovgo/OneDrive/Desktop/3D/Texture/Sci-fi Compact Radar/DefaultMaterial_Emissive.png
+map_Bump -bm 1.000000 C:/Users/dovgo/OneDrive/Desktop/3D/Texture/Sci-fi Compact Radar/DefaultMaterial_Normal_DirectX.png
