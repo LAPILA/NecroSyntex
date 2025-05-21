@@ -867,6 +867,17 @@ void APlayerCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, const U
 	TakeDamageNotify(Damage);
 	PlayerHitReactMontage();
 
+	float NewDamage = Damage - Defense;
+	if (NewDamage <= 0.0f) {
+		NewDamage = 0.0f;
+	}
+
+	if (GEngine)
+	{
+		FString DamageText = FString::Printf(TEXT("Received : %f"), NewDamage);
+		GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, DamageText);
+	}
+
 	if (Combat && Combat->CombatState == ECombatState::ECS_Reloading)
 	{
 		Combat->CancelReload();
@@ -874,7 +885,7 @@ void APlayerCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, const U
 
 	if (Shield > 0)
 	{
-		float NewShieldValue = FMath::Clamp(Shield - (Damage - Defense), 0.f, MaxShield);
+		float NewShieldValue = FMath::Clamp(Shield - NewDamage, 0.f, MaxShield);
 
 		if (NewShieldValue == 0 && Shield != 0)
 		{
@@ -889,7 +900,7 @@ void APlayerCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, const U
 	}
 	else
 	{
-		Health = FMath::Clamp(Health - (Damage - Defense), 0.f, MaxHealth);
+		Health = FMath::Clamp(Health - NewDamage, 0.f, MaxHealth);
 		UpdateHUDHealth();
 
 		if (Health <= Health / 20) TRY_PLAY_VOICE(EVoiceCue::LowHP);

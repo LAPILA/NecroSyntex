@@ -517,15 +517,15 @@ public:
 
 	UPROPERTY(Replicated, EditAnywhere)
 	float MLAtaackPoint; // 근접 공격력
-	UPROPERTY(Replicated, EditAnywhere)
+	UPROPERTY(Replicated, EditAnywhere, Category = "Player Stats")
 	float Defense; // 방어력
-	UPROPERTY(Replicated, EditAnywhere)
+	UPROPERTY(Replicated, EditAnywhere, Category = "Player Stats")
 	float Blurred; // 시야(화면 흐림도)
 	UPROPERTY(Replicated, EditAnywhere)
 	float ROF; // 총 연사속도
 	//float Item_UseRate; // 아이템 사용비율
 
-	UPROPERTY(Replicated, EditAnywhere)
+	UPROPERTY(Replicated, EditAnywhere, Category = "Player Stats")
 	float DopingDamageBuff; // 도핑으로 강화된 공격력
 
 	UPROPERTY(Replicated, EditAnywhere)
