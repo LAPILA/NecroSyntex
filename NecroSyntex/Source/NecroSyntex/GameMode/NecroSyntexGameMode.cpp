@@ -116,7 +116,7 @@ void ANecroSyntexGameMode::RequestRespawn(ACharacter* ElimmedCharacter, AControl
 	}
 	if (ElimmedController)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("ElimmedController valid"))
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("RequestRespawn"));
 		TArray<AActor*> PlayerStarts;
 		UGameplayStatics::GetAllActorsOfClass(this, APlayerStart::StaticClass(), PlayerStarts);
 		int32 Selection = FMath::RandRange(0, PlayerStarts.Num() - 1);
@@ -124,8 +124,41 @@ void ANecroSyntexGameMode::RequestRespawn(ACharacter* ElimmedCharacter, AControl
 		ANecroSyntexGameState* NecroSyntexGameState = GetGameState<ANecroSyntexGameState>();
 		NecroSyntexGameState->PlayerReviveUpdate();
 
-		RestartPlayerAtPlayerStart(ElimmedController, PlayerStarts[Selection]);
+		ANecroSyntexPlayerController* MyPC = Cast<ANecroSyntexPlayerController>(ElimmedController);
+		if (!MyPC) return;
+		ANecroSyntexPlayerState* PS = MyPC->GetPlayerState<ANecroSyntexPlayerState>();
+		if (PS && PS->SelectedCharacterClass)
+		{
+			DefaultPawnClass = PS->SelectedCharacterClass;
 
+			if (PlayerStarts.Num() > 0)
+			{
+				AActor* ChosenStart = PlayerStarts[FMath::RandRange(0, PlayerStarts.Num() - 1)];
+				RestartPlayerAtPlayerStart(MyPC, ChosenStart);
+			}
+			else
+			{
+				GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Not Player Start"));
+				return;
+			}
+
+			// GetPawn() null 체크 후 안전하게 처리
+			if (APlayerCharacter* NewCharacter = Cast<APlayerCharacter>(MyPC->GetPawn()))
+			{
+				GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Player Charactar Yes"));
+
+				MyPC->ClientRestart(NewCharacter);
+				GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("ClientRestart"));
+			}
+			else
+			{
+				GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Not Player Character"));
+			}
+		}
+		else
+		{
+			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Not State"));
+		}
 
 	}
 }
