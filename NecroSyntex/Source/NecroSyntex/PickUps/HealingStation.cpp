@@ -103,6 +103,10 @@ void AHealingStation::ServerInteract_Implementation(APlayerCharacter* PlayerChar
     HealAllPlayers();
     bCanUse = false;
     OnRep_bCanUse();
+    if (HealingMesh)
+    {
+        HealingMesh->SetOverlayMaterial(nullptr);
+    }
     GetWorldTimerManager().SetTimer(CooldownTimerHandle, this, &AHealingStation::ResetCooldown, CooldownTime, false);
 }
 

@@ -60,6 +60,10 @@ void ASupplyCrate::ServerOpenCrate_Implementation(APlayerCharacter* InteractingP
     SpawnRandomWeapon();
     GiveAmmoToAllPlayers();
     MulticastOpenCrate();
+    if (CrateMesh)
+    {
+        CrateMesh->SetOverlayMaterial(nullptr);
+    }
 }
 
 void ASupplyCrate::MulticastOpenCrate_Implementation()
