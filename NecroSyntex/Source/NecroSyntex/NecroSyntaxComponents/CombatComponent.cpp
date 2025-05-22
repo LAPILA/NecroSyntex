@@ -586,6 +586,13 @@ void UCombatComponent::AttachActorToRightHand(AActor* ActorToAttach)
 {
 	if (!Character || !Character->GetMesh() || !ActorToAttach) return;
 
+	if (UPrimitiveComponent* RootComp = Cast<UPrimitiveComponent>(ActorToAttach->GetRootComponent()))
+	{
+		RootComp->SetSimulatePhysics(false);
+		RootComp->SetEnableGravity(false);
+		RootComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	}
+
 	const USkeletalMeshSocket* HandSocket = Character->GetMesh()->GetSocketByName(FName("RightHandSocket"));
 	if (HandSocket)
 	{
