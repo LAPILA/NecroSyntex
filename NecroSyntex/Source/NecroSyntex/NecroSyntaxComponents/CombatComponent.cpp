@@ -466,21 +466,16 @@ void UCombatComponent::ResetFireState()
 	if (Character)
 	{
 		Character->bFinishedSwapping = true;
+
+		if (Character->bIsCrouched)
+			Character->GetCharacterMovement()->MaxWalkSpeed = Character->CrouchSpeed;
+		else if (bAiming)
+			Character->GetCharacterMovement()->MaxWalkSpeed = Character->AimWalkSpeed;
+		else
+			Character->GetCharacterMovement()->MaxWalkSpeed = Character->WalkSpeed;
+
 		if (Character->GetFollowCamera())
-		{
 			Character->GetFollowCamera()->SetFieldOfView(DefaultFOV);
-		}
-	}
-
-	if (EquippedWeapon)
-	{
-		LastServerFireTime = GetWorld()->GetTimeSeconds();
-		LastServerShotgunFireTime = GetWorld()->GetTimeSeconds();
-
-		if (GetWorld()->GetTimerManager().IsTimerActive(FireTimer))
-		{
-			GetWorld()->GetTimerManager().ClearTimer(FireTimer);
-		}
 	}
 }
 
@@ -1384,6 +1379,7 @@ void UCombatComponent::InterpFOV(float DeltaTime)
 void UCombatComponent::SetAiming(bool bIsAiming)
 {
 	if (!Character || !EquippedWeapon) return;
+	if (bAiming == bIsAiming) return;
 
 	bAiming = bIsAiming;
 	ServerSetAiming(bIsAiming);
