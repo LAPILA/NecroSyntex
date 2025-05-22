@@ -117,11 +117,11 @@ float ABasicMonsterAI::TakeDamage_Implementation(float DamageAmount, FDamageEven
 
 	//GetWorld()->GetTimerManager().SetTimer(SpeedRestoreTimerHandle, this, &ABasicMonsterAI::UpdateWalkSpeed, SlowTime, false);
 	GetWorld()->GetTimerManager().SetTimer(AttackRestoreTimerHandle, this, &ABasicMonsterAI::AttackCoolTime, 0.02f, false);
-	if (GEngine)
+	/*if (GEngine)
 	{
 		FString DamageText = FString::Printf(TEXT("Taked : %f"), DamageAmount + DPA->DopingDamageBuff);
 		GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, DamageText);
-	}
+	}*/
 	MonsterHP -= DamageAmount + DPA->DopingDamageBuff;
 	
 	if (!valueStopAnimationSound) {
@@ -310,8 +310,15 @@ void ABasicMonsterAI::MoveToPlayer()
 		
 		if (AIController && GameState->CurrentMission != "Defense") {
 			if (MeleeAttack) {//비교적 근접 공격을 하는 경우.
-				//UE_LOG(LogTemp, Warning, TEXT("Moving to Player 0511"));
 				AIController->MoveToActor(Player, MonsterDistance, true, true, true, 0, true);
+				//UE_LOG(LogTemp, Warning, TEXT("Moving to Player 0511"));
+				//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("moveto"));
+				/*if (AIController->MoveToActor(Player, MonsterDistance, true, true, true, 0, true)) {
+					GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("success~~~~~~~~``"));
+				}
+				else {
+					GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("fail~~~~~~~~~~~~"));
+				}*/
 			}
 			else {
 				//UE_LOG(LogTemp, Warning, TEXT("Moving to Player 0511 2"));

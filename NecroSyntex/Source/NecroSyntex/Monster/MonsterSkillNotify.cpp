@@ -17,7 +17,7 @@ void UMonsterSkillNotify::Notify(USkeletalMeshComponent* MeshComp, UAnimSequence
 
 	for (AActor* Target : Monster->GetOverlappingPlayers()) {
 		//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Notify!!!"));
-		float DamageAmount = Monster->MonsterAD * 2; // 또는 MonsterAD
+		float DamageAmount = Monster->MonsterAD * 1.5; // 또는 MonsterAD
 		UGameplayStatics::ApplyDamage(Target, DamageAmount, Monster->GetController(), Monster, nullptr); //targetactor, targetdamage, causercontroller, causeractor, damagetype
 		//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Damage!!!!!!!!!!"));
 	}
