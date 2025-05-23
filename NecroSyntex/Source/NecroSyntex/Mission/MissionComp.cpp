@@ -42,7 +42,7 @@ void UMissionComp::TickComponent(float DeltaTime, ELevelTick TickType, FActorCom
 void UMissionComp::Init(class ANecroSyntexGameMode* InGameMode)
 {
     CurrentGameMode = InGameMode;
-    count = 3.0f;
+    count = 0.1f;
     ANecroSyntexGameState* GS = Cast<ANecroSyntexGameState>(GetWorld()->GetGameState());
     if (GS)
     {

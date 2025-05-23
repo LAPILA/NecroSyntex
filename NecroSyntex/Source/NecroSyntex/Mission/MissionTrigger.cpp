@@ -92,7 +92,7 @@ void AMissionTrigger::OnBoxTriggerOverlapBegin(UPrimitiveComponent* OverlappedCo
 					GetWorld()->GetTimerManager().SetTimer(
 						TriggerTimer,
 						[this]() { TriggerDestroy(); },
-						GM->MissionManager->count + 0.3f,
+						GM->MissionManager->count + 1.0f,
 						false
 					);
 					TriggerMakeNoise();
