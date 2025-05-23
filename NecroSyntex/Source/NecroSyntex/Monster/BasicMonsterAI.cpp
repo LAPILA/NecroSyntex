@@ -129,7 +129,7 @@ float ABasicMonsterAI::TakeDamage_Implementation(float DamageAmount, FDamageEven
 		if (DamageAmount > 0) {//Refactoring Need..
 			//UGameplayStatics::PlaySoundAtLocation(this, HitSound, GetActorLocation());
 			PlayHitAnimation();
-			DelayedAnimationSound(2.0f);
+			DelayedAnimationSound(0.6f);
 		}
 		/*else {
 			UGameplayStatics::PlaySoundAtLocation(this, HitSound, GetActorLocation());
@@ -159,7 +159,7 @@ float ABasicMonsterAI::TakeDamage_Implementation(float DamageAmount, FDamageEven
 
 		MonsterStopMove();
 
-		DelayedFunction(3.5f); // 일정 시간 후 제거 또는 리스폰
+		DelayedFunction(2.2f); // 일정 시간 후 제거 또는 리스폰
 	}
 	return DamageAmount;
 }
@@ -205,7 +205,7 @@ void ABasicMonsterAI::TakeDopingDamage(float DopingDamageAmount)
 
 		MonsterStopMove();
 
-		DelayedFunction(3.5f); // 일정 시간 후 제거 또는 리스폰
+		DelayedFunction(2.2f); // 일정 시간 후 제거
 	}
 	return;
 }
