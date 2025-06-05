@@ -3,11 +3,12 @@
 
 #include "MonsterSkillNotify.h"
 #include "BasicMonsterAI.h"
+#include "EliteMonsterAI.h"
 #include "Kismet/GameplayStatics.h"
 
 void UMonsterSkillNotify::Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation)
 {
-	ABasicMonsterAI* Monster = Cast<ABasicMonsterAI>(MeshComp->GetOwner());
+	AEliteMonsterAI* Monster = Cast<AEliteMonsterAI>(MeshComp->GetOwner());
 
 	if (!Monster)
 	{

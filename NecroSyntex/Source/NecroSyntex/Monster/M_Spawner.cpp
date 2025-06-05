@@ -4,6 +4,7 @@
 #include "M_Spawner.h"
 #include "Engine.h"
 #include "BasicMonsterAI.h"
+#include "EliteMonsterAI.h"
 #include "Components/BoxComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "Kismet/GameplayStatics.h"

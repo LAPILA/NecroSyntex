@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "BasicMonsterAI.h"
+#include "EliteMonsterAI.h"
 #include "Animation/AnimInstance.h"
 #include "MonsterAnimInstance.generated.h"
 
