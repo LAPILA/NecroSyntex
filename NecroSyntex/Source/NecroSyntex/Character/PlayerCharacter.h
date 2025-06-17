@@ -164,6 +164,9 @@ public:
 	void SetMontagePlaying(bool bIsPlaying);
 
 	void ResetMontageState();
+
+	UFUNCTION(BlueprintCallable) //protected->public changed by duream
+	void ReceiveDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, class AController* InstigatorController, AActor* DamageCauser);
 protected:
     virtual void BeginPlay() override;
 
@@ -202,8 +205,7 @@ protected:
 	void DropOrDestroyWeapon(AWeapon* Weapon);
 	void DropOrDestroyWeapons();
 
-	UFUNCTION(BlueprintCallable)
-	void ReceiveDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, class AController* InstigatorController, AActor* DamageCauser);
+	
 	void PollInit();
 	void RotateInPlace(float DeltaTime);
 

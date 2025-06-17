@@ -22,7 +22,7 @@ AEliteMonsterAI::AEliteMonsterAI()
 	SkillAttackArea->SetCollisionResponseToAllChannels(ECR_Ignore);
 	SkillAttackArea->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
 	//SkillAttackArea->SetGenerateOverlapEvents(true);
-
+	
 	MonsterHP = 100.0f;
 	MonsterAD = 20.0f;
 	ChaseSpeed = 0.0f;
@@ -125,3 +125,4 @@ TArray<AActor*>& AEliteMonsterAI::GetOverlappingPlayers()
 {
 	return OverlappingPlayers;
 }
+

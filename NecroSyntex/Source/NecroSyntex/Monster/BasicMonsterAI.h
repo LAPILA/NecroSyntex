@@ -60,14 +60,14 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effects")
 	UNiagaraSystem* GasBombEffect;
 
-
-
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI")
 	bool CanAttack;
 
 	UPROPERTY()
 	float MonsterDistance;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Value")
+	FName KeyName;
 
 	UFUNCTION(BlueprintCallable)
 	void SpawnNiagaraEffect(FVector SpawnLocation);
@@ -78,8 +78,8 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void AttackCoolTime();
 
-	UFUNCTION(BlueprintCallable)
-	void Attack_Player();
+	//UFUNCTION(BlueprintCallable)
+	//void Attack_Player();
 
 	UFUNCTION(BlueprintCallable)
 	void TakeDopingDamage(float DopingDamageAmount);
@@ -102,8 +102,6 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
-
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Area")
 	bool isAttackArea;
 
@@ -119,10 +117,11 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
 	UAnimMontage* DeathReactionMontage;
 
-
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
-	class UAnimMontage* AttackMontage;
+	UAnimMontage* AttackMontage;
+
+	/*UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
+	class UAnimMontage* AttackMontage;*/
 
 	UPROPERTY()
 	bool valueStopAnimationSound;
@@ -132,7 +131,6 @@ protected:
 
 	UPROPERTY()
 	FTimerHandle DeathDelayTimerHandle;
-
 
 	UFUNCTION()
 	void PlayHitAnimation();
@@ -144,9 +142,10 @@ protected:
 	void PlayDeathAnimation();
 
 	UFUNCTION()
+	void PlayAttackAnimation();
+
+	UFUNCTION()
 	void DestroyMonster();
-
-
 
 	//Timer Function
 	UFUNCTION()
@@ -157,6 +156,15 @@ protected:
 
 	UFUNCTION()
 	void StopAnimationSound();
+
+	UFUNCTION(BlueprintImplementableEvent)
+	void AttackPlayer();
+
+	UFUNCTION(BlueprintCallable)
+	void ServerAttackPlayer();
+
+	UFUNCTION(BlueprintCallable)
+	void AttackOverlap(AActor* OtherActor);
 public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;

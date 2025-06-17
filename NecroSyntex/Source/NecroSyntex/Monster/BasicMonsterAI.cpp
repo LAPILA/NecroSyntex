@@ -26,24 +26,6 @@ ABasicMonsterAI::ABasicMonsterAI()
 	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = false;
 
-	/*SkillAttackArea = CreateDefaultSubobject<UBoxComponent>(TEXT("SkillArea"));
-	SkillAttackArea->SetupAttachment(RootComponent);
-	SkillAttackArea->SetRelativeLocation(FVector(168.f, 0.f, 0.f));
-	SkillAttackArea->SetBoxExtent(FVector(100.f, 50.f, 50.f));
-	SkillAttackArea->SetCollisionProfileName(TEXT("Trigger")); 
-	SkillAttackArea->SetGenerateOverlapEvents(true);*/
-
-	/*SkillAttackArea->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
-	SkillAttackArea->SetCollisionObjectType(ECC_WorldDynamic);
-	SkillAttackArea->SetCollisionResponseToAllChannels(ECR_Ignore);
-	SkillAttackArea->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
-	SkillAttackArea->SetGenerateOverlapEvents(true);*/
-
-	//AttackPoint = CreateDefaultSubobject<USphereComponent>(TEXT("AttackPoint"));
-	//AttackPoint->SetupAttachment(RootComponent);
-	//AttackPoint->SetCollisionProfileName(TEXT("Trigger"));
-	//AttackPoint->OnComponentBeginOverlap.AddDynamic(this, &ABasicMonsterAI::OnAttackAreaOverlap);
-
 	MonsterHP = 100.0f;
 	MonsterAD = 20.0f;
 	ChaseSpeed = 0.0f;
@@ -65,15 +47,6 @@ void ABasicMonsterAI::BeginPlay()
 	Super::BeginPlay();
 
 	DefaultChaseSpeed = ChaseSpeed;
-
-	//SkillBoxComponent overlab event bind.
-	/*if (SkillAttackArea) {
-		SkillAttackArea->OnComponentBeginOverlap.AddDynamic(this, &ABasicMonsterAI::OnSkillAreaOverlapBegin);
-		SkillAttackArea->OnComponentEndOverlap.AddDynamic(this, &ABasicMonsterAI::OnSkillAreaOverlapEnd);
-	}
-	else {
-		UE_LOG(LogTemp, Warning, TEXT("SkillAttackArea is nullptr"));
-	}*/
 }
 
 // Called every frame
@@ -244,7 +217,13 @@ void ABasicMonsterAI::PlayDeathAnimation()//죽음 애니메이션 재생
 	}
 }
 
-
+void ABasicMonsterAI::PlayAttackAnimation()//공격 애니메이션 재생
+{
+	if (AttackMontage && GetMesh() && GetMesh()->GetAnimInstance()) {
+		//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("DeathReaction Start"));
+		GetMesh()->GetAnimInstance()->Montage_Play(AttackMontage);
+	}
+}
 
 void ABasicMonsterAI::DelayedFunction(float DelayTime)//일정 시간 동안 비동기적으로 함수가 실행되다가 destroy
 {
@@ -267,17 +246,18 @@ void ABasicMonsterAI::DestroyMonster()
 	Destroy();
 }
 
-void ABasicMonsterAI::Attack_Player()//c++로 구현 시도했지만 블프로 이미 해둬서 패스 playx4 이후로 삭제 예정.
-{
-	if (AttackMontage) {
-		UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
-		if (AnimInstance) {
-			AnimInstance->Montage_Play(AttackMontage);
-			UE_LOG(LogTemp, Warning, TEXT("Playing Attack Montage"));
-		}
-	}
-	MoveToPlayer();
-}
+//void ABasicMonsterAI::Attack_Player()//c++로 구현 시도했지만 블프로 이미 해둬서 패스 playx4 이후로 삭제 예정.
+//{
+//	//AttackPlayer();
+//	/*if (AttackMontage) {
+//		UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+//		if (AnimInstance) {
+//			AnimInstance->Montage_Play(AttackMontage);
+//			UE_LOG(LogTemp, Warning, TEXT("Playing Attack Montage"));
+//		}
+//	}
+//	MoveToPlayer();*/
+//}
 
 void ABasicMonsterAI::MoveToPlayer()
 {
@@ -325,68 +305,33 @@ void ABasicMonsterAI::MoveToPlayer()
 	}
 }
 
-//void ABasicMonsterAI::OnSkillAreaOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
-//{
-//	//isSkillAttackTime = true;
-//	if (MonsterHP <= 0) {
-//		UE_LOG(LogTemp, Warning, TEXT("No Skill"));
-//		return;
-//	}
-//
-//	if (OtherActor && OtherActor != this && OtherActor->ActorHasTag("Player")) {
-//		if (!OverlappingPlayers.Contains(OtherActor)) {
-//			OverlappingPlayers.Add(OtherActor);
-//		}
-//		if (CanSkill) {
-//			UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
-//			UMonsterAnimInstance* MonsterAnim = Cast<UMonsterAnimInstance>(AnimInstance);
-//			MonsterAnim->isSkillAttackTime = true;
-//
-//			if (MonsterAnim->isSkillAttackTime) {
-//				CanAttack = false;
-//				
-//				MonsterStopMove();
-//
-//				//UGameplayStatics::PlaySoundAtLocation(this, AttackSound, GetActorLocation());
-//				//SkillAttack();
-//				PlaySkillAttackAnimation();
-//
-//				GetWorld()->GetTimerManager().SetTimer(SpeedRestoreTimerHandle, this, &ABasicMonsterAI::UpdateWalkSpeed, 2.3f, false);
-//				GetWorld()->GetTimerManager().SetTimer(AttackRestoreTimerHandle, this, &ABasicMonsterAI::AttackCoolTime, 2.0f, false);
-//			}
-//		}
-//		else {
-//			return;
-//		}
-//		CanSkill = false;
-//		GetWorld()->GetTimerManager().SetTimer(MonsterSkillCoolTime, this, &ABasicMonsterAI::SkillCoolTime, SkillAttackCoolTime, false);
-//	}
-//}
-//
-//void ABasicMonsterAI::OnSkillAreaOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
-//{
-//	if (OverlappingPlayers.Contains(OtherActor)) {
-//		OverlappingPlayers.Remove(OtherActor);
-//	}
-//}
-//
-//void ABasicMonsterAI::SkillAttack()
-//{
-//	PlaySkillAttackAnimation();
-//}
-//
-//void ABasicMonsterAI::SkillCoolTime()
-//{
-//	CanSkill = true;
-//}
-//
-//TArray<AActor*>& ABasicMonsterAI::GetOverlappingPlayers()
-//{
-//	return OverlappingPlayers;
-//}
-
 void ABasicMonsterAI::SpawnNiagaraEffect(FVector SpawnLocation)
 {
 	//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Spawn Niagara"));
 	UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), GasBombEffect, SpawnLocation);
+}
+
+void ABasicMonsterAI::ServerAttackPlayer()
+{
+	AttackPlayer();
+}
+
+void ABasicMonsterAI::AttackOverlap(AActor* OtherActor)
+{
+	UAnimInstance* BaseAnim = GetMesh()->GetAnimInstance();
+
+	UMonsterAnimInstance* MonsterAnim = Cast<UMonsterAnimInstance>(BaseAnim);
+	//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("cast success!!!!!"));
+	if (MonsterAnim->AttackTiming) {
+		APlayerCharacter* TargetPlayer = Cast<APlayerCharacter>(OtherActor);
+		if (TargetPlayer) {
+			TargetPlayer->ReceiveDamage(TargetPlayer, MonsterAD, nullptr, GetController(), this);
+		}
+		else {
+			ADefenseTarget* DefenseObject = Cast<ADefenseTarget>(OtherActor);
+			if (DefenseObject) {
+				DefenseObject->TakedDamage(DefenseObject, MonsterAD);
+			}
+		}
+	}
 }
