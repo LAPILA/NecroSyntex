@@ -35,6 +35,9 @@ public:
 
 public:
 	UPROPERTY()
+	USceneComponent* RootSceneComponent;
+
+	UPROPERTY()
 	int32 PlayerInTrigger = 0;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
@@ -43,8 +46,19 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FName MissionRegion;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Mission", meta = (GetOptions = "GetMissionNameOptions"))
 	FName MissionName;
+
+	UFUNCTION()
+	TArray<FName> GetMissionNameOptions() const
+	{
+		return {
+			FName("Survival"),
+			FName("Defense"),
+			FName("Rescue"),
+			FName("Boss")
+		};
+	}
 
 	UPROPERTY(EditAnywhere, Replicated, BlueprintReadWrite)
 	bool OnTrigger = true;
@@ -57,8 +71,18 @@ public:
 
 	FTimerHandle TriggerTimer;
 
+	UFUNCTION()
 	void TriggerDestroy();
+
+	UFUNCTION(NetMulticast, Reliable)
+	void MultiCastLog();
+
+	/*UFUNCTION(NetMulticast, Reliable)
+	void DestroyMulticast();*/
 
 	UFUNCTION(BlueprintImplementableEvent)
 	void TriggerMakeNoise();
+
+	UFUNCTION(BlueprintImplementableEvent)
+	void TriggerDestroyCall();
 };

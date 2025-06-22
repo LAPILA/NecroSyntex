@@ -181,6 +181,19 @@ void APlayerCharacter::BeginPlay()
 		Shield = MaxShield;
 	}
 }
+void APlayerCharacter::PossessedBy(AController* NewController)
+{
+	Super::PossessedBy(NewController);
+
+	if (UDC) {
+		UDC->InitDopingSkillSet();
+	}
+	else {
+		UE_LOG(LogTemp, Error, TEXT("UDC 인식 안됨"));
+	}
+}
+
+
 #pragma endregion
 
 #pragma region Tick
@@ -1348,10 +1361,13 @@ void APlayerCharacter::HandleHeadBob(float DeltaTime)
 
 void APlayerCharacter::HSDeBuffON()
 {
-	GetWorld()->GetFirstPlayerController()->ClientStartCameraShake(UDeBuffCameraShake::StaticClass());
+	if (ANecroSyntexPlayerController* PC = Cast<ANecroSyntexPlayerController>(GetController()))
+	{
+		PC->ClientStartCameraShake(UDeBuffCameraShake::StaticClass());
+	}
 }
 
-void APlayerCharacter::SPStrengthDeBuffON()
+void APlayerCharacter::SPStrengthDeBuffON_Implementation()
 {
 
 	// 블러 효과 추가
@@ -1366,7 +1382,7 @@ void APlayerCharacter::SPStrengthDeBuffON()
 	FollowCamera->PostProcessBlendWeight = 1.0f;
 }
 
-void APlayerCharacter::SPStrengthDeBuffOFF()
+void APlayerCharacter::SPStrengthDeBuffOFF_Implementation()
 {
 	FollowCamera->PostProcessBlendWeight = 1.0f;
 

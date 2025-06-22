@@ -87,6 +87,7 @@ public:
     virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	virtual void PostInitializeComponents() override;
+	virtual void PossessedBy(AController* NewController) override;
 
 	/*
 		Montage
@@ -467,10 +468,10 @@ public:
 	UFUNCTION(BlueprintImplementableEvent)
 	void SetHUDRemainSecondDoping();
 
-	UFUNCTION()
+	UFUNCTION(NetMulticast, Reliable)
 	void SPStrengthDeBuffON();
 
-	UFUNCTION()
+	UFUNCTION(NetMulticast, Reliable)
 	void SPStrengthDeBuffOFF();
 
 	UFUNCTION()
