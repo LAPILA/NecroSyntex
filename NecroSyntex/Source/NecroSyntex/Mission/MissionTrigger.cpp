@@ -14,6 +14,11 @@ AMissionTrigger::AMissionTrigger()
 {
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = false;
+	bReplicates = true;
+	bNetLoadOnClient = true; // 클라이언트에서 객체를 로드하도록 설정
+
+	RootSceneComponent = CreateDefaultSubobject<USceneComponent>(TEXT("RootSceneComponent"));
+	RootComponent = RootSceneComponent;
 
 	MissionTriggerBox = CreateDefaultSubobject<UBoxComponent>(TEXT("MissionTrigger"));
 	MissionTriggerBox->SetupAttachment(RootComponent);
@@ -54,6 +59,12 @@ void AMissionTrigger::BeginPlay()
 	else {
 		UE_LOG(LogTemp, Warning, TEXT("SkillAttackArea is nullptr"));
 	}
+
+	if (!HasAuthority()) {
+		if (IsValid(this)) {
+			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("Client sees the Actor!"));
+		}
+	}
 	
 }
 
@@ -66,6 +77,13 @@ void AMissionTrigger::Tick(float DeltaTime)
 
 void AMissionTrigger::OnBoxTriggerOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
+	if (HasAuthority()) {
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Server : In``"));
+	}
+	else {
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Client : In``"));
+	}
+
 	if (!HasAuthority()) return;
 
 
@@ -85,16 +103,18 @@ void AMissionTrigger::OnBoxTriggerOverlapBegin(UPrimitiveComponent* OverlappedCo
 				{
 					//시작할 미션 설정
 					GM->MissionManager->MissionSet(MissionName, MissionRegion, MissionDuration);
+					GM->MissionManager->CMTSet(this);
 
 					//미션 시작 카운터 다운 시작 (도중에 영역 나가면 타이머 취소 및 초기화)
 					GM->MissionManager->MissionCountdownStart();
 
-					GetWorld()->GetTimerManager().SetTimer(
+					/*GetWorld()->GetTimerManager().SetTimer(
 						TriggerTimer,
 						[this]() { TriggerDestroy(); },
 						GM->MissionManager->count + 1.0f,
 						false
-					);
+					);*/
+
 					TriggerMakeNoise();
 					OnTriggerTimer = true;
 
@@ -109,7 +129,7 @@ void AMissionTrigger::OnBoxTriggerOverlapEnd(UPrimitiveComponent* OverlappedComp
 	if (!HasAuthority()) return;
 
 
-	if (!OnTriggerTimer) return;
+	//if (!OnTriggerTimer) return;
 
 	if (APlayerCharacter* PC = Cast<APlayerCharacter>(OtherActor))
 	{
@@ -123,7 +143,7 @@ void AMissionTrigger::OnBoxTriggerOverlapEnd(UPrimitiveComponent* OverlappedComp
 					if (ANecroSyntexGameMode* GM = Cast<ANecroSyntexGameMode>(UGameplayStatics::GetGameMode(this)))
 					{
 						GM->MissionManager->MissionCountdownCancel();
-						GetWorld()->GetTimerManager().ClearTimer(TriggerTimer);
+						//GetWorld()->GetTimerManager().ClearTimer(TriggerTimer);
 						OnTriggerTimer = false;
 					}
 				}
@@ -140,5 +160,19 @@ void AMissionTrigger::MissionTriggerActivate_Implementation()
 void AMissionTrigger::TriggerDestroy()
 {
 	OnTrigger = false;
+
 	Destroy();
+
 }
+
+void AMissionTrigger::MultiCastLog_Implementation()
+{
+	if (!HasAuthority()) {
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Client : Multicast!!!!!``"));
+	}
+}
+
+//void AMissionTrigger::DestroyClient_Implementation()
+//{
+//	Destroy();
+//}

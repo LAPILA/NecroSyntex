@@ -6,6 +6,7 @@
 #include "NecroSyntex/Monster/M_Spawner.h"
 #include "NecroSyntex/Mission/DefenseTarget.h"
 #include "NecroSyntex/GameMode/NecroSyntexGameMode.h"
+#include "NecroSyntex/Mission/MissionTrigger.h"
 #include "NecroSyntex/NecroSyntexGameState.h"
 #include "NecroSyntex/Character/PlayerCharacter.h"
 #include "Net/UnrealNetwork.h"
@@ -42,7 +43,7 @@ void UMissionComp::TickComponent(float DeltaTime, ELevelTick TickType, FActorCom
 void UMissionComp::Init(class ANecroSyntexGameMode* InGameMode)
 {
     CurrentGameMode = InGameMode;
-    count = 1.0f;
+    //count = 3.0f;
     ANecroSyntexGameState* GS = Cast<ANecroSyntexGameState>(GetWorld()->GetGameState());
     if (GS)
     {
@@ -57,6 +58,11 @@ void UMissionComp::MissionSet(FName MissionName, FName RegionTag, float Duration
     CurrentDuration = Duration;
 }
 
+void UMissionComp::CMTSet(class AMissionTrigger* MissionTrigger)
+{
+    CMT = MissionTrigger;
+}
+
 void UMissionComp::ActiveMission()
 {
     if (CurrentMissionName == "Survival") {
@@ -65,12 +71,17 @@ void UMissionComp::ActiveMission()
     else if (CurrentMissionName == "Defense") {
         StartDefenseMission();
     }
+    else if (CurrentMissionName == "Rescue") {
+
+    }
     else if (CurrentMissionName == "Boss") {
 
     }
     else {
         
     }
+    CMT->MakeNoise();
+    CMT->Destroy();
 }
 
 void UMissionComp::ActiveMonsterSpawner()
@@ -168,7 +179,6 @@ void UMissionComp::EndSurvivlvalMission()
 
 
 //DefenseMission
-
 void UMissionComp::StartDefenseMission()
 {
     TArray<AActor*> FoundDefenseTarget;

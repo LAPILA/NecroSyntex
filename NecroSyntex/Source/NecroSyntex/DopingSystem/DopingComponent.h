@@ -58,6 +58,9 @@ public:
 	UPROPERTY(Replicated)
 	bool TwoKeyBool;
 
+	UFUNCTION()
+	void InitDopingSkillSet();
+
 	//패시브
 	UPROPERTY(Replicated)
 	float Passive_Duration = 5.0f;

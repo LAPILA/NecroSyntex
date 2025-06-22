@@ -76,7 +76,7 @@ public:
 
 
 	// Mission
-	UPROPERTY(BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	UMissionComp* MissionManager;
 
 	UPROPERTY(BlueprintAssignable)
