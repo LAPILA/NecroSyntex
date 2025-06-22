@@ -135,6 +135,9 @@ protected:
 	UFUNCTION()
 	void PlayHitAnimation();
 
+	UFUNCTION(NetMulticast, Reliable)
+	void Multicast_PlayHitAnimation();
+
 	UFUNCTION()
 	void PlayHitHighDamageAnimation();
 

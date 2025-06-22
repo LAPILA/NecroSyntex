@@ -28,6 +28,9 @@ public:
 	UFUNCTION()
 	void PlaySkillAttackAnimation();
 
+	UFUNCTION(NetMulticast, Reliable)
+	void Multicast_PlaySkillAttackAnimation();
+
 	UFUNCTION()
 	void SkillCoolTime();
 

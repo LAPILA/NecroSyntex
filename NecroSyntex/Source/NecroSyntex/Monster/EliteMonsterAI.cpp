@@ -63,6 +63,13 @@ void AEliteMonsterAI::UpdateMoveSpeed(float inputSpeed)
 
 void AEliteMonsterAI::PlaySkillAttackAnimation()//스킬 공격 애니메이션 재생
 {
+	if (HasAuthority()) {
+		Multicast_PlaySkillAttackAnimation();
+	}
+}
+
+void AEliteMonsterAI::Multicast_PlaySkillAttackAnimation_Implementation()
+{
 	if (SkillAttackMontage && GetMesh() && GetMesh()->GetAnimInstance()) {
 		GetMesh()->GetAnimInstance()->Montage_Play(SkillAttackMontage);
 	}

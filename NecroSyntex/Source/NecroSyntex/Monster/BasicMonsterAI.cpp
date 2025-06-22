@@ -197,6 +197,13 @@ void ABasicMonsterAI::AttackCoolTime()
 
 void ABasicMonsterAI::PlayHitAnimation()//약한 데미지인 경우 hit 애니메이션 재생
 {
+	if (HasAuthority()) {
+		Multicast_PlayHitAnimation();
+	}
+}
+
+void ABasicMonsterAI::Multicast_PlayHitAnimation_Implementation()
+{
 	if (HitReactionMontage && GetMesh() && GetMesh()->GetAnimInstance()) {
 		GetMesh()->GetAnimInstance()->Montage_Play(HitReactionMontage);
 	}
