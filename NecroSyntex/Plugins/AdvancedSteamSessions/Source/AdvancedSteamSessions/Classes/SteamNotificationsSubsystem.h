@@ -7,7 +7,7 @@
 
 #if STEAM_SDK_INSTALLED && (PLATFORM_WINDOWS || PLATFORM_MAC || PLATFORM_LINUX)
 
-#include <steam_api.h>
+#include <steam/steam_api.h>
 
 #endif
 

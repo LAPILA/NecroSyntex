@@ -35,13 +35,14 @@ MSVC_PRAGMA(warning(push))
 MSVC_PRAGMA(warning(disable : ALL_CODE_ANALYSIS_WARNINGS))
 #endif	// USING_CODE_ANALYSIS
 
-#include <steam_api.h>
+#include <steam/steam_api.h>
 
 #if USING_CODE_ANALYSIS
 MSVC_PRAGMA(warning(pop))
 #endif	// USING_CODE_ANALYSIS
 
-#include <isteamapps.h>
+#include <steam/isteamapps.h>
+#include <steam/isteamapplist.h>
 //#include <OnlineSubsystemSteamTypes.h>
 #pragma pop_macro("ARRAY_COUNT")
 

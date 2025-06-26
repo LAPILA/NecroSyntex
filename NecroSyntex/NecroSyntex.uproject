@@ -35,14 +35,6 @@
 			"MarketplaceURL": "com.epicgames.launcher://ue/Fab/product/74a15004-2adf-4fe3-abc6-16190fb582c5"
 		},
 		{
-			"Name": "AdvancedSteamSessions",
-			"Enabled": false
-		},
-		{
-			"Name": "AdvancedSessions",
-			"Enabled": false
-		},
-		{
 			"Name": "OnlineSubsystemNull",
 			"Enabled": false
 		},
@@ -83,6 +75,10 @@
 		},
 		{
 			"Name": "MovieRenderPipeline",
+			"Enabled": true
+		},
+		{
+			"Name": "OnlineSubsystemSteam",
 			"Enabled": true
 		}
 	],
