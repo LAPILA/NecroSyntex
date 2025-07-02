@@ -281,6 +281,10 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 		EnhancedInputComponent->BindAction(SwapFirstWeapon, ETriggerEvent::Triggered, this, &APlayerCharacter::SwapToFirstWeapon);
 		EnhancedInputComponent->BindAction(SwapSecondWeapon, ETriggerEvent::Triggered, this, &APlayerCharacter::SwapToSecondWeapon);
 		EnhancedInputComponent->BindAction(SwapThirdWeapon, ETriggerEvent::Triggered, this, &APlayerCharacter::SwapToThirdWeapon);
+		UE_LOG(LogTemp, Warning, TEXT("Enhanced Input success"));
+	}
+	else {
+		UE_LOG(LogTemp, Warning, TEXT("Enhanced Input fail"));
 	}
 }
 
