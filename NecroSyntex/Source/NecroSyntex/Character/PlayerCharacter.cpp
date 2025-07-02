@@ -277,7 +277,7 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 		EnhancedInputComponent->BindAction(SwapWeaponAction, ETriggerEvent::Triggered, this, &APlayerCharacter::SwapWeaponWheel);
 		EnhancedInputComponent->BindAction(UDCskill1, ETriggerEvent::Triggered, this, &APlayerCharacter::FirstDoping);
 		EnhancedInputComponent->BindAction(UDCskill2, ETriggerEvent::Triggered, this, &APlayerCharacter::SecondDoping);
-		//EnhancedInputComponent->BindAction(UDCModeChange, ETriggerEvent::Triggered, this, &APlayerCharacter::DopingModeChange);
+		EnhancedInputComponent->BindAction(UDCModeChange, ETriggerEvent::Triggered, this, &APlayerCharacter::DopingModeChange);
 		EnhancedInputComponent->BindAction(SwapFirstWeapon, ETriggerEvent::Triggered, this, &APlayerCharacter::SwapToFirstWeapon);
 		EnhancedInputComponent->BindAction(SwapSecondWeapon, ETriggerEvent::Triggered, this, &APlayerCharacter::SwapToSecondWeapon);
 		EnhancedInputComponent->BindAction(SwapThirdWeapon, ETriggerEvent::Triggered, this, &APlayerCharacter::SwapToThirdWeapon);
@@ -1089,6 +1089,11 @@ void APlayerCharacter::UpdateHUDHealth()
 	}
 }
 
+void APlayerCharacter::ClientUpdateHUDHealth_Implementation()
+{
+	UpdateHUDHealth();
+}
+
 void APlayerCharacter::UpdateHUDShield()
 {
 	NecroSyntexPlayerController = NecroSyntexPlayerController == nullptr ? Cast<ANecroSyntexPlayerController>(Controller) : NecroSyntexPlayerController;
@@ -1096,6 +1101,11 @@ void APlayerCharacter::UpdateHUDShield()
 	{
 		NecroSyntexPlayerController->SetHUDShield(Shield, MaxShield);
 	}
+}
+
+void APlayerCharacter::ClientUpdateHUDShield_Implementation()
+{
+	UpdateHUDShield();
 }
 
 void APlayerCharacter::UpdateHUDAmmo()
@@ -1405,7 +1415,9 @@ void APlayerCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 	DOREPLIFETIME_CONDITION(APlayerCharacter, bIsSprinting, COND_SkipOwner);
 	DOREPLIFETIME(APlayerCharacter, bDisableGameplay);
 	DOREPLIFETIME(APlayerCharacter, Health);
+	DOREPLIFETIME(APlayerCharacter, MaxHealth);
 	DOREPLIFETIME(APlayerCharacter, Shield);
+	DOREPLIFETIME(APlayerCharacter, MaxShield);
 	DOREPLIFETIME(APlayerCharacter, HealingStationActor);
 	DOREPLIFETIME(APlayerCharacter, OverlappingSupplyCrate);
 
@@ -1458,7 +1470,16 @@ void APlayerCharacter::OnRep_Health(float LastHealth)
 	}
 }
 
+void APlayerCharacter::OnRep_MaxHealth()
+{
+	UpdateHUDHealth();
+}
+
 void APlayerCharacter::OnRep_Shield(float LastShield)
+{
+	UpdateHUDShield();
+}
+void APlayerCharacter::OnRep_MaxShield()
 {
 	UpdateHUDShield();
 }

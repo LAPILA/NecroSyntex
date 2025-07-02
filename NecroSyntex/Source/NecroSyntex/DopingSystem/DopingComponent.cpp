@@ -111,6 +111,15 @@ void UDopingComponent::OnRep_OneAble()
 	}
 }
 
+void UDopingComponent::OnRep_OneItemNum()
+{
+	APlayerCharacter* OwnerCharacter = Cast<APlayerCharacter>(GetOwner());
+
+	if (!OwnerCharacter) return;
+
+	OwnerCharacter->SetHUDRemainFirstDoping();
+}
+
 void UDopingComponent::OnRep_TwoAble()
 {
 	UE_LOG(LogTemp, Warning, TEXT("OnRep_TwoAble Call"));
@@ -125,6 +134,15 @@ void UDopingComponent::OnRep_TwoAble()
 	else {
 		OwnerCharacter->SetHUDSecondDopingFalseicon();
 	}
+}
+
+void UDopingComponent::OnRep_TwoItemNum()
+{
+	APlayerCharacter* OwnerCharacter = Cast<APlayerCharacter>(GetOwner());
+
+	if (!OwnerCharacter) return;
+
+	OwnerCharacter->SetHUDRemainSecondDoping();
 }
 
 // NewObject 생성 시 메모리 관리
