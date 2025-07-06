@@ -185,17 +185,6 @@ void APlayerCharacter::PossessedBy(AController* NewController)
 {
 	Super::PossessedBy(NewController);
 
-	if (GEngine) {
-		if (HasAuthority()) {
-			FString Message = FString::Printf(TEXT("호스트 PossessedBy 작동"));
-			GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, Message);
-		}
-		else {
-			FString Message = FString::Printf(TEXT("클라 PossessedBy 작동"));
-			GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, Message);
-		}
-	}
-
 	if (UDC) {
 		UDC->InitDopingSkillSet();
 	}
