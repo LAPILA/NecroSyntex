@@ -166,10 +166,16 @@ void ANecroSyntexGameMode::RequestRespawn(ACharacter* ElimmedCharacter, AControl
 void ANecroSyntexGameMode::SetupPlayers()
 {
 
+	FString Message = FString::Printf(TEXT("SetupPlayers 000"));
+	GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, Message);
+
 	for (FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
 	{
 		ANecroSyntexPlayerController* MyPC = Cast<ANecroSyntexPlayerController>(*It);
 		if (!MyPC) continue;
+
+		FString Message = FString::Printf(TEXT("SetupPlayers 111"));
+		GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, Message);
 
 		MyPC->CheckPSSetTimer();
 
@@ -177,6 +183,8 @@ void ANecroSyntexGameMode::SetupPlayers()
 
 		if (APawn* OldPawn = MyPC->GetPawn())
 		{
+			FString Message = FString::Printf(TEXT("SetupPlayers 222 oldpawn destroy"));
+			GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, Message);
 			OldPawn->Destroy();
 		}
 
@@ -188,6 +196,9 @@ void ANecroSyntexGameMode::SetupPlayers()
 			TSubclassOf<APawn> OldDefault = DefaultPawnClass;
 			DefaultPawnClass = PS->SelectedCharacterClass;
 
+			FString Message = FString::Printf(TEXT("SetupPlayers 333"));
+			GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, Message);
+
 			// PlayerStart 직접 선택 (안전하게 처리)
 			TArray<AActor*> PlayerStarts;
 			UGameplayStatics::GetAllActorsOfClass(this, APlayerStart::StaticClass(), PlayerStarts);
@@ -196,6 +207,9 @@ void ANecroSyntexGameMode::SetupPlayers()
 			{
 				AActor* ChosenStart = PlayerStarts[FMath::RandRange(0, PlayerStarts.Num() - 1)];
 				RestartPlayerAtPlayerStart(MyPC, ChosenStart);
+
+				FString Message = FString::Printf(TEXT("SetupPlayers 444 캐릭터 생성"));
+				GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, Message);
 			}
 			else
 			{
@@ -210,6 +224,9 @@ void ANecroSyntexGameMode::SetupPlayers()
 			if (APlayerCharacter* NewCharacter = Cast<APlayerCharacter>(MyPC->GetPawn()))
 			{
 				UE_LOG(LogTemp, Warning, TEXT("777777 - 캐릭터 생성 성공"));
+
+				FString Message = FString::Printf(TEXT("SetupPlayers 555 캐릭터 생성 성공"));
+				GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, Message);
 
 				/*if (NewCharacter->UDC)
 				{
@@ -252,6 +269,9 @@ void ANecroSyntexGameMode::PostLogin(APlayerController* NewPlayer)
 {
 	Super::PostLogin(NewPlayer);
 
+	FString Message = FString::Printf(TEXT("PostLogin 작동"));
+	GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, Message);
+
 	ANecroSyntexPlayerController* PC = Cast<ANecroSyntexPlayerController>(NewPlayer);
 	if (PC)
 	{
@@ -259,6 +279,8 @@ void ANecroSyntexGameMode::PostLogin(APlayerController* NewPlayer)
 		{
 			GS->TotalPlayer++;
 			GS->SurvivingPlayer = GS->TotalPlayer;
+			FString Message = FString::Printf(TEXT("PostLogin : 토탈플레이어 늘리기 작동"));
+			GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, Message);
 		}
 
 		PC->GetInstanceAndSetSelectedCharacter();//요거 주석 처리하면 멀티 가능.
@@ -278,6 +300,9 @@ void ANecroSyntexGameMode::SelectAndReadyComplete_Implementation()
 {
 
 	PlayersReadyCount++;
+	
+	FString Message = FString::Printf(TEXT("SelectAndReadyComplete 작동"));
+	GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, Message);
 
 	CheckAllPlayersReady();
 
@@ -298,10 +323,15 @@ void ANecroSyntexGameMode::ShowCharacterSelectionUI()
 
 void ANecroSyntexGameMode::CheckAllPlayersReady()
 {
+	FString Message = FString::Printf(TEXT("CheckAllPlayersReady 작동"));
+	GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, Message);
+
 	if (ANecroSyntexGameState* GS = GetGameState<ANecroSyntexGameState>())
 	{
 		if (PlayersReadyCount >= GS->TotalPlayer) {
 			SetupPlayers();
+			FString Message = FString::Printf(TEXT("CheckAllPlayersReady 내부 작동"));
+			GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, Message);
 		}
 	}
 
