@@ -218,6 +218,13 @@ void ABasicMonsterAI::PlayHitHighDamageAnimation()//강한 데미지인 경우 hit 애니�
 
 void ABasicMonsterAI::PlayDeathAnimation()//죽음 애니메이션 재생
 {
+	if (HasAuthority()) {
+		Multicast_PlayDeathAnimation();
+	}
+}
+
+void ABasicMonsterAI::Multicast_PlayDeathAnimation_Implementation()
+{
 	if (DeathReactionMontage && GetMesh() && GetMesh()->GetAnimInstance()) {
 		//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("DeathReaction Start"));
 		GetMesh()->GetAnimInstance()->Montage_Play(DeathReactionMontage);

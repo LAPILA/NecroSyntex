@@ -13,7 +13,8 @@
 				"UMG",
 				"AIModule",
 				"GameplayCameras",
-				"CoreUObject"
+				"CoreUObject",
+				"AdvancedSessions"
 			]
 		}
 	],

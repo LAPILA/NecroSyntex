@@ -144,6 +144,9 @@ protected:
 	UFUNCTION()
 	void PlayDeathAnimation();
 
+	UFUNCTION(NetMulticast, Reliable)
+	void Multicast_PlayDeathAnimation();
+
 	UFUNCTION()
 	void PlayAttackAnimation();
 
