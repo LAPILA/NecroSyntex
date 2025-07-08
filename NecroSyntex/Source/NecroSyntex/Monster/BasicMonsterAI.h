@@ -20,9 +20,6 @@ public:
 	// Sets default values for this character's properties
 	ABasicMonsterAI();
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Components")
-	class UBoxComponent* SkillAttackArea;
-
 	UPROPERTY(EditAnywhere, Category = "AI")
 	float ChaseSpeed;
 
@@ -63,14 +60,26 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effects")
 	UNiagaraSystem* GasBombEffect;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI")
+	bool CanAttack;
+
+	UPROPERTY()
+	float MonsterDistance;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Value")
+	FName KeyName;
+
+	UFUNCTION(BlueprintCallable)
+	void SpawnNiagaraEffect(FVector SpawnLocation);
+
 	UFUNCTION(BlueprintCallable)
 	void UpdateWalkSpeed(); //float NewWalkSpeed in parameter
 
 	UFUNCTION(BlueprintCallable)
 	void AttackCoolTime();
 
-	UFUNCTION(BlueprintCallable)
-	void Attack_Player();
+	//UFUNCTION(BlueprintCallable)
+	//void Attack_Player();
 
 	UFUNCTION(BlueprintCallable)
 	void TakeDopingDamage(float DopingDamageAmount);
@@ -86,33 +95,12 @@ public:
 	UFUNCTION(BlueprintImplementableEvent, Category = "Combat")
 	void OnWeaponHitEvent(const FHitResult& HitResult);
 
-	UPROPERTY()
-	TArray<AActor*> OverlappingPlayers;
-
-	UFUNCTION()
-	TArray<AActor*>& GetOverlappingPlayers();
-
-	UPROPERTY()
-	bool CanSkill;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI")
-	bool CanAttack;
-
 	UFUNCTION()
 	void MonsterStopMove();
-
-	UPROPERTY()
-	float MonsterDistance;
-
-	UFUNCTION(BlueprintCallable)
-	void SpawnNiagaraEffect(FVector SpawnLocation);
 
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Skill")
-	float SkillAttackCoolTime;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Area")
 	bool isAttackArea;
@@ -130,22 +118,25 @@ protected:
 	UAnimMontage* DeathReactionMontage;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
-	UAnimMontage* SkillAttackMontage;
+	UAnimMontage* AttackMontage;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
-	class UAnimMontage* AttackMontage;
+	/*UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
+	class UAnimMontage* AttackMontage;*/
 
-	UFUNCTION(BlueprintCallable, Category = "AI")
-	void SkillAttack();
+	UPROPERTY()
+	bool valueStopAnimationSound;
 
-	UFUNCTION()
-	void OnSkillAreaOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+	UPROPERTY()
+	FTimerHandle SetAnimationSound;
 
-	UFUNCTION()
-	void OnSkillAreaOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
+	UPROPERTY()
+	FTimerHandle DeathDelayTimerHandle;
 
 	UFUNCTION()
 	void PlayHitAnimation();
+
+	UFUNCTION(NetMulticast, Reliable)
+	void Multicast_PlayHitAnimation();
 
 	UFUNCTION()
 	void PlayHitHighDamageAnimation();
@@ -154,13 +145,10 @@ protected:
 	void PlayDeathAnimation();
 
 	UFUNCTION()
+	void PlayAttackAnimation();
+
+	UFUNCTION()
 	void DestroyMonster();
-
-	UFUNCTION()
-	void PlaySkillAttackAnimation();
-
-	UFUNCTION()
-	void SkillCoolTime();
 
 	//Timer Function
 	UFUNCTION()
@@ -172,17 +160,14 @@ protected:
 	UFUNCTION()
 	void StopAnimationSound();
 
-	UPROPERTY()
-	bool valueStopAnimationSound;
+	UFUNCTION(BlueprintImplementableEvent)
+	void AttackPlayer();
 
-	UPROPERTY()
-	FTimerHandle SetAnimationSound;
+	UFUNCTION(BlueprintCallable)
+	void ServerAttackPlayer();
 
-	UPROPERTY()
-	FTimerHandle DeathDelayTimerHandle;
-
-	UPROPERTY()
-	FTimerHandle MonsterSkillCoolTime;
+	UFUNCTION(BlueprintCallable)
+	void AttackOverlap(AActor* OtherActor);
 public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;

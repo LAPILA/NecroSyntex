@@ -87,6 +87,7 @@ public:
     virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	virtual void PostInitializeComponents() override;
+	virtual void PossessedBy(AController* NewController) override;
 
 	/*
 		Montage
@@ -117,8 +118,15 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void UpdateHUDHealth();
+
+	UFUNCTION(Client, Reliable, BlueprintCallable)
+	void ClientUpdateHUDHealth();
+
 	UFUNCTION(BlueprintCallable)
 	void UpdateHUDShield();
+
+	UFUNCTION(Client, Reliable, BlueprintCallable)
+	void ClientUpdateHUDShield();
 
 	bool bInitializeAmmo = false;
 	int32 InitialCarriedAmmo = 0;
@@ -164,6 +172,9 @@ public:
 	void SetMontagePlaying(bool bIsPlaying);
 
 	void ResetMontageState();
+
+	UFUNCTION(BlueprintCallable) //protected->public changed by duream
+	void ReceiveDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, class AController* InstigatorController, AActor* DamageCauser);
 protected:
     virtual void BeginPlay() override;
 
@@ -202,8 +213,7 @@ protected:
 	void DropOrDestroyWeapon(AWeapon* Weapon);
 	void DropOrDestroyWeapons();
 
-	UFUNCTION(BlueprintCallable)
-	void ReceiveDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, class AController* InstigatorController, AActor* DamageCauser);
+	
 	void PollInit();
 	void RotateInPlace(float DeltaTime);
 
@@ -357,12 +367,18 @@ private:
 	
 	UFUNCTION()
 	void OnRep_Health(float LastHealth);
+
+	UFUNCTION()
+	void OnRep_MaxHealth();
 	/**
 	* Player sheild
 	*/
 	
 	UFUNCTION()
 	void OnRep_Shield(float LastShield);
+
+	UFUNCTION()
+	void OnRep_MaxShield();
 
 	bool bElimed = false;
 
@@ -467,10 +483,10 @@ public:
 	UFUNCTION(BlueprintImplementableEvent)
 	void SetHUDRemainSecondDoping();
 
-	UFUNCTION()
+	UFUNCTION(NetMulticast, Reliable)
 	void SPStrengthDeBuffON();
 
-	UFUNCTION()
+	UFUNCTION(NetMulticast, Reliable)
 	void SPStrengthDeBuffOFF();
 
 	UFUNCTION()
@@ -478,12 +494,12 @@ public:
 
 
 	//PID(Player Inform Data)
-	UPROPERTY(EditAnywhere, Category = "Player Stats")
+	UPROPERTY(ReplicatedUsing = OnRep_MaxHealth, EditAnywhere, Category = "Player Stats")
 	float MaxHealth = 100.f;
 	UPROPERTY(ReplicatedUsing = OnRep_Health, BlueprintReadWrite, VisibleAnywhere, Category = "Player Stats")
 	float Health = 100.f;
 
-	UPROPERTY(EditAnywhere, Category = "Player Stats")
+	UPROPERTY(ReplicatedUsing = OnRep_MaxShield, EditAnywhere, Category = "Player Stats")
 	float MaxShield = 200.f;
 	UPROPERTY(ReplicatedUsing = OnRep_Shield, VisibleAnywhere, BlueprintReadWrite, Category = "Player Stats")
 	float Shield = 200.f;

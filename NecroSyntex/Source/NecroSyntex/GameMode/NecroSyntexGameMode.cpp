@@ -19,14 +19,14 @@ ANecroSyntexGameMode::ANecroSyntexGameMode()
 {
 	//Delay mode (if you want, delete)
 	bDelayedStart = true;
-
+	MissionManager = CreateDefaultSubobject<UMissionComp>(TEXT("MissionManager"));
 }
 
 void ANecroSyntexGameMode::BeginPlay()
 {
 	Super::BeginPlay();
 
-	MissionManager = NewObject<UMissionComp>(this, UMissionComp::StaticClass());
+	//MissionManager = NewObject<UMissionComp>(this, UMissionComp::StaticClass());
 	MissionManager->Init(this);
 
 

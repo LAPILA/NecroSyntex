@@ -66,65 +66,27 @@ void UDopingComponent::BeginPlay()
 	if (GetOwner()->HasAuthority())
 	{
 
-		//아군에게 도핑을 받기위한 도핑 오브젝트 생성
-		LegEnforce = NewObject<UDPLegEnforce>(this);
-		ReducePain = NewObject<UDPReducePain>(this);
-		SupremeStrength = NewObject<UDPSupremeStrength>(this);
-		ForcedHealing = NewObject<UDPForcedHealing>(this);
-		FinalEmber = NewObject<UDPFinalEmber>(this);
-		BurningFurnace = NewObject<UDPBurningFurnace>(this);
-		SolidFortress = NewObject<UDPSolidFortress>(this);
-		Painless = NewObject<UDPPainless>(this);
-		ParadoxofGuardianship = NewObject<UDPParadoxofGuardianship>(this);
-		HallucinationShield = NewObject<UDPHallucinationShield>(this);
-		HPconversion = NewObject<UDPHPconversion>(this);
-		CurseofChaos = NewObject<UDPCurseofChaos>(this);
+		////아군에게 도핑을 받기위한 도핑 오브젝트 생성
+		//LegEnforce = NewObject<UDPLegEnforce>(this);
+		//ReducePain = NewObject<UDPReducePain>(this);
+		//SupremeStrength = NewObject<UDPSupremeStrength>(this);
+		//ForcedHealing = NewObject<UDPForcedHealing>(this);
+		//FinalEmber = NewObject<UDPFinalEmber>(this);
+		//BurningFurnace = NewObject<UDPBurningFurnace>(this);
+		//SolidFortress = NewObject<UDPSolidFortress>(this);
+		//Painless = NewObject<UDPPainless>(this);
+		//ParadoxofGuardianship = NewObject<UDPParadoxofGuardianship>(this);
+		//HallucinationShield = NewObject<UDPHallucinationShield>(this);
+		//HPconversion = NewObject<UDPHPconversion>(this);
+		//CurseofChaos = NewObject<UDPCurseofChaos>(this);
 
 
-		//도핑 모드(아군에게 도핑을 줄지 나에게 줄지 설정)
-		DopingforAllyMode = false;
+		////도핑 모드(아군에게 도핑을 줄지 나에게 줄지 설정)
+		//DopingforAllyMode = false;
 
-		OneKeyBool = false;
-		TwoKeyBool = false;
-
-		APlayerCharacter* OwnerCharacter = Cast<APlayerCharacter>(GetOwner());
-		ANecroSyntexPlayerState* PS = Cast<ANecroSyntexPlayerState>(OwnerCharacter->GetPlayerState());
-		if (PS)
-		{
-			SetFirstDopingKey(PS->FirstDopingCode);
-			SetSecondDopingKey(PS->SecondDopingCode);
-		}
-		else {
-			//임시로 도핑키 셋팅
-			OneKeyDoping = HallucinationShield;
-			One_DopingItemNum = OneKeyDoping->DopingItemNum;
-			One_DopingCoolTime = OneKeyDoping->DopingCoolTime;
-			FirstDopingCode = 1;
-			One_DopingCoolTime = OneKeyDoping->DopingCoolTime;
-			One_DopingItemNum = OneKeyDoping->DopingItemNum;
-			One_BuffDuration = OneKeyDoping->BuffDuration;
-			One_DeBuffDuration = OneKeyDoping->DeBuffDuration;
-			One_CheckBuff = OneKeyDoping->CheckBuff;
-			One_CheckDeBuff = OneKeyDoping->CheckDeBuff;
-			OneKeyBool = true;
-			One_Able = true;
-
-			TwoKeyDoping = BurningFurnace;
-			Two_DopingCoolTime = TwoKeyDoping->DopingCoolTime;
-			Two_DopingItemNum = TwoKeyDoping->DopingItemNum;
-			SecondDopingCode = 2;
-			Two_DopingCoolTime = TwoKeyDoping->DopingCoolTime;
-			Two_DopingItemNum = TwoKeyDoping->DopingItemNum;
-			Two_BuffDuration = TwoKeyDoping->BuffDuration;
-			Two_DeBuffDuration = TwoKeyDoping->DeBuffDuration;
-			Two_CheckBuff = TwoKeyDoping->CheckBuff;
-			Two_CheckDeBuff = TwoKeyDoping->CheckDeBuff;
-			TwoKeyBool = true;
-			Two_Able = true;
-		}
+		//OneKeyBool = false;
+		//TwoKeyBool = false;
 	}
-	
-
 }
 
 
@@ -149,6 +111,15 @@ void UDopingComponent::OnRep_OneAble()
 	}
 }
 
+void UDopingComponent::OnRep_OneItemNum()
+{
+	APlayerCharacter* OwnerCharacter = Cast<APlayerCharacter>(GetOwner());
+
+	if (!OwnerCharacter) return;
+
+	OwnerCharacter->SetHUDRemainFirstDoping();
+}
+
 void UDopingComponent::OnRep_TwoAble()
 {
 	UE_LOG(LogTemp, Warning, TEXT("OnRep_TwoAble Call"));
@@ -163,6 +134,15 @@ void UDopingComponent::OnRep_TwoAble()
 	else {
 		OwnerCharacter->SetHUDSecondDopingFalseicon();
 	}
+}
+
+void UDopingComponent::OnRep_TwoItemNum()
+{
+	APlayerCharacter* OwnerCharacter = Cast<APlayerCharacter>(GetOwner());
+
+	if (!OwnerCharacter) return;
+
+	OwnerCharacter->SetHUDRemainSecondDoping();
 }
 
 // NewObject 생성 시 메모리 관리
@@ -225,6 +205,80 @@ void UDopingComponent::SetSecondDopingKey_Implementation(int32 Num)
 UDopingComponent* UDopingComponent::GetDopingComponent()
 {
 	return this;
+}
+
+void UDopingComponent::InitDopingSkillSet()
+{
+	if (GetOwner()->HasAuthority()) {
+		//아군에게 도핑을 받기위한 도핑 오브젝트 생성
+		LegEnforce = NewObject<UDPLegEnforce>(this);
+		ReducePain = NewObject<UDPReducePain>(this);
+		SupremeStrength = NewObject<UDPSupremeStrength>(this);
+		ForcedHealing = NewObject<UDPForcedHealing>(this);
+		FinalEmber = NewObject<UDPFinalEmber>(this);
+		BurningFurnace = NewObject<UDPBurningFurnace>(this);
+		SolidFortress = NewObject<UDPSolidFortress>(this);
+		Painless = NewObject<UDPPainless>(this);
+		ParadoxofGuardianship = NewObject<UDPParadoxofGuardianship>(this);
+		HallucinationShield = NewObject<UDPHallucinationShield>(this);
+		HPconversion = NewObject<UDPHPconversion>(this);
+		CurseofChaos = NewObject<UDPCurseofChaos>(this);
+
+
+		//도핑 모드(아군에게 도핑을 줄지 나에게 줄지 설정)
+		DopingforAllyMode = false;
+
+		OneKeyBool = false;
+		TwoKeyBool = false;
+
+
+
+		APlayerCharacter* OwnerCharacter = Cast<APlayerCharacter>(GetOwner());
+		if (OwnerCharacter) {
+			UE_LOG(LogTemp, Error, TEXT("OwnerCharacter 있음"));
+		}
+		else {
+			UE_LOG(LogTemp, Error, TEXT("OwnerCharacter 없음"));
+		}
+		ANecroSyntexPlayerState* PS = Cast<ANecroSyntexPlayerState>(OwnerCharacter->GetPlayerState());
+		if (PS)
+		{
+			SetFirstDopingKey(PS->FirstDopingCode);
+			SetSecondDopingKey(PS->SecondDopingCode);
+			UE_LOG(LogTemp, Error, TEXT("aaa플레이어스테이트 있고 셋팅 성공"));
+		}
+		else {
+			//임시로 도핑키 셋팅
+			OneKeyDoping = HPconversion;
+			One_DopingItemNum = OneKeyDoping->DopingItemNum;
+			One_DopingCoolTime = OneKeyDoping->DopingCoolTime;
+			FirstDopingCode = 11;
+			One_DopingCoolTime = OneKeyDoping->DopingCoolTime;
+			One_DopingItemNum = OneKeyDoping->DopingItemNum;
+			One_BuffDuration = OneKeyDoping->BuffDuration;
+			One_DeBuffDuration = OneKeyDoping->DeBuffDuration;
+			One_CheckBuff = OneKeyDoping->CheckBuff;
+			One_CheckDeBuff = OneKeyDoping->CheckDeBuff;
+			OneKeyBool = true;
+			One_Able = true;
+
+			TwoKeyDoping = BurningFurnace;
+			Two_DopingCoolTime = TwoKeyDoping->DopingCoolTime;
+			Two_DopingItemNum = TwoKeyDoping->DopingItemNum;
+			SecondDopingCode = 2;
+			Two_DopingCoolTime = TwoKeyDoping->DopingCoolTime;
+			Two_DopingItemNum = TwoKeyDoping->DopingItemNum;
+			Two_BuffDuration = TwoKeyDoping->BuffDuration;
+			Two_DeBuffDuration = TwoKeyDoping->DeBuffDuration;
+			Two_CheckBuff = TwoKeyDoping->CheckBuff;
+			Two_CheckDeBuff = TwoKeyDoping->CheckDeBuff;
+			TwoKeyBool = true;
+			Two_Able = true;
+			UE_LOG(LogTemp, Error, TEXT("bbb왜 없냐고"));
+		}
+	}
+
+	return;
 }
 
 //패시브
@@ -326,6 +380,11 @@ void UDopingComponent::FirstDopingUse() {
 		passive_call = true;
 		ClientPlayDopingEffect();
 		FirstDopingCoolStart();
+
+		if (GEngine) {
+			FString DopingCode = FString::Printf(TEXT("%d 사용"), FirstDopingCode);
+			GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, DopingCode);
+		}
 	}
 	else {
 
@@ -352,6 +411,11 @@ void UDopingComponent::SecondDopingUse() {
 		passive_call = true;
 		ClientPlayDopingEffect();
 		SecondDopingCoolStart();
+
+		if (GEngine) {
+			FString DopingCode = FString::Printf(TEXT("%d 사용"), SecondDopingCode);
+			GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, DopingCode);
+		}
 	}
 	else {
 

@@ -2,6 +2,7 @@
 
 
 #include "MonsterAttackAnimNotify.h"
+#include "EliteMonsterAI.h"
 #include "BasicMonsterAI.h"
 
 void UMonsterAttackAnimNotify::Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation)

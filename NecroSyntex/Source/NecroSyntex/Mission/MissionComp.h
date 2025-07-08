@@ -32,6 +32,12 @@ public:
 	void MissionSet(FName MissionName, FName RegionTag, float Duration);
 
 	UPROPERTY()
+	class AMissionTrigger* CMT;
+
+	UFUNCTION()
+	void CMTSet(class AMissionTrigger* MissionTrigger);
+
+	UPROPERTY()
 	FName CurrentMissionName;
 	UPROPERTY()
 	FName CurrentRegionTag;
@@ -67,7 +73,7 @@ public:
 	UFUNCTION()
 	void UpdateMissionCountdown();
 
-	UPROPERTY()
+	UPROPERTY(EditAnywhere)
 	float count;
 
 	FTimerHandle CountDownTimer;
