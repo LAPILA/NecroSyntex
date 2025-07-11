@@ -1,0 +1,11 @@
+Model Information:
+* title:	Police sign trimsheet
+* source:	https://sketchfab.com/3d-models/police-sign-trimsheet-20991623760c46b0aa40ebf3c31905f9
+* author:	Sousinho (https://sketchfab.com/sousinho)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Police sign trimsheet" (https://sketchfab.com/3d-models/police-sign-trimsheet-20991623760c46b0aa40ebf3c31905f9) by Sousinho (https://sketchfab.com/sousinho) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
