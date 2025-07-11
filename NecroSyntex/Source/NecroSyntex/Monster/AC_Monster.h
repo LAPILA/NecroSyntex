@@ -15,6 +15,7 @@ class NECROSYNTEX_API AAC_Monster : public AAIController
 	GENERATED_BODY()
 
 public:
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	bool isSight;
 
@@ -23,6 +24,4 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FVector NoiseLocation;
-	
-	
 };

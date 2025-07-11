@@ -15,6 +15,7 @@
 #include "AIController.h"
 #include "NecroSyntex/Mission/DefenseTarget.h"
 #include "NecroSyntex/NecroSyntexGameState.h"
+#include "NecroSyntex/Mission/MissionComp.h"
 #include "NecroSyntex/Monster/MonsterAnimInstance.h"
 #include "NecroSyntex/Character/PlayerCharacter.h"
 #include "M_Spawner.h"
@@ -317,12 +318,6 @@ void ABasicMonsterAI::MoveToPlayer()
 			}
 		}
 	}
-}
-
-void ABasicMonsterAI::SpawnNiagaraEffect(FVector SpawnLocation)
-{
-	//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Spawn Niagara"));
-	UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), GasBombEffect, SpawnLocation);
 }
 
 void ABasicMonsterAI::ServerAttackPlayer()

@@ -2,4 +2,6 @@
 
 
 #include "AC_Monster.h"
+#include "NecroSyntex/Mission/MissionComp.h"
+#include "GameFramework/Pawn.h"
 

@@ -88,6 +88,9 @@ public:
 	UPROPERTY(BlueprintAssignable)
 	FMissionEvent MissionFail;
 
+	UPROPERTY(BlueprintAssignable)
+	FMissionEvent MissionEndEvent;
+
 	UFUNCTION()
 	void LevelMissionStart();
 
@@ -96,6 +99,9 @@ public:
 
 	UFUNCTION()
 	void LevelMissionFail();
+
+	UFUNCTION()
+	void CallMissionEndEvent();
 
 
 protected:

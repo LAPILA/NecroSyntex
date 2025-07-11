@@ -70,9 +70,6 @@ public:
 	FName KeyName;
 
 	UFUNCTION(BlueprintCallable)
-	void SpawnNiagaraEffect(FVector SpawnLocation);
-
-	UFUNCTION(BlueprintCallable)
 	void UpdateWalkSpeed(); //float NewWalkSpeed in parameter
 
 	UFUNCTION(BlueprintCallable)

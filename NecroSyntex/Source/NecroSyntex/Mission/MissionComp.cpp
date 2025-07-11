@@ -243,6 +243,7 @@ void UMissionComp::EndDefenseMission()
     }
 
     MissionSet("None", "None", 0.0f);
+    CurrentGameMode->CallMissionEndEvent();
 
     GameStateAndUIUpdate(false);
 }

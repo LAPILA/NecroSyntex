@@ -248,6 +248,11 @@ void ANecroSyntexGameMode::LevelMissionFail()
 	MissionFail.Broadcast();
 }
 
+void ANecroSyntexGameMode::CallMissionEndEvent()
+{
+	MissionEndEvent.Broadcast();
+}
+
 void ANecroSyntexGameMode::PostLogin(APlayerController* NewPlayer)
 {
 	Super::PostLogin(NewPlayer);
