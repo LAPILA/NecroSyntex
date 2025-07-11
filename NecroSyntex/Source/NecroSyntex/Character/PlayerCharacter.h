@@ -118,8 +118,15 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void UpdateHUDHealth();
+
+	UFUNCTION(Client, Reliable, BlueprintCallable)
+	void ClientUpdateHUDHealth();
+
 	UFUNCTION(BlueprintCallable)
 	void UpdateHUDShield();
+
+	UFUNCTION(Client, Reliable, BlueprintCallable)
+	void ClientUpdateHUDShield();
 
 	bool bInitializeAmmo = false;
 	int32 InitialCarriedAmmo = 0;
@@ -360,12 +367,18 @@ private:
 	
 	UFUNCTION()
 	void OnRep_Health(float LastHealth);
+
+	UFUNCTION()
+	void OnRep_MaxHealth();
 	/**
 	* Player sheild
 	*/
 	
 	UFUNCTION()
 	void OnRep_Shield(float LastShield);
+
+	UFUNCTION()
+	void OnRep_MaxShield();
 
 	bool bElimed = false;
 
@@ -481,12 +494,12 @@ public:
 
 
 	//PID(Player Inform Data)
-	UPROPERTY(EditAnywhere, Category = "Player Stats")
+	UPROPERTY(ReplicatedUsing = OnRep_MaxHealth, EditAnywhere, Category = "Player Stats")
 	float MaxHealth = 100.f;
 	UPROPERTY(ReplicatedUsing = OnRep_Health, BlueprintReadWrite, VisibleAnywhere, Category = "Player Stats")
 	float Health = 100.f;
 
-	UPROPERTY(EditAnywhere, Category = "Player Stats")
+	UPROPERTY(ReplicatedUsing = OnRep_MaxShield, EditAnywhere, Category = "Player Stats")
 	float MaxShield = 200.f;
 	UPROPERTY(ReplicatedUsing = OnRep_Shield, VisibleAnywhere, BlueprintReadWrite, Category = "Player Stats")
 	float Shield = 200.f;

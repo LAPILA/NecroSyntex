@@ -75,7 +75,7 @@ public:
 	virtual void Passive_End();
 
 	
-	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite, Category = "FirstDopping")
+	UPROPERTY(ReplicatedUsing = OnRep_OneItemNum, EditAnywhere, BlueprintReadWrite, Category = "FirstDopping")
 	int One_DopingItemNum; // 도핑 아이템 개숫
 	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite, Category = "FirstDopping")
 	float One_DopingCoolTime; // 아이템 사용 쿨타임
@@ -93,8 +93,11 @@ public:
 	UFUNCTION()
 	void OnRep_OneAble();
 
+	UFUNCTION()
+	void OnRep_OneItemNum();
 
-	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite, Category = "SecondDopping")
+
+	UPROPERTY(ReplicatedUsing = OnRep_TwoItemNum, EditAnywhere, BlueprintReadWrite, Category = "SecondDopping")
 	int Two_DopingItemNum; // 도핑 아이템 개숫
 	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite, Category = "SecondDopping")
 	float Two_DopingCoolTime; // 아이템 사용 쿨타임
@@ -111,6 +114,9 @@ public:
 
 	UFUNCTION()
 	void OnRep_TwoAble();
+
+	UFUNCTION()
+	void OnRep_TwoItemNum();
 
 	//데미지
 	//임시 총 데미지
