@@ -23,5 +23,8 @@ public:
 	bool isSound;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	bool isDefenseModeChange;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FVector NoiseLocation;
 };
