@@ -185,6 +185,15 @@ void APlayerCharacter::PossessedBy(AController* NewController)
 {
 	Super::PossessedBy(NewController);
 
+	ANecroSyntexPlayerController* NPC = Cast<ANecroSyntexPlayerController>(NewController);
+	if (!NPC) {
+		GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, TEXT("NecroSyntex Not Possessd XXXXXX"));
+	}
+	else {
+		GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, TEXT("NecroSyntex Possessd OOOOOOOO"));
+		UE_LOG(LogTemp, Error, TEXT("Possessed 작동"));
+	}
+
 	if (UDC) {
 		UDC->InitDopingSkillSet();
 	}

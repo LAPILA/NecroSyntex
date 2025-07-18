@@ -178,6 +178,7 @@ void ANecroSyntexGameMode::SetupPlayers()
 		if (APawn* OldPawn = MyPC->GetPawn())
 		{
 			OldPawn->Destroy();
+			UE_LOG(LogTemp, Error, TEXT("캐릭터 디스트로이"));
 		}
 
 
@@ -196,6 +197,7 @@ void ANecroSyntexGameMode::SetupPlayers()
 			{
 				AActor* ChosenStart = PlayerStarts[FMath::RandRange(0, PlayerStarts.Num() - 1)];
 				RestartPlayerAtPlayerStart(MyPC, ChosenStart);
+				UE_LOG(LogTemp, Error, TEXT("플레이어 캐릭터 생성"));
 			}
 			else
 			{
@@ -210,12 +212,6 @@ void ANecroSyntexGameMode::SetupPlayers()
 			if (APlayerCharacter* NewCharacter = Cast<APlayerCharacter>(MyPC->GetPawn()))
 			{
 				UE_LOG(LogTemp, Warning, TEXT("777777 - 캐릭터 생성 성공"));
-
-				/*if (NewCharacter->UDC)
-				{
-					NewCharacter->UDC->SetFirstDopingKey(PS->FirstDopingCode);
-					NewCharacter->UDC->SetSecondDopingKey(PS->SecondDopingCode);
-				}*/
 
 				MyPC->ClientRestart(NewCharacter);
 				UE_LOG(LogTemp, Warning, TEXT("99999 - ClientRestart 호출"));
