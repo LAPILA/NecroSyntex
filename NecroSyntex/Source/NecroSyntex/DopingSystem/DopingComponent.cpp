@@ -66,26 +66,6 @@ void UDopingComponent::BeginPlay()
 	if (GetOwner()->HasAuthority())
 	{
 
-		////아군에게 도핑을 받기위한 도핑 오브젝트 생성
-		//LegEnforce = NewObject<UDPLegEnforce>(this);
-		//ReducePain = NewObject<UDPReducePain>(this);
-		//SupremeStrength = NewObject<UDPSupremeStrength>(this);
-		//ForcedHealing = NewObject<UDPForcedHealing>(this);
-		//FinalEmber = NewObject<UDPFinalEmber>(this);
-		//BurningFurnace = NewObject<UDPBurningFurnace>(this);
-		//SolidFortress = NewObject<UDPSolidFortress>(this);
-		//Painless = NewObject<UDPPainless>(this);
-		//ParadoxofGuardianship = NewObject<UDPParadoxofGuardianship>(this);
-		//HallucinationShield = NewObject<UDPHallucinationShield>(this);
-		//HPconversion = NewObject<UDPHPconversion>(this);
-		//CurseofChaos = NewObject<UDPCurseofChaos>(this);
-
-
-		////도핑 모드(아군에게 도핑을 줄지 나에게 줄지 설정)
-		//DopingforAllyMode = false;
-
-		//OneKeyBool = false;
-		//TwoKeyBool = false;
 	}
 }
 
