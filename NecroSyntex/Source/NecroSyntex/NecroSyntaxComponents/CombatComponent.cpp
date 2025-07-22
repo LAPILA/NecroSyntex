@@ -18,6 +18,7 @@
 #include "NecroSyntex/Weapon/Projectile.h"
 #include "NecroSyntex/Weapon/Shotgun.h"
 #include "NecroSyntex/Voice/VoiceComponent.h"
+#include "NecroSyntex/NecroSyntaxComponents/DR_FlashDrone.h"
 
 #define TRY_PLAY_VOICE(Cue)  Character->GetVoiceComp()->PlayVoice(Cue)
 // Sets default values for this component's properties
@@ -92,6 +93,11 @@ void UCombatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 
 		SetHUDCrosshairs(DeltaTime);
 		InterpFOV(DeltaTime);
+
+		if (Character && Character->FlashDroneComponent && Character->FlashDroneComponent->GetFlashDrone())
+		{
+			Character->FlashDroneComponent->GetFlashDrone()->SetAimTarget(HitTarget);
+		}
 	}
 }
 

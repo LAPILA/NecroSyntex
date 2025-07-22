@@ -11,6 +11,7 @@
 #include "NecroSyntex/Interfaces/InteractWithCrossHairsInterface.h"
 #include "NecroSyntex/NecroSyntexType/CombatState.h"
 #include "NecroSyntex/Voice/VoiceComponent.h"
+#include "NecroSyntex/NecroSyntaxComponents/DR_FlashDroneComponent.h"
 #include "PlayerCharacter.generated.h"
 
 class UInputMappingContext;
@@ -441,6 +442,8 @@ private:
 
 	void HandleHeadBob(float DeltaTime);
 
+	UPROPERTY()
+	bool bFlashLightOn = true;
 public:
 	//Pahu
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
@@ -449,6 +452,9 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Doping")
 	TSubclassOf<UDopingComponent> DopingComponentClass;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	UDR_FlashDroneComponent* FlashDroneComponent;
 
 	UFUNCTION(BlueprintCallable)
 	UDopingComponent* GetDopingComponent();

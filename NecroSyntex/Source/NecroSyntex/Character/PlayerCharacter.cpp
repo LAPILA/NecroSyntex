@@ -33,6 +33,8 @@
 #include "NecroSyntex/NecroSyntaxComponents/LagCompensationComponent.h"
 #include "NecroSyntex/PickUps/HealingStation.h"
 #include "NecroSyntex\PickUps\SupplyCrate.h"
+#include "NecroSyntex/NecroSyntaxComponents/DR_FlashDroneComponent.h"
+#include "NecroSyntex/NecroSyntaxComponents/DR_FlashDrone.h"
 
 // Animation
 #include "PlayerAnimInstance.h"
@@ -122,6 +124,8 @@ APlayerCharacter::APlayerCharacter()
 	//================= Voice Pack ================
 	VoiceComp = CreateDefaultSubobject<UVoiceComponent>(TEXT("VoiceComponent"));
 	VoiceComp->SetIsReplicated(true);
+
+	FlashDroneComponent = CreateDefaultSubobject<UDR_FlashDroneComponent>(TEXT("FlashDroneComp"));
 }
 
 #pragma endregion
@@ -180,6 +184,12 @@ void APlayerCharacter::BeginPlay()
 		Health = MaxHealth;
 		Shield = MaxShield;
 	}
+
+	if (HasAuthority() && FlashDroneComponent)
+	{
+		FActorSpawnParameters SpawnParams;
+		SpawnParams.Owner = this;
+	}
 }
 void APlayerCharacter::PossessedBy(AController* NewController)
 {
@@ -237,6 +247,16 @@ void APlayerCharacter::Tick(float DeltaTime)
 	if (!bIsCrouched)
 	{
 		HandleHeadBob(DeltaTime);
+	}
+
+	if (IsLocallyControlled() && FlashDroneComponent)
+	{
+		if (ADR_FlashDrone* Drone = FlashDroneComponent->GetFlashDrone())
+		{
+			const FVector AimTarget = (Combat && Combat->bAiming) ? Combat->HitTarget
+				: FVector::ZeroVector;
+			Drone->SetAimTarget(AimTarget);
+		}
 	}
 
 	PollInit();
@@ -651,6 +671,7 @@ void APlayerCharacter::AimButtonPressed()
 	{
 		Combat->SetAiming(true);
 	}
+
 }
 void APlayerCharacter::AimButtonReleased()
 {
@@ -663,6 +684,13 @@ void APlayerCharacter::AimButtonReleased()
 
 void APlayerCharacter::FlashButtonPressed()
 {
+	if (!FlashDroneComponent) return;
+
+	if (ADR_FlashDrone* Drone = FlashDroneComponent->GetFlashDrone())
+	{
+		bFlashLightOn = !bFlashLightOn;          // 토글
+		Drone->ToggleFlash(bFlashLightOn);       // 앞서 만든 RPC 호출
+	}
 }
 #pragma endregion
 
