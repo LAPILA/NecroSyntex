@@ -77,14 +77,6 @@
 		{
 			"Name": "OnlineServicesNull",
 			"Enabled": true
-		},
-		{
-			"Name": "AdvancedSteamSessions",
-			"Enabled": true
-		},
-		{
-			"Name": "AdvancedSessions",
-			"Enabled": true
 		}
 	],
 	"TargetPlatforms": [
