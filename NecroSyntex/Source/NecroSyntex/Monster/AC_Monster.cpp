@@ -2,6 +2,19 @@
 
 
 #include "AC_Monster.h"
-#include "NecroSyntex/Mission/MissionComp.h"
+#include "NecroSyntex/Monster/TenAxe_MonsterAI.h"
+#include "NecroSyntex/Monster/BasicMonsterAI.h"
 #include "GameFramework/Pawn.h"
 
+void AAC_Monster::CallFindPlayer()
+{
+    APawn* ControlledPawn = GetPawn();
+    
+    if (!ControlledPawn) {
+        return;
+    }
+
+    if (ATenAxe_MonsterAI* TenAxePawn = Cast<ATenAxe_MonsterAI>(ControlledPawn)) {
+        TenAxePawn->FindPlayer();
+    }
+}

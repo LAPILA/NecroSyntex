@@ -27,4 +27,7 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FVector NoiseLocation;
+
+	UFUNCTION(BlueprintCallable)
+	void CallFindPlayer();
 };

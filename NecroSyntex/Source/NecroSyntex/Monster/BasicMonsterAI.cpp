@@ -42,6 +42,16 @@ ABasicMonsterAI::ABasicMonsterAI()
 	isCanAttack = false;
 }
 
+void ABasicMonsterAI::FuncScream()
+{
+	ScreamStart.Broadcast();
+}
+
+void ABasicMonsterAI::FindPlayer()
+{
+	FuncScream();
+}
+
 // Called when the game starts or when spawned
 void ABasicMonsterAI::BeginPlay()
 {

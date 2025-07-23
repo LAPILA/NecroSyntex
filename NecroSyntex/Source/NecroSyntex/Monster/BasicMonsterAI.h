@@ -11,6 +11,8 @@
 #include "NecroSyntex/Interfaces/InteractWithCrossHairsInterface.h"
 #include "BasicMonsterAI.generated.h"
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FScreamStartEvent);
+
 UCLASS()
 class NECROSYNTEX_API ABasicMonsterAI : public ACharacter, public IInteractWithCrossHairsInterface
 {
@@ -94,6 +96,15 @@ public:
 
 	UFUNCTION()
 	void MonsterStopMove();
+
+	UPROPERTY(BlueprintAssignable)
+	FScreamStartEvent ScreamStart;
+
+	UFUNCTION()
+	void FuncScream();
+
+	UFUNCTION(BlueprintCallable)
+	void FindPlayer();
 
 protected:
 	// Called when the game starts or when spawned
