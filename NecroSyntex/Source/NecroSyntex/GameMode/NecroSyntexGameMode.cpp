@@ -261,22 +261,22 @@ void ANecroSyntexGameMode::PostLogin(APlayerController* NewPlayer)
 {
 	Super::PostLogin(NewPlayer);
 
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Post Login 작동 1"));
+	//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Post Login 작동 1"));
 
-	ANecroSyntexPlayerController* PC = Cast<ANecroSyntexPlayerController>(NewPlayer);
-	if (PC)
-	{
-		if (ANecroSyntexGameState* GS = GetGameState<ANecroSyntexGameState>())
-		{
-			GS->TotalPlayer++;
-			GS->SurvivingPlayer = GS->TotalPlayer;
-		}
+	//ANecroSyntexPlayerController* PC = Cast<ANecroSyntexPlayerController>(NewPlayer);
+	//if (PC)
+	//{
+	//	if (ANecroSyntexGameState* GS = GetGameState<ANecroSyntexGameState>())
+	//	{
+	//		GS->TotalPlayer++;
+	//		GS->SurvivingPlayer = GS->TotalPlayer;
+	//	}
 
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Post Login 작동 2"));
+	//	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Post Login 작동 2"));
 
-		PC->GetInstanceAndSetSelectedCharacter();//요거 주석 처리하면 멀티 가능.
-		SelectAndReadyComplete();//요거 주석 처리하면 멀티가능.
-	}
+	//	PC->GetInstanceAndSetSelectedCharacter();//요거 주석 처리하면 멀티 가능.
+	//	SelectAndReadyComplete();//요거 주석 처리하면 멀티가능.
+	//}
 
 }
 
