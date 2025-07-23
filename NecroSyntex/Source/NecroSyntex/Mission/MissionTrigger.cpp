@@ -77,12 +77,6 @@ void AMissionTrigger::Tick(float DeltaTime)
 
 void AMissionTrigger::OnBoxTriggerOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	if (HasAuthority()) {
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Server : In``"));
-	}
-	else {
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Client : In``"));
-	}
 
 	if (!HasAuthority()) return;
 
@@ -93,9 +87,13 @@ void AMissionTrigger::OnBoxTriggerOverlapBegin(UPrimitiveComponent* OverlappedCo
 	{
 		PlayerInTrigger++;
 
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Mission Trigger 1"));
+
 		ANecroSyntexGameState* GS = Cast<ANecroSyntexGameState>(GetWorld()->GetGameState());
 		if (GS && !GS->OngoingMission)
 		{
+
+			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Mission Trigger 2"));
 
 			if (GS->TotalPlayer == PlayerInTrigger)
 			{
@@ -107,6 +105,8 @@ void AMissionTrigger::OnBoxTriggerOverlapBegin(UPrimitiveComponent* OverlappedCo
 
 					//미션 시작 카운터 다운 시작 (도중에 영역 나가면 타이머 취소 및 초기화)
 					GM->MissionManager->MissionCountdownStart();
+
+					GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Mission Trigger 3"));
 
 					/*GetWorld()->GetTimerManager().SetTimer(
 						TriggerTimer,
