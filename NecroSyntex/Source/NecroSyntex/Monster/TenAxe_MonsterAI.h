@@ -20,5 +20,10 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void UpdateMaxWalkSpeed(float inputSpeed);
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
+	UAnimMontage* ScreamMontage;
+
+	UFUNCTION(BlueprintCallable)
+	void PlayScreamAnimation();
 	
 };

@@ -16,4 +16,12 @@ void ATenAxe_MonsterAI::UpdateMaxWalkSpeed(float inputSpeed)
 	}
 }
 
+void ATenAxe_MonsterAI::PlayScreamAnimation()
+{
+	if (HitReactionMontage && GetMesh() && GetMesh()->GetAnimInstance()) {
+		GetMesh()->GetAnimInstance()->Montage_Play(ScreamMontage);
+	}
+}
+
+
 
