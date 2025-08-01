@@ -32,7 +32,7 @@ public:
 	void Multicast_PlaySkillAttackAnimation();
 
 	UFUNCTION()
-	void SkillCoolTime();
+	void SkillCoolTime(); //attack skill cooltime.
 
 	UPROPERTY()
 	FTimerHandle MonsterSkillCoolTime;
