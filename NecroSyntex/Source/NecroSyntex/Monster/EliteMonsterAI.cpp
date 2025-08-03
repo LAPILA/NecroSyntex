@@ -3,6 +3,7 @@
 #include "EliteMonsterAI.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Animation/AnimInstance.h"
+#include "MonsterAnimInstance.h"
 #include "NecroSyntex/Monster/MonsterAnimInstance.h"
 #include "Components/BoxComponent.h"
 
@@ -87,27 +88,11 @@ void AEliteMonsterAI::OnSkillAreaOverlapBegin(UPrimitiveComponent* OverlappedCom
 		if (!OverlappingPlayers.Contains(OtherActor)) {
 			OverlappingPlayers.Add(OtherActor);
 		}
-		if (CanSkill) {
-			UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
-			UMonsterAnimInstance* MonsterAnim = Cast<UMonsterAnimInstance>(AnimInstance);
-			MonsterAnim->isSkillAttackTime = true;
-
-			if (MonsterAnim->isSkillAttackTime) {
-				CanAttack = false;
-
-				MonsterStopMove();
-
-				PlaySkillAttackAnimation();
-
-				GetWorld()->GetTimerManager().SetTimer(SpeedRestoreTimerHandle, this, &AEliteMonsterAI::UpdateWalkSpeed, 2.3f, false);
-				GetWorld()->GetTimerManager().SetTimer(AttackRestoreTimerHandle, this, &AEliteMonsterAI::AttackCoolTime, 2.0f, false);
-			}
+		UAnimInstance* BaseAnim = GetMesh()->GetAnimInstance();
+		UMonsterAnimInstance* monsterAnim = Cast<UMonsterAnimInstance>(BaseAnim);
+		if (!monsterAnim->isScreamSkillTime) {
+			AttackSkillStart(1.0f);
 		}
-		else {
-			return;
-		}
-		CanSkill = false;
-		GetWorld()->GetTimerManager().SetTimer(MonsterSkillCoolTime, this, &AEliteMonsterAI::SkillCoolTime, SkillAttackCoolTime, false);
 	}
 }
 
@@ -132,4 +117,35 @@ TArray<AActor*>& AEliteMonsterAI::GetOverlappingPlayers()
 {
 	return OverlappingPlayers;
 }
+
+void AEliteMonsterAI::CallAttackSkill()
+{
+	if (CanSkill) {
+		UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+		UMonsterAnimInstance* MonsterAnim = Cast<UMonsterAnimInstance>(AnimInstance);
+		MonsterAnim->isSkillAttackTime = true;
+
+		if (MonsterAnim->isSkillAttackTime) {
+			CanAttack = false;
+
+			MonsterStopMove();
+
+			PlaySkillAttackAnimation();
+
+			GetWorld()->GetTimerManager().SetTimer(SpeedRestoreTimerHandle, this, &AEliteMonsterAI::UpdateWalkSpeed, 2.3f, false);
+			GetWorld()->GetTimerManager().SetTimer(AttackRestoreTimerHandle, this, &AEliteMonsterAI::AttackCoolTime, 2.0f, false);
+		}
+	}
+	else {
+		return;
+	}
+	CanSkill = false;
+	GetWorld()->GetTimerManager().SetTimer(MonsterSkillCoolTime, this, &AEliteMonsterAI::SkillCoolTime, SkillAttackCoolTime, false);
+}
+
+void AEliteMonsterAI::AttackSkillStart(float delayTime)
+{
+	GetWorld()->GetTimerManager().SetTimer(skillDelayTime, this, &AEliteMonsterAI::CallAttackSkill, delayTime, false);
+}
+
 
