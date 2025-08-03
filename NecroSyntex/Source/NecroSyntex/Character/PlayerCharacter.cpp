@@ -126,6 +126,9 @@ APlayerCharacter::APlayerCharacter()
 	VoiceComp->SetIsReplicated(true);
 
 	FlashDroneComponent = CreateDefaultSubobject<UDR_FlashDroneComponent>(TEXT("FlashDroneComp"));
+
+	bReplicates = true;
+	SetReplicateMovement(true);
 }
 
 #pragma endregion
@@ -335,67 +338,7 @@ void APlayerCharacter::Move(const FInputActionValue& Value)
 		const FVector ForwardDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
 		const FVector RightDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
 
-		float TargetSpeed = WalkSpeed;
-
-		// 상태 기반
-		if (bIsCrouched)
-		{
-			TargetSpeed = CrouchSpeed;
-		}
-		else if (Combat && Combat->bAiming)
-		{
-			TargetSpeed = AimWalkSpeed;
-		}
-		else if (IsLocallyReloading())
-		{
-			TargetSpeed = WalkSpeed * 0.6f;
-		}
-		else if (bIsSprinting || bWantsToSprint)
-		{
-			if (MovementVector.Y >= 0.5f)
-			{
-				bIsSprinting = true;
-				TargetSpeed = RunningSpeed;
-			}
-			else
-			{
-				bIsSprinting = false;
-				TargetSpeed = WalkSpeed;
-			}
-		}
-
-		// 방향 감속
-		if (!bIsSprinting)
-		{
-			if (MovementVector.Y < -0.1f)
-			{
-				TargetSpeed *= 0.6f;
-			}
-			else if (FMath::Abs(MovementVector.X) > 0.1f && FMath::Abs(MovementVector.Y) < 0.2f)
-			{
-				TargetSpeed *= 0.75f;
-			}
-		}
-		else
-		{
-			if (MovementVector.Y < 0.5f)
-			{
-				TargetSpeed *= 0.9f;
-			}
-		}
-
-		if (HasAuthority())
-		{
-			GetCharacterMovement()->MaxWalkSpeed = TargetSpeed;
-		}
-		else
-		{
-			static float SmoothedSpeed = WalkSpeed;
-			const float InterpSpeed = 10.f;
-			SmoothedSpeed = FMath::FInterpTo(SmoothedSpeed, TargetSpeed, GetWorld()->GetDeltaSeconds(), InterpSpeed);
-			GetCharacterMovement()->MaxWalkSpeed = SmoothedSpeed;
-		}
-
+		// 클라는 AddMovementInput만.
 		AddMovementInput(ForwardDirection, MovementVector.Y);
 		AddMovementInput(RightDirection, MovementVector.X);
 	}
@@ -406,66 +349,67 @@ void APlayerCharacter::SprintStart()
 	if (bDisableGameplay) return;
 
 	bWantsToSprint = true;
+	if (!HasAuthority())
+	{
+		// 클라 예측 반영
+		bIsSprinting = true;
+		GetCharacterMovement()->MaxWalkSpeed = RunningSpeed;
+		ServerSprintStart();
+		return;
+	}
 
 	if (!bIsSprinting && GetVelocity().Size() > 0.f)
 	{
 		bIsSprinting = true;
-
-		if (HasAuthority())
-		{
-			GetCharacterMovement()->MaxWalkSpeed = RunningSpeed;
-		}
-		else
-		{
-			ServerSprintStart();
-		}
+		GetCharacterMovement()->MaxWalkSpeed = RunningSpeed;
 	}
 }
-
 void APlayerCharacter::SprintStop()
 {
 	if (bDisableGameplay) return;
 
 	bWantsToSprint = false;
+	if (!HasAuthority())
+	{
+		// 클라 예측 반영
+		bIsSprinting = false;
+		GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
+		ServerSprintStop();
+		return;
+	}
 
 	if (bIsSprinting)
 	{
 		bIsSprinting = false;
-
-		if (HasAuthority())
-		{
-			GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
-		}
-		else
-		{
-			ServerSprintStop();
-		}
+		GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
 	}
 }
 
+
 void APlayerCharacter::ServerSprintStart_Implementation()
 {
-	GetCharacterMovement()->MaxWalkSpeed = RunningSpeed;
+	SprintStart();
 }
-
 void APlayerCharacter::ServerSprintStop_Implementation()
 {
-	GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
+	SprintStop();
 }
+bool APlayerCharacter::ServerSprintStart_Validate() { return true; }
+bool APlayerCharacter::ServerSprintStop_Validate() { return true; }
 
-bool APlayerCharacter::ServerSprintStart_Validate()
-{
-	return true;
-}
-
-bool APlayerCharacter::ServerSprintStop_Validate()
-{
-	return true;
-}
 
 void APlayerCharacter::CrouchButtonPressed()
 {
-	if (bDisableGameplay || Combat->CombatState != ECombatState::ECS_Unoccupied) return;
+	if (bDisableGameplay) return;
+	if (Combat->CombatState == ECombatState::ECS_ThrowingGrenade) return;
+
+	if (!HasAuthority())
+	{
+		if (bIsCrouched) UnCrouch();
+		else Crouch();
+		ServerCrouchButtonPressed();
+		return;
+	}
 
 	if (bIsCrouched)
 	{
@@ -478,6 +422,13 @@ void APlayerCharacter::CrouchButtonPressed()
 		GetCharacterMovement()->MaxWalkSpeed = CrouchSpeed;
 	}
 }
+
+void APlayerCharacter::ServerCrouchButtonPressed_Implementation()
+{
+	CrouchButtonPressed();
+}
+bool APlayerCharacter::ServerCrouchButtonPressed_Validate() { return true; }
+
 #pragma endregion
 
 #pragma region Combat Actions
@@ -1480,13 +1431,9 @@ void APlayerCharacter::OnRep_ReplicatedMovement()
 	TimeSinceLastMovementReplication = 0.f;
 }
 
-void APlayerCharacter::OnRep_bIsSprinting()
+void APlayerCharacter::OnRep_IsSprinting()
 {
-	if (!IsLocallyControlled())
-	{
-		GetCharacterMovement()->MaxWalkSpeed =
-			bIsSprinting ? RunningSpeed : WalkSpeed;
-	}
+	GetCharacterMovement()->MaxWalkSpeed = bIsSprinting ? RunningSpeed : WalkSpeed;
 }
 
 void APlayerCharacter::OnRep_OverlappingWeapon(AWeapon* LastWeapon)
