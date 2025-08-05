@@ -60,4 +60,12 @@ public:
 
 	UPROPERTY()
 	bool CanSkill;
+
+	UFUNCTION()
+	void CallAttackSkill();
+
+	UFUNCTION(BlueprintCallable)
+	void AttackSkillStart(float delayTime);
+
+	FTimerHandle skillDelayTime;
 };

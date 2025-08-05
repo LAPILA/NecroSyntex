@@ -100,11 +100,19 @@ public:
 	UPROPERTY(BlueprintAssignable)
 	FScreamStartEvent ScreamStart;
 
+	//ScreamStart event broadcast.
 	UFUNCTION()
 	void FuncScream();
 
+	//플레이어 발견 시 FuncScream()호출을 위한 함수.
 	UFUNCTION(BlueprintCallable)
 	void FindPlayer();
+
+	//포효 스킬 시 즉시 사용이 아닌 일정 시간 이후에 사용하도록 하기 위한 함수.
+	UFUNCTION(BlueprintCallable)
+	void StartScreamTime(float delayTime);
+
+	FTimerHandle ScreamStartPoint;
 
 protected:
 	// Called when the game starts or when spawned

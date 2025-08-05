@@ -225,6 +225,9 @@ protected:
 	UFUNCTION(Server, Reliable, WithValidation)
 	void ServerSprintStop();
 
+	UFUNCTION(Server, Reliable, WithValidation)
+	void ServerCrouchButtonPressed();
+
 	/**
 	* Hit boxes used for server-side rewind
 	*/
@@ -280,14 +283,15 @@ protected:
 	UPROPERTY(EditAnywhere)
 	UBoxComponent* foot_r;
 
-	UPROPERTY(ReplicatedUsing = OnRep_bIsSprinting)
+	UPROPERTY(ReplicatedUsing = OnRep_IsSprinting)
 	bool bIsSprinting;
 
 	bool bWantsToSprint = false;
 
-	UFUNCTION()
-	void OnRep_bIsSprinting();
 private:
+	UFUNCTION()
+	void OnRep_IsSprinting();
+
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera", meta = (AllowPrivateAccess = "true"))
     class USpringArmComponent* CameraBoom;
 

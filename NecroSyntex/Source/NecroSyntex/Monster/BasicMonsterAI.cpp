@@ -42,16 +42,6 @@ ABasicMonsterAI::ABasicMonsterAI()
 	isCanAttack = false;
 }
 
-void ABasicMonsterAI::FuncScream()
-{
-	ScreamStart.Broadcast();
-}
-
-void ABasicMonsterAI::FindPlayer()
-{
-	FuncScream();
-}
-
 // Called when the game starts or when spawned
 void ABasicMonsterAI::BeginPlay()
 {
@@ -98,17 +88,12 @@ float ABasicMonsterAI::TakeDamage_Implementation(float DamageAmount, FDamageEven
 	}
 
 	GetWorld()->GetTimerManager().SetTimer(AttackRestoreTimerHandle, this, &ABasicMonsterAI::AttackCoolTime, 0.02f, false);
-	//if (GEngine)
-	//{
-	//	FString DamageText = FString::Printf(TEXT("Taked : %f"), DamageAmount + DPA->DopingDamageBuff);
-	//	GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, DamageText);
-	//}
+	
 	MonsterHP -= DamageAmount + DPA->DopingDamageBuff;
 	
 	if (!valueStopAnimationSound) {
 		valueStopAnimationSound = true;
 		if (DamageAmount > 0) {//Refactoring Need..
-			//UGameplayStatics::PlaySoundAtLocation(this, HitSound, GetActorLocation());
 			PlayHitAnimation();
 			DelayedAnimationSound(0.6f);
 		}
@@ -271,19 +256,6 @@ void ABasicMonsterAI::DestroyMonster()
 	Destroy();
 }
 
-//void ABasicMonsterAI::Attack_Player()//c++로 구현 시도했지만 블프로 이미 해둬서 패스 playx4 이후로 삭제 예정.
-//{
-//	//AttackPlayer();
-//	/*if (AttackMontage) {
-//		UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
-//		if (AnimInstance) {
-//			AnimInstance->Montage_Play(AttackMontage);
-//			UE_LOG(LogTemp, Warning, TEXT("Playing Attack Montage"));
-//		}
-//	}
-//	MoveToPlayer();*/
-//}
-
 void ABasicMonsterAI::MoveToPlayer()
 {
 	APlayerCharacter* Player = Cast<APlayerCharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
@@ -312,19 +284,9 @@ void ABasicMonsterAI::MoveToPlayer()
 			if (MeleeAttack) {//비교적 근접 공격을 하는 경우.
 				//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("move success~~~~~~~~``"));
 				AIController->MoveToActor(Player, MonsterDistance, true, true, true, 0, true);
-				//UE_LOG(LogTemp, Warning, TEXT("Moving to Player 0511"));
-				//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("moveto"));
-				/*if(AIController->MoveToActor(Player, MonsterDistance, true, true, true, 0, true)) {
-					GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("success~~~~~~~~``"));
-				}
-				else {
-					GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("fail~~~~~~~~~~~~"));
-				}*/
 			}
 			else {
-				//UE_LOG(LogTemp, Warning, TEXT("Moving to Player 0511 2"));
 				AIController->MoveToActor(Player, 150.0f, true, true, true, 0, true);
-				//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("move to end~~~~~~~~~~~~~"));
 			}
 		}
 	}
@@ -353,4 +315,21 @@ void ABasicMonsterAI::AttackOverlap(AActor* OtherActor)
 			}
 		}
 	}
+}
+
+void ABasicMonsterAI::FuncScream()
+{
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("scream broadcast "));
+	ScreamStart.Broadcast();
+}
+
+void ABasicMonsterAI::FindPlayer()
+{
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("scream call"));
+	FuncScream();
+}
+
+void ABasicMonsterAI::StartScreamTime(float delayTime)
+{
+	GetWorld()->GetTimerManager().SetTimer(ScreamStartPoint, this, &ABasicMonsterAI::FuncScream, delayTime, false);
 }
