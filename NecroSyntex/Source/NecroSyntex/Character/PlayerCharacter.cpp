@@ -294,6 +294,7 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent)) {
 
 		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &APlayerCharacter::Move);
+		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &APlayerCharacter::Look);
 		EnhancedInputComponent->BindAction(EquipAction, ETriggerEvent::Triggered, this, &APlayerCharacter::EquipButtonPressed);
 		EnhancedInputComponent->BindAction(CrouchAction, ETriggerEvent::Started, this, &APlayerCharacter::CrouchButtonPressed);
 		EnhancedInputComponent->BindAction(AimAction, ETriggerEvent::Started, this, &APlayerCharacter::AimButtonPressed);
@@ -343,6 +344,36 @@ void APlayerCharacter::Move(const FInputActionValue& Value)
 		AddMovementInput(RightDirection, MovementVector.X);
 	}
 }
+
+void APlayerCharacter::Look(const FInputActionValue& Value)
+{
+	if (bDisableGameplay) return;
+	FVector2D LookInput = Value.Get<FVector2D>();
+
+	// 서버에 회전 입력 전송 (본인 컨트롤일 때만)
+	if (Controller && IsLocallyControlled())
+	{
+		ServerUpdateLook(LookInput.X, LookInput.Y);
+
+		AddControllerYawInput(LookInput.X);
+		AddControllerPitchInput(LookInput.Y);
+	}
+}
+
+void APlayerCharacter::ServerUpdateLook_Implementation(float YawInput, float PitchInput)
+{
+	if (Controller)
+	{
+		FRotator NewRotation = Controller->GetControlRotation();
+		NewRotation.Yaw += YawInput;
+		NewRotation.Pitch = FMath::Clamp(NewRotation.Pitch + PitchInput, -89.f, 89.f);
+		Controller->SetControlRotation(NewRotation);
+
+		// **핵심: RootComponent(캡슐)의 회전도 변경해야 복제된다**
+		SetActorRotation(FRotator(0.f, NewRotation.Yaw, 0.f));
+	}
+}
+bool APlayerCharacter::ServerUpdateLook_Validate(float, float) { return true; }
 
 void APlayerCharacter::SprintStart()
 {
