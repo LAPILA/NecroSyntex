@@ -353,8 +353,11 @@ void APlayerCharacter::Look(const FInputActionValue& Value)
 	// 서버에 회전 입력 전송 (본인 컨트롤일 때만)
 	if (Controller && IsLocallyControlled())
 	{
-		ServerUpdateLook(LookInput.X, LookInput.Y);
-
+		if (!HasAuthority()) {
+			ServerUpdateLook(LookInput.X, LookInput.Y);
+		}
+		//ServerUpdateLook(LookInput.X, LookInput.Y);
+		
 		AddControllerYawInput(LookInput.X);
 		AddControllerPitchInput(LookInput.Y);
 	}
