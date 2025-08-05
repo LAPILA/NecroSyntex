@@ -20,6 +20,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Components")
 	class UBoxComponent* SkillAttackArea;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Components")
+	class USphereComponent* ScreamSkillArea;
+
 	virtual void BeginPlay() override;
 
 	UFUNCTION(BlueprintCallable)
@@ -51,6 +54,18 @@ public:
 
 	UFUNCTION()
 	TArray<AActor*>& GetOverlappingPlayers();
+
+	UFUNCTION()
+	void OnScreamSkillAreaOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+
+	UFUNCTION()
+	void OnScreamSkillAreaOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
+
+	UPROPERTY()
+	TArray<AActor*> ScreamOverlappingPlayers;
+
+	UFUNCTION()
+	TArray<AActor*>& GetScreamOverlappingPlayers();
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Skill")
 	float SkillAttackCoolTime;
