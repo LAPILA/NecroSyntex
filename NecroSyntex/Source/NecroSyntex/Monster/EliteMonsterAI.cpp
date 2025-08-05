@@ -6,6 +6,7 @@
 #include "MonsterAnimInstance.h"
 #include "NecroSyntex/Monster/MonsterAnimInstance.h"
 #include "Components/BoxComponent.h"
+#include "Components/SphereComponent.h"
 
 AEliteMonsterAI::AEliteMonsterAI()
 {
@@ -24,6 +25,16 @@ AEliteMonsterAI::AEliteMonsterAI()
 	SkillAttackArea->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
 	//SkillAttackArea->SetGenerateOverlapEvents(true);
 	
+	ScreamSkillArea = CreateDefaultSubobject<USphereComponent>(TEXT("ScreamArea"));
+	ScreamSkillArea->SetupAttachment(RootComponent);
+	ScreamSkillArea->SetCollisionProfileName(TEXT("ScreamTrigger"));
+	ScreamSkillArea->SetGenerateOverlapEvents(true);
+	ScreamSkillArea->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+	ScreamSkillArea->SetCollisionObjectType(ECC_WorldDynamic);
+	ScreamSkillArea->SetCollisionResponseToAllChannels(ECR_Ignore);
+	ScreamSkillArea->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
+
+
 	MonsterHP = 100.0f;
 	MonsterAD = 20.0f;
 	ChaseSpeed = 0.0f;
@@ -53,6 +64,15 @@ void AEliteMonsterAI::BeginPlay()
 	else {
 		UE_LOG(LogTemp, Warning, TEXT("SkillAttackArea is nullptr"));
 	}
+
+	if (ScreamSkillArea) {
+		ScreamSkillArea->OnComponentBeginOverlap.AddDynamic(this, &AEliteMonsterAI::OnScreamSkillAreaOverlapBegin);
+		ScreamSkillArea->OnComponentEndOverlap.AddDynamic(this, &AEliteMonsterAI::OnScreamSkillAreaOverlapEnd);
+	}
+	else {
+		UE_LOG(LogTemp, Warning, TEXT("ScreamSkillArea is nullptr"));
+	}
+
 }
 
 void AEliteMonsterAI::UpdateMoveSpeed(float inputSpeed)
@@ -116,6 +136,36 @@ void AEliteMonsterAI::SkillCoolTime()
 TArray<AActor*>& AEliteMonsterAI::GetOverlappingPlayers()
 {
 	return OverlappingPlayers;
+}
+
+void AEliteMonsterAI::OnScreamSkillAreaOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Overlap!!!!!!!!!!!"));
+	if (MonsterHP <= 0) {
+		UE_LOG(LogTemp, Warning, TEXT("No Skill"));
+		return;
+	}
+
+	if (OtherActor && OtherActor != this && OtherActor->ActorHasTag("Player")) {
+		if (!ScreamOverlappingPlayers.Contains(OtherActor)) {
+			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("inin Overlap!!!!!!!!!!!"));
+			ScreamOverlappingPlayers.Add(OtherActor);
+		}
+	}
+}
+
+void AEliteMonsterAI::OnScreamSkillAreaOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
+{
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("OverlapEND!!!!!!!!!!!"));
+	if (ScreamOverlappingPlayers.Contains(OtherActor)) {
+		ScreamOverlappingPlayers.Remove(OtherActor);
+	}
+}
+
+TArray<AActor*>& AEliteMonsterAI::GetScreamOverlappingPlayers()
+{
+	return ScreamOverlappingPlayers;
+	// TODO: 여기에 return 문을 삽입합니다.
 }
 
 void AEliteMonsterAI::CallAttackSkill()
