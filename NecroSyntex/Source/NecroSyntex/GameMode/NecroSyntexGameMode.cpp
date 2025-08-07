@@ -261,22 +261,7 @@ void ANecroSyntexGameMode::PostLogin(APlayerController* NewPlayer)
 {
 	Super::PostLogin(NewPlayer);
 
-	//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Post Login 작동 1"));
-
-	//ANecroSyntexPlayerController* PC = Cast<ANecroSyntexPlayerController>(NewPlayer);
-	//if (PC)
-	//{
-	//	if (ANecroSyntexGameState* GS = GetGameState<ANecroSyntexGameState>())
-	//	{
-	//		GS->TotalPlayer++;
-	//		GS->SurvivingPlayer = GS->TotalPlayer;
-	//	}
-
-	//	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Post Login 작동 2"));
-
-	//	PC->GetInstanceAndSetSelectedCharacter();//요거 주석 처리하면 멀티 가능.
-	//	SelectAndReadyComplete();//요거 주석 처리하면 멀티가능.
-	//}
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Post Login 작동 1"));
 
 }
 
@@ -286,7 +271,52 @@ void ANecroSyntexGameMode::HandleStartingNewPlayer_Implementation(APlayerControl
 
 	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("HandleStartingNewPlayer 작동 1"));
 
-	ANecroSyntexPlayerController* PC = Cast<ANecroSyntexPlayerController>(NewPlayer);
+	ANecroSyntexPlayerController* NSPC = Cast<ANecroSyntexPlayerController>(NewPlayer);
+	if (!NSPC) {
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("none NSPC"));
+		return;
+	}
+
+	NSPC->GetInstanceAndSetSelectedCharacter();
+
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Playerselected set 작동"));
+
+	ANecroSyntexPlayerState* NSPS = NSPC->GetPlayerState<ANecroSyntexPlayerState>();
+	if (APawn* OldPawn = NSPC->GetPawn()) {
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("oldpawn destroy 작동"));
+		OldPawn->Destroy();
+	}
+
+	if (NSPS && NSPS->SelectedCharacterClass) {
+
+		TSubclassOf<APawn> OldDefault = DefaultPawnClass;
+		DefaultPawnClass = NSPS->SelectedCharacterClass;
+
+		TArray<AActor*> PlayerStarts;
+		UGameplayStatics::GetAllActorsOfClass(this, APlayerStart::StaticClass(), PlayerStarts);
+
+		if (PlayerStarts.Num() > 0)
+		{
+			AActor* ChosenStart = PlayerStarts[FMath::RandRange(0, PlayerStarts.Num() - 1)];
+			RestartPlayerAtPlayerStart(NSPC, ChosenStart);
+		}
+		else {
+			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("PlayerStarts Zero"));
+			return;
+		}
+
+
+		if (APlayerCharacter* NewCharacter = Cast<APlayerCharacter>(NSPC->GetPawn())) {
+			NSPC->ClientRestart(NewCharacter);
+			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("NewVer ClientRestart"));
+		}
+	}
+	else {
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("NSPS selected character 없음"));
+	}
+
+
+	/*ANecroSyntexPlayerController* PC = Cast<ANecroSyntexPlayerController>(NewPlayer);
 	if (PC)
 	{
 		if (ANecroSyntexGameState* GS = GetGameState<ANecroSyntexGameState>())
@@ -297,9 +327,9 @@ void ANecroSyntexGameMode::HandleStartingNewPlayer_Implementation(APlayerControl
 
 		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("HandleStartingNewPlayer 작동 2"));
 
-		PC->GetInstanceAndSetSelectedCharacter();//요거 주석 처리하면 멀티 가능.
-		SelectAndReadyComplete();//요거 주석 처리하면 멀티가능.
-	}
+		PC->GetInstanceAndSetSelectedCharacter();
+		SelectAndReadyComplete();
+	}*/
 }
 
 void ANecroSyntexGameMode::SelectAndReadyComplete_Implementation()
@@ -311,24 +341,11 @@ void ANecroSyntexGameMode::SelectAndReadyComplete_Implementation()
 
 }
 
-void ANecroSyntexGameMode::ShowCharacterSelectionUI()
-{
-	// 현재 접속한 모든 플레이어 컨트롤러 가져오기
-	for (FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
-	{
-		ANecroSyntexPlayerController* PC = Cast<ANecroSyntexPlayerController>(*It);
-		if (PC)
-		{
-			PC->ShowCharacterSelectUI(); // 클라이언트에서 UI 띄우기
-		}
-	}
-}
-
 void ANecroSyntexGameMode::CheckAllPlayersReady()
 {
 	if (ANecroSyntexGameState* GS = GetGameState<ANecroSyntexGameState>())
 	{
-		if (PlayersReadyCount >= GS->TotalPlayer) {
+		if (PlayersReadyCount >= GS->PlayerArray.Num()) {
 			SetupPlayers();
 		}
 	}

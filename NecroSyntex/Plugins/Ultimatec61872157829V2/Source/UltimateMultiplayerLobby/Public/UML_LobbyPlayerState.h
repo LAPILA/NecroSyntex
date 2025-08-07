@@ -22,7 +22,7 @@ public:
 	void ServerSetReady(bool bReady);
 	
 	UPROPERTY(BlueprintReadWrite, ReplicatedUsing=OnRep_bIsReady, Category = "Ultimate Game Menu|Player State")
-	bool bIsReady = true; //기존은 false
+	bool bIsReady = false; //기존은 false
 
 	UFUNCTION()
 	void OnRep_bIsReady();

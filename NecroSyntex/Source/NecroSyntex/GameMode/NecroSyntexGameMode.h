@@ -47,10 +47,6 @@ private:
 
 public:
 
-	//������ ���� ����
-	 // ��� �÷��̾�� ĳ���� ���� UI�� ǥ��
-	void ShowCharacterSelectionUI();
-
 	// �÷��̾ ĳ���͸� �����ϸ� ������ �˸��� �Լ�
 	UFUNCTION(Server, Reliable)
 	void SelectAndReadyComplete();
