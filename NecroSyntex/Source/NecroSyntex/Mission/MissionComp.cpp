@@ -75,7 +75,7 @@ void UMissionComp::ActiveMission()
 
     }
     else if (CurrentMissionName == "Boss") {
-
+        StartBossMission();
     }
     else {
         
@@ -123,7 +123,7 @@ void UMissionComp::CurrentMissionFail()
         DefenseMissionFail();
     }
     else if (CurrentMissionName == "Boss") {
-
+        BossMissionFail();
     }
     else {
         CurrentGameMode->LevelMissionFail();
@@ -211,9 +211,9 @@ void UMissionComp::StartDefenseMission()
 
 void UMissionComp::DefenseMissionSuccess()
 {
-    CurrentGameMode->LevelMissionSuccess();
-
     EndDefenseMission();
+
+    CurrentGameMode->LevelMissionSuccess();
 }
 
 void UMissionComp::DefenseMissionFail()
@@ -246,6 +246,33 @@ void UMissionComp::EndDefenseMission()
     CurrentGameMode->CallMissionEndEvent();
 
     GameStateAndUIUpdate(false);
+}
+
+void UMissionComp::StartBossMission()
+{
+    ActiveMonsterSpawner();
+
+    GameStateAndUIUpdate(true);
+
+    CurrentGameMode->LevelMissionStart();
+}
+
+void UMissionComp::BossMissionSuccess()
+{
+
+    CurrentGameMode->LevelMissionSuccess();
+}
+
+void UMissionComp::BossMissionFail()
+{
+
+    CurrentGameMode->LevelMissionFail();
+}
+
+void UMissionComp::EndBossMission()
+{
+
+    CurrentGameMode->CallMissionEndEvent();
 }
 
 //Game State Update
@@ -298,19 +325,3 @@ void UMissionComp::MissionCountdownCancel()
         GS->MissionCountDownBool = false;
     }
 }
-//
-//void UMissionComp::ClientStartCall_Implementation()
-//{
-//    MissionStart.Broadcast();
-//    GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("ClientCall"));
-//}
-//
-//void UMissionComp::ClientSuccessCall_Implementation()
-//{
-//    MissionSuccess.Broadcast();
-//}
-//
-//void UMissionComp::ClientFailCall_Implementation()
-//{
-//    MissionFail.Broadcast();
-//}

@@ -102,6 +102,18 @@ public:
 	UFUNCTION()
 	void EndDefenseMission();
 
+	// boss mission
+	UFUNCTION()
+	void StartBossMission();
+	UFUNCTION()
+	void BossMissionSuccess();
+	UFUNCTION()
+	void BossMissionFail();
+	UFUNCTION()
+	void EndBossMission();
+
+
+
 	class ADefenseTarget* CurrentDefenseTarget;
 
 	FTimerHandle DefenseTimerHandle;
