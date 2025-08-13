@@ -143,6 +143,23 @@ void APlayerCharacter::BeginPlay()
 		VoiceComp->VoiceSet = DefaultVoiceSet;
 	}
 
+	// Input mapping
+	if (APlayerController* PC = Cast<APlayerController>(GetController()))
+	{
+		if (UEnhancedInputLocalPlayerSubsystem* SubSys = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PC->GetLocalPlayer()))
+		{
+			SubSys->ClearAllMappings();
+			SubSys->AddMappingContext(DefaultMappingContext, 0);
+			UE_LOG(LogTemp, Warning, TEXT("AddMappingContext 확인"));
+		}
+		else {
+			UE_LOG(LogTemp, Warning, TEXT("AddMappingContext 작동X"));
+		}
+	}
+	else {
+		UE_LOG(LogTemp, Warning, TEXT("AddMapping 전 GetController 작동X"));
+	}
+
 
 	// Initialize weapons and HUD
 	SpawnDefaultWeapon();
@@ -204,23 +221,6 @@ void APlayerCharacter::PossessedBy(AController* NewController)
 	}
 	else {
 		UE_LOG(LogTemp, Error, TEXT("UDC 인식 안됨"));
-	}
-
-	// Input mapping
-	if (APlayerController* PC = Cast<APlayerController>(GetController()))
-	{
-		if (UEnhancedInputLocalPlayerSubsystem* SubSys = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PC->GetLocalPlayer()))
-		{
-			SubSys->ClearAllMappings();
-			SubSys->AddMappingContext(DefaultMappingContext, 0);
-			UE_LOG(LogTemp, Warning, TEXT("AddMappingContext 확인"));
-		}
-		else {
-			UE_LOG(LogTemp, Warning, TEXT("AddMappingContext 작동X"));
-		}
-	}
-	else {
-		UE_LOG(LogTemp, Warning, TEXT("AddMapping 전 GetController 작동X"));
 	}
 
 	bDisableGameplay = false;
