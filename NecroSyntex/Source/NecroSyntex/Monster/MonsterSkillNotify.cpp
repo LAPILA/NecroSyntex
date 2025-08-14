@@ -13,6 +13,7 @@
 #include "NecroSyntex/DopingSystem/DPParadoxofGuardianship.h"
 #include "NecroSyntex/DopingSystem/DPSolidFortress.h"
 #include "NecroSyntex/DopingSystem/DopingComponent.h"
+#include "TimerManager.h" 
 #include "Kismet/GameplayStatics.h"
 
 void UMonsterSkillNotify::Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation)
@@ -31,23 +32,32 @@ void UMonsterSkillNotify::Notify(USkeletalMeshComponent* MeshComp, UAnimSequence
 			if (player) {
 				GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("player"));
 				//player->GetCharacterMovement()->MaxWalkSpeed = 100.0f;
-				if (player->HasAuthority()) {
-					if (!player->UDC->LegEnforce->GetBuff() && !player->UDC->LegEnforce->GetDeBuff()) {
-						//평상시 감소값 + 타이머
-						GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("no buff debuff"));
-					}
-					else if (player->UDC->LegEnforce->GetBuff()) {
-						GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("use buff"));
-						player->WalkSpeed -= 300.0f;
-						player->RunningSpeed -= 300.0f;
-						//+ 타이머
-					}
-					else if (player->UDC->LegEnforce->GetDeBuff()) {
-						GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("use debuff"));
-						player->WalkSpeed -= 300.0f;
-						player->RunningSpeed -= 300.0f;
-						//+ 타이머
-					}
+				originWalkSpeed = player->WalkSpeed;
+				originRunningSpeed = player->RunningSpeed;
+				targetPlayer.Add(player);
+				
+				if (!player->UDC->LegEnforce->GetBuff() && !player->UDC->LegEnforce->GetDeBuff()) {
+					//평상시 감소값 + 타이머
+					GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("no buff debuff"));
+					slowWalkSpeed = FMath::Max(0.0f, originWalkSpeed - 300.0f);
+					slowRunningSpeed = FMath::Max(0.0f, originRunningSpeed - 300.0f);
+					player->GetCharacterMovement()->MaxWalkSpeed = slowWalkSpeed;
+					GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Timer start"));
+					player->GetWorldTimerManager().SetTimer(RestoreHandle, this, &UMonsterSkillNotify::RestoredSpeed, 5.0f, false);
+				}
+				else if (player->UDC->LegEnforce->GetBuff()) {
+					GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("use buff"));
+					slowWalkSpeed = FMath::Max(0.0f, originWalkSpeed - 300.0f);
+					slowRunningSpeed = FMath::Max(0.0f, originRunningSpeed - 300.0f);
+					GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Timer start"));
+					player->GetWorldTimerManager().SetTimer(RestoreHandle, this, &UMonsterSkillNotify::RestoredSpeed, 5.0f, false);
+				}
+				else if (player->UDC->LegEnforce->GetDeBuff()) {
+					GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("use debuff"));
+					slowWalkSpeed = FMath::Max(0.0f, originWalkSpeed - 300.0f);
+					slowRunningSpeed = FMath::Max(0.0f, originRunningSpeed - 300.0f);
+					GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Timer start"));
+					player->GetWorldTimerManager().SetTimer(RestoreHandle, this, &UMonsterSkillNotify::RestoredSpeed, 5.0f, false);
 				}
 			}
 			else {
@@ -58,11 +68,29 @@ void UMonsterSkillNotify::Notify(USkeletalMeshComponent* MeshComp, UAnimSequence
 	else {
 		for (AActor* Target : Monster->GetOverlappingPlayers()) {
 			//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Notify!!!"));
-			float DamageAmount = Monster->MonsterAD * 1.5; // 또는 MonsterAD
+			float DamageAmount = Monster->MonsterAD * 1.5f; // 또는 MonsterAD
 			UGameplayStatics::ApplyDamage(Target, DamageAmount, Monster->GetController(), Monster, nullptr); //targetactor, targetdamage, causercontroller, causeractor, damagetype
 			//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Damage!!!!!!!!!!"));
 		}
 	}
+}
+
+void UMonsterSkillNotify::RestoredSpeed()
+{
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("speed restored start!!!!"));
+	for (auto restorePlayer : targetPlayer) {
+		if (!restorePlayer.IsValid()) {
+			targetPlayer.Remove(restorePlayer);
+			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("failed restored speed!!!!"));
+			return;
+		}
+		restorePlayer->WalkSpeed = originWalkSpeed;
+		restorePlayer->RunningSpeed = originRunningSpeed;
+		restorePlayer->GetCharacterMovement()->MaxWalkSpeed = originWalkSpeed;
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("speed restored complete!!!!"));
+		targetPlayer.Remove(restorePlayer);
+	}
+	
 }
 
 
