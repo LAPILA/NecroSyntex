@@ -20,12 +20,6 @@ public:
 	UPROPERTY(EditAnywhere)
 	bool isScreamSkill = false;
 
-	/*UPROPERTY(EditAnywhere)
-	float decreaseSpeed;*/
-
 	UPROPERTY()
 	float reducedSpeed = 0;
-
-	//UFUNCTION(NetMulticast, Reliable, BlueprintCallable)
-	//void MulticastRestoreSpeed(AActor* Target, float speed);
 };

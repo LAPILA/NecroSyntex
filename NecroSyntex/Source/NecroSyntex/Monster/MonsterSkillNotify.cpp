@@ -6,6 +6,13 @@
 #include "EliteMonsterAI.h"
 #include "NecroSyntex/Character/PlayerCharacter.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "NecroSyntex/DopingSystem/DPFinalEmber.h"
+#include "NecroSyntex/DopingSystem/DPCurseofChaos.h"
+#include "NecroSyntex/DopingSystem/DPLegEnforce.h"
+#include "NecroSyntex/DopingSystem/DPPainless.h"
+#include "NecroSyntex/DopingSystem/DPParadoxofGuardianship.h"
+#include "NecroSyntex/DopingSystem/DPSolidFortress.h"
+#include "NecroSyntex/DopingSystem/DopingComponent.h"
 #include "Kismet/GameplayStatics.h"
 
 void UMonsterSkillNotify::Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation)
@@ -25,20 +32,23 @@ void UMonsterSkillNotify::Notify(USkeletalMeshComponent* MeshComp, UAnimSequence
 				GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("player"));
 				//player->GetCharacterMovement()->MaxWalkSpeed = 100.0f;
 				if (player->HasAuthority()) {
-					/*float reducedSpeed = player->WalkSpeed * 0.2f;
-					player->WalkSpeed -= reducedSpeed;*/
-
-					//FTimerHandle RestoreSpeedHandle;
-					//// 복원 타이머 설정 (서버에서만)
-					//GetWorld()->GetTimerManager().SetTimer(RestoreSpeedHandle, [this, player, reducedSpeed]()
-					//	{
-					//		player->WalkSpeed += reducedSpeed;  // 타이머 종료 후 이동 속도 복원
-					//	}, 3.0f, false);
-
-					//// 클라이언트에게 이동 속도 변경을 알리는 멀티캐스트 호출
-					//MulticastRestoreSpeed(Target, reducedSpeed);
+					if (!player->UDC->LegEnforce->GetBuff() && !player->UDC->LegEnforce->GetDeBuff()) {
+						//평상시 감소값 + 타이머
+						GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("no buff debuff"));
+					}
+					else if (player->UDC->LegEnforce->GetBuff()) {
+						GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("use buff"));
+						player->WalkSpeed -= 300.0f;
+						player->RunningSpeed -= 300.0f;
+						//+ 타이머
+					}
+					else if (player->UDC->LegEnforce->GetDeBuff()) {
+						GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("use debuff"));
+						player->WalkSpeed -= 300.0f;
+						player->RunningSpeed -= 300.0f;
+						//+ 타이머
+					}
 				}
-				//GetWorld()->GetTimerManager().SetTimer(RestoreSpeedHandle, this, &AEliteMonsterAI::, 0.02f, false);
 			}
 			else {
 				GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("nonononoeeeeee"));
@@ -55,12 +65,4 @@ void UMonsterSkillNotify::Notify(USkeletalMeshComponent* MeshComp, UAnimSequence
 	}
 }
 
-//void UMonsterSkillNotify::MulticastRestoreSpeed(AActor* Target, float speed)
-//{
-//	APlayerCharacter* player = Cast<APlayerCharacter>(Target);
-//	if (player && !player->HasAuthority()) {
-//		// 클라이언트에서는 이동 속도를 복원
-//		player->WalkSpeed += speed;
-//	}
-//}
 

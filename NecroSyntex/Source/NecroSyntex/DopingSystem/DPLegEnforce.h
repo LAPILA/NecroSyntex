@@ -32,4 +32,7 @@ public:
 	void BuffOff(APlayerCharacter* DopedPC) override;
 
 	void DeBuffOff(APlayerCharacter* DopedPC) override;
+
+	virtual bool GetBuff() const override { return  CheckBuff; };
+	virtual bool GetDeBuff() const override { return CheckDeBuff; };
 };
