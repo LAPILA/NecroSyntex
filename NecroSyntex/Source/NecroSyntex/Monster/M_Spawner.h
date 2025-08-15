@@ -64,8 +64,19 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Mission")
 	FName RegionTag;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Mission")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Mission", meta = (GetOptions = "GetMissionNameOptions"))
 	FName MissionName;
+
+	UFUNCTION()
+	TArray<FName> GetMissionNameOptions() const
+	{
+		return {
+			FName("Survival"),
+			FName("Defense"),
+			FName("Rescue"),
+			FName("Boss")
+		};
+	}
 
 protected:
 	// Called when the game starts or when spawned

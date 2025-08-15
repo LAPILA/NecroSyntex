@@ -13,11 +13,13 @@ UDPPainless::UDPPainless()
 	CheckDeBuff = false;
 }
 
-void UDPPainless::UseDopingItem(APlayerCharacter* DopedPC)
+bool UDPPainless::UseDopingItem(APlayerCharacter* DopedPC)
 {
 	UE_LOG(LogTemp, Warning, TEXT("Painless Use"));
 	//효과
 	BuffOn(DopedPC);
+
+	return true;
 }
 
 
@@ -60,6 +62,23 @@ void UDPPainless::DeBuffOn(APlayerCharacter* DopedPC)
 {
 	if (CheckDeBuff == false) {
 		//체력 회복량 50% 감소?
+		if (DopedPC->Health <= 30.0f) {
+			DopedPC->Health = 1.0f;
+		}
+		else {
+			DopedPC->Health -= 30.0f;
+		}
+
+		/*if (DopedPC->Shield <= 20.0f)
+		{
+			DopedPC->Shield = 0.0f;
+		}
+		else {
+			DopedPC->Shield -= 20.0f;
+		}*/
+
+		DopedPC->UpdateHUDHealth();
+		DopedPC->UpdateHUDShield();
 
 		CheckDeBuff = true;
 	}

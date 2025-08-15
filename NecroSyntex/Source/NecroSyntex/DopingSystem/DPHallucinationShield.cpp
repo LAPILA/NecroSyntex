@@ -12,11 +12,13 @@ UDPHallucinationShield::UDPHallucinationShield()
 	CheckDeBuff = false;
 }
 
-void UDPHallucinationShield::UseDopingItem(APlayerCharacter* DopedPC)
+bool UDPHallucinationShield::UseDopingItem(APlayerCharacter* DopedPC)
 {
 	UE_LOG(LogTemp, Warning, TEXT("HallucinationShield Use"));
 	//È¿°ú
 	BuffOn(DopedPC);
+
+	return true;
 }
 
 void UDPHallucinationShield::BuffOn(APlayerCharacter* DopedPC)
@@ -28,6 +30,8 @@ void UDPHallucinationShield::BuffOn(APlayerCharacter* DopedPC)
 	else {
 		DopedPC->Shield += 50.0f;
 	}
+
+	DopedPC->UpdateHUDShield();
 
 	DeBuffOn(DopedPC);
 

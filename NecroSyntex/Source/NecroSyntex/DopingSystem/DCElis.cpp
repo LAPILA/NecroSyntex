@@ -39,6 +39,7 @@ void UDCElis::Elis_Passive_End(APlayerCharacter* HitCharacter)
 
 	OwnerCharacter->DopingDamageBuff -= 10.0f;
 	HitCharacter->DopingDamageBuff -= 10.0f;
+	passive_call = true;
 }
 
 void UDCElis::FirstDopingForAlly()
@@ -47,18 +48,15 @@ void UDCElis::FirstDopingForAlly()
 
 	AActor* Owner = GetOwner();
 	if (!Owner) return;
-
-	//UE_LOG(LogTemp, Warning, TEXT("1"));
-
+	
 	APlayerCharacter* OwnerCharacter = Cast<APlayerCharacter>(Owner);
 	if (!OwnerCharacter) return;
 
-	//UE_LOG(LogTemp, Warning, TEXT("2"));
+	
 
 	UCameraComponent* CameraComponent = OwnerCharacter->FindComponentByClass<UCameraComponent>();
 	if (!CameraComponent) return;
 
-	//UE_LOG(LogTemp, Warning, TEXT("3"));
 
 	FVector Start = CameraComponent->GetComponentLocation();
 	FVector ForwardVector = CameraComponent->GetForwardVector();
@@ -68,27 +66,41 @@ void UDCElis::FirstDopingForAlly()
 	FCollisionQueryParams Params;
 	Params.AddIgnoredActor(Owner);
 
-	//UE_LOG(LogTemp, Warning, TEXT("4"));
+	
 	if (GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_Visibility, Params))
 	{
-		//UE_LOG(LogTemp, Warning, TEXT("5"));
+		
 		APlayerCharacter* HitCharacter = Cast<APlayerCharacter>(HitResult.GetActor());
 		if (HitCharacter) {
-			//UE_LOG(LogTemp, Warning, TEXT("6"));
+
+			if (HitCharacter->CurrentDoped >= 2) {
+				return;
+			}
+
+			bool DopingUseSuccess;
+
 			switch (FirstDopingCode)
 			{
-			case 1: HitCharacter->UDC->LegEnforce->BuffOn(HitCharacter); UE_LOG(LogTemp, Warning, TEXT("7��")); break;
-			case 2: HitCharacter->UDC->ReducePain->BuffOn(HitCharacter); break;
-			case 3: HitCharacter->UDC->SupremeStrength->BuffOn(HitCharacter); break;
-			case 4: HitCharacter->UDC->ForcedHealing->BuffOn(HitCharacter); break;
-			case 5: HitCharacter->UDC->FinalEmber->BuffOn(HitCharacter); break;
-			case 6: HitCharacter->UDC->BurningFurnace->BuffOn(HitCharacter); break;
-			case 7: HitCharacter->UDC->SolidFortress->BuffOn(HitCharacter); break;
-			case 8: HitCharacter->UDC->Painless->BuffOn(HitCharacter); break;
+			case 1: DopingUseSuccess = HitCharacter->UDC->SupremeStrength->UseDopingItem(HitCharacter); break;
+			case 2: DopingUseSuccess = HitCharacter->UDC->BurningFurnace->UseDopingItem(HitCharacter); break;
+			case 3: DopingUseSuccess = HitCharacter->UDC->Painless->UseDopingItem(HitCharacter); break;
+			case 4: DopingUseSuccess = HitCharacter->UDC->FinalEmber->UseDopingItem(HitCharacter); break;
+			case 5: DopingUseSuccess = HitCharacter->UDC->ReducePain->UseDopingItem(HitCharacter); break;
+			case 6: DopingUseSuccess = HitCharacter->UDC->SolidFortress->UseDopingItem(HitCharacter); break;
+			case 7: DopingUseSuccess = HitCharacter->UDC->ParadoxofGuardianship->UseDopingItem(HitCharacter); break;
+			case 8: DopingUseSuccess = HitCharacter->UDC->HallucinationShield->UseDopingItem(HitCharacter); break;
+			case 9: DopingUseSuccess = HitCharacter->UDC->LegEnforce->UseDopingItem(HitCharacter); break;
+			case 10: DopingUseSuccess = HitCharacter->UDC->ForcedHealing->UseDopingItem(HitCharacter); break;
+			case 11: DopingUseSuccess = HitCharacter->UDC->HPconversion->UseDopingItem(HitCharacter); break;
+			case 12: DopingUseSuccess = HitCharacter->UDC->CurseofChaos->UseDopingItem(HitCharacter); break;
 			default: UE_LOG(LogTemp, Warning, TEXT("Invalid Doping Key Set!")); break;
 			}
 
-			Elis_Passive_Start(HitCharacter);
+			if (passive_call)
+			{
+				Elis_Passive_Start(HitCharacter);
+				passive_call = false;
+			}
 
 			HitCharacter->PlayDopingEffect();
 
@@ -122,21 +134,35 @@ void UDCElis::SecondDopingForAlly()
 	{
 		APlayerCharacter* HitCharacter = Cast<APlayerCharacter>(HitResult.GetActor());
 		if (HitCharacter) {
-			switch (SecondDopingCode)
-			{
-			case 1: HitCharacter->UDC->LegEnforce->BuffOn(HitCharacter); break;
-			case 2: HitCharacter->UDC->ReducePain->BuffOn(HitCharacter); break;
-			case 3: HitCharacter->UDC->SupremeStrength->BuffOn(HitCharacter); break;
-			case 4: HitCharacter->UDC->ForcedHealing->BuffOn(HitCharacter); break;
-			case 5: HitCharacter->UDC->FinalEmber->BuffOn(HitCharacter); break;
-			case 6: HitCharacter->UDC->BurningFurnace->BuffOn(HitCharacter); break;
-			case 7: HitCharacter->UDC->SolidFortress->BuffOn(HitCharacter); break;
-			case 8: HitCharacter->UDC->Painless->BuffOn(HitCharacter); break;
-			default: UE_LOG(LogTemp, Warning, TEXT("Invalid Doping Key Set!")); break;
 
+			if (HitCharacter->CurrentDoped >= 2) {
+				return;
 			}
 
-			Elis_Passive_Start(HitCharacter);
+			bool DopingUseSuccess;
+
+			switch (SecondDopingCode)
+			{
+			case 1: DopingUseSuccess = HitCharacter->UDC->SupremeStrength->UseDopingItem(HitCharacter); break;
+			case 2: DopingUseSuccess = HitCharacter->UDC->BurningFurnace->UseDopingItem(HitCharacter); break;
+			case 3: DopingUseSuccess = HitCharacter->UDC->Painless->UseDopingItem(HitCharacter); break;
+			case 4: DopingUseSuccess = HitCharacter->UDC->FinalEmber->UseDopingItem(HitCharacter); break;
+			case 5: DopingUseSuccess = HitCharacter->UDC->ReducePain->UseDopingItem(HitCharacter); break;
+			case 6: DopingUseSuccess = HitCharacter->UDC->SolidFortress->UseDopingItem(HitCharacter); break;
+			case 7: DopingUseSuccess = HitCharacter->UDC->ParadoxofGuardianship->UseDopingItem(HitCharacter); break;
+			case 8: DopingUseSuccess = HitCharacter->UDC->HallucinationShield->UseDopingItem(HitCharacter); break;
+			case 9: DopingUseSuccess = HitCharacter->UDC->LegEnforce->UseDopingItem(HitCharacter); break;
+			case 10: DopingUseSuccess = HitCharacter->UDC->ForcedHealing->UseDopingItem(HitCharacter); break;
+			case 11: DopingUseSuccess = HitCharacter->UDC->HPconversion->UseDopingItem(HitCharacter); break;
+			case 12: DopingUseSuccess = HitCharacter->UDC->CurseofChaos->UseDopingItem(HitCharacter); break;
+			default: UE_LOG(LogTemp, Warning, TEXT("Invalid Doping Key Set!")); break;
+			}
+
+			if (passive_call)
+			{
+				Elis_Passive_Start(HitCharacter);
+				passive_call = false;
+			}
 
 			HitCharacter->PlayDopingEffect();
 		}

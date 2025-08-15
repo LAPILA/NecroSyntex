@@ -39,6 +39,9 @@ void AHitScanWeapon::Fire(const FVector& HitTarget)
 	const USkeletalMeshSocket* MuzzleSocket = GetWeaponMesh()->GetSocketByName(TEXT("MuzzleFlash"));
 	if (!MuzzleSocket) return;
 
+	//duream code add. playfiresound();
+	PlayFireSound();
+
 	/* ------------------------------------------------------------------ */
 	/* 1) Trace                                                       */
 	/* ------------------------------------------------------------------ */

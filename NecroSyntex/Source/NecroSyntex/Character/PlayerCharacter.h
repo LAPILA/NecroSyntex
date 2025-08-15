@@ -11,6 +11,7 @@
 #include "NecroSyntex/Interfaces/InteractWithCrossHairsInterface.h"
 #include "NecroSyntex/NecroSyntexType/CombatState.h"
 #include "NecroSyntex/Voice/VoiceComponent.h"
+#include "NecroSyntex/NecroSyntaxComponents/DR_FlashDroneComponent.h"
 #include "PlayerCharacter.generated.h"
 
 class UInputMappingContext;
@@ -35,6 +36,9 @@ private:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* MoveAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UInputAction* LookAction;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* EquipAction;
@@ -71,6 +75,15 @@ private:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* UDCModeChange;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UInputAction* SwapFirstWeapon;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UInputAction* SwapSecondWeapon;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UInputAction* SwapThirdWeapon;
 public:
     APlayerCharacter();
 
@@ -78,6 +91,7 @@ public:
     virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	virtual void PostInitializeComponents() override;
+	virtual void PossessedBy(AController* NewController) override;
 
 	/*
 		Montage
@@ -86,6 +100,8 @@ public:
 	void PlayReloadMontage();
 	void PlayElimMontage();
 	void PlayThrowGrenadeMontage();
+	UFUNCTION()
+	void OnThrowGrenadeMontageEnded(UAnimMontage* Montage, bool bInterrupted);
 	void PlaySwapMontage();
 	void PlayDopingMontage();
 	virtual void OnRep_ReplicatedMovement() override;
@@ -96,15 +112,25 @@ public:
 	virtual void Destroyed() override;
 
 	UPROPERTY(Replicated)
-	bool bDisableGameplay = false;
+	bool bDisableGameplay = true;
 
 	UFUNCTION(BluePrintImplementableEvent)
 	void ShowSniperScopeWidget(bool bShowScope);
 
+	UFUNCTION(BlueprintImplementableEvent, Category = "Damage")
+	void TakeDamageNotify(float DamageAmount);
+
 	UFUNCTION(BlueprintCallable)
 	void UpdateHUDHealth();
+
+	UFUNCTION(Client, Reliable, BlueprintCallable)
+	void ClientUpdateHUDHealth();
+
 	UFUNCTION(BlueprintCallable)
 	void UpdateHUDShield();
+
+	UFUNCTION(Client, Reliable, BlueprintCallable)
+	void ClientUpdateHUDShield();
 
 	bool bInitializeAmmo = false;
 	int32 InitialCarriedAmmo = 0;
@@ -142,6 +168,17 @@ public:
 	UFUNCTION(BlueprintImplementableEvent, Category = "Combat")
 	void OnWeaponHitEvent(const FHitResult& HitResult);
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat")
+	bool bIsMontagePlaying = false;
+
+	FTimerHandle MontageEndTimer;
+
+	void SetMontagePlaying(bool bIsPlaying);
+
+	void ResetMontageState();
+
+	UFUNCTION(BlueprintCallable) //protected->public changed by duream
+	void ReceiveDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, class AController* InstigatorController, AActor* DamageCauser);
 protected:
     virtual void BeginPlay() override;
 
@@ -162,16 +199,25 @@ protected:
 	void ReloadButtonPressed();
 	void PlayerHitReactMontage();
 	void GrenadeButtonPressed();
+	void ResetGrenadeState();
 	void SwapWeaponWheel();
 	void FirstDoping();
 	void SecondDoping();
 	void DopingModeChange();
+	void SwapToFirstWeapon();
+	void SwapToSecondWeapon();
+	void SwapToThirdWeapon();
+
+	bool CanSwapWeapon() const;
+
+	void StartWeaponSwapCooldown();
+
+	void ResetWeaponSwapCooldown();
 
 	void DropOrDestroyWeapon(AWeapon* Weapon);
 	void DropOrDestroyWeapons();
 
-	UFUNCTION(BlueprintCallable)
-	void ReceiveDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, class AController* InstigatorController, AActor* DamageCauser);
+	
 	void PollInit();
 	void RotateInPlace(float DeltaTime);
 
@@ -182,6 +228,13 @@ protected:
 	UFUNCTION(Server, Reliable, WithValidation)
 	void ServerSprintStop();
 
+	UFUNCTION(Server, Reliable, WithValidation)
+	void ServerCrouchButtonPressed();
+
+	void Look(const FInputActionValue& Value);
+
+	UFUNCTION(Server, Reliable, WithValidation)
+	void ServerUpdateLook(float YawInput,float PitchInput);
 	/**
 	* Hit boxes used for server-side rewind
 	*/
@@ -237,14 +290,15 @@ protected:
 	UPROPERTY(EditAnywhere)
 	UBoxComponent* foot_r;
 
-	UPROPERTY(ReplicatedUsing = OnRep_bIsSprinting)
+	UPROPERTY(ReplicatedUsing = OnRep_IsSprinting)
 	bool bIsSprinting;
 
 	bool bWantsToSprint = false;
 
-	UFUNCTION()
-	void OnRep_bIsSprinting();
 private:
+	UFUNCTION()
+	void OnRep_IsSprinting();
+
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera", meta = (AllowPrivateAccess = "true"))
     class USpringArmComponent* CameraBoom;
 
@@ -325,12 +379,18 @@ private:
 	
 	UFUNCTION()
 	void OnRep_Health(float LastHealth);
+
+	UFUNCTION()
+	void OnRep_MaxHealth();
 	/**
 	* Player sheild
 	*/
 	
 	UFUNCTION()
 	void OnRep_Shield(float LastShield);
+
+	UFUNCTION()
+	void OnRep_MaxShield();
 
 	bool bElimed = false;
 
@@ -393,6 +453,8 @@ private:
 
 	void HandleHeadBob(float DeltaTime);
 
+	UPROPERTY()
+	bool bFlashLightOn = true;
 public:
 	//Pahu
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
@@ -401,6 +463,9 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Doping")
 	TSubclassOf<UDopingComponent> DopingComponentClass;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	UDR_FlashDroneComponent* FlashDroneComponent;
 
 	UFUNCTION(BlueprintCallable)
 	UDopingComponent* GetDopingComponent();
@@ -426,10 +491,19 @@ public:
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
 	void PlayerDeathStopDopingEffect();
 
-	UFUNCTION()
+	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
+	void SetDopingIconHUD();
+
+	UFUNCTION(BlueprintImplementableEvent)
+	void SetHUDRemainFirstDoping();
+
+	UFUNCTION(BlueprintImplementableEvent)
+	void SetHUDRemainSecondDoping();
+
+	UFUNCTION(NetMulticast, Reliable)
 	void SPStrengthDeBuffON();
 
-	UFUNCTION()
+	UFUNCTION(NetMulticast, Reliable)
 	void SPStrengthDeBuffOFF();
 
 	UFUNCTION()
@@ -437,12 +511,12 @@ public:
 
 
 	//PID(Player Inform Data)
-	UPROPERTY(EditAnywhere, Category = "Player Stats")
+	UPROPERTY(ReplicatedUsing = OnRep_MaxHealth, EditAnywhere, Category = "Player Stats")
 	float MaxHealth = 100.f;
 	UPROPERTY(ReplicatedUsing = OnRep_Health, BlueprintReadWrite, VisibleAnywhere, Category = "Player Stats")
 	float Health = 100.f;
 
-	UPROPERTY(EditAnywhere, Category = "Player Stats")
+	UPROPERTY(ReplicatedUsing = OnRep_MaxShield, EditAnywhere, Category = "Player Stats")
 	float MaxShield = 200.f;
 	UPROPERTY(ReplicatedUsing = OnRep_Shield, VisibleAnywhere, BlueprintReadWrite, Category = "Player Stats")
 	float Shield = 200.f;
@@ -476,15 +550,15 @@ public:
 
 	UPROPERTY(Replicated, EditAnywhere)
 	float MLAtaackPoint; // 근접 공격력
-	UPROPERTY(Replicated, EditAnywhere)
+	UPROPERTY(Replicated, EditAnywhere, Category = "Player Stats")
 	float Defense; // 방어력
-	UPROPERTY(Replicated, EditAnywhere)
+	UPROPERTY(Replicated, EditAnywhere, Category = "Player Stats")
 	float Blurred; // 시야(화면 흐림도)
 	UPROPERTY(Replicated, EditAnywhere)
 	float ROF; // 총 연사속도
 	//float Item_UseRate; // 아이템 사용비율
 
-	UPROPERTY(Replicated, EditAnywhere)
+	UPROPERTY(Replicated, EditAnywhere, Category = "Player Stats")
 	float DopingDamageBuff; // 도핑으로 강화된 공격력
 
 	UPROPERTY(Replicated, EditAnywhere)
@@ -507,7 +581,12 @@ public:
 	UPROPERTY()
 	int CurrentDoped;
 
+	UFUNCTION(BlueprintCallable, Category = "Combat")
+	void UseGrenade();
 	//Pahu end
+
+	UFUNCTION(BlueprintCallable, Category = "Grenade")
+	int32 GetCurrentGrenadeCount() const;
 
 	void SetOverlappingWeapon(AWeapon* Weapon);
 	bool IsWeaponEquipped();
@@ -535,4 +614,11 @@ public:
 	bool IsLocallyReloading();
 	FORCEINLINE ULagCompensationComponent* GetLagCompensation() const { return LagCompensation; }
 	FORCEINLINE UVoiceComponent* GetVoiceComp() const { return VoiceComp; }
+
+	//Player move action speed update by duream.
+	UPROPERTY(Replicated)
+	int MoveActionState;
+
+	UFUNCTION()
+	void UpdateMaxWalkSpeed();
 };

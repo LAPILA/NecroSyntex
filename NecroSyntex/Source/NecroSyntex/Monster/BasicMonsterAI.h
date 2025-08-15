@@ -8,19 +8,19 @@
 #include "NiagaraComponent.h"
 #include "NiagaraSystem.h"
 #include "NiagaraFunctionLibrary.h"
+#include "NecroSyntex/Interfaces/InteractWithCrossHairsInterface.h"
 #include "BasicMonsterAI.generated.h"
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FScreamStartEvent);
+
 UCLASS()
-class NECROSYNTEX_API ABasicMonsterAI : public ACharacter
+class NECROSYNTEX_API ABasicMonsterAI : public ACharacter, public IInteractWithCrossHairsInterface
 {
 	GENERATED_BODY()
 
 public:
 	// Sets default values for this character's properties
 	ABasicMonsterAI();
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Components")
-	class UBoxComponent* SkillAttackArea;
 
 	UPROPERTY(EditAnywhere, Category = "AI")
 	float ChaseSpeed;
@@ -62,14 +62,23 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effects")
 	UNiagaraSystem* GasBombEffect;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI")
+	bool CanAttack;
+
+	UPROPERTY()
+	float MonsterDistance;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Value")
+	FName KeyName;
+
 	UFUNCTION(BlueprintCallable)
 	void UpdateWalkSpeed(); //float NewWalkSpeed in parameter
 
 	UFUNCTION(BlueprintCallable)
 	void AttackCoolTime();
 
-	UFUNCTION(BlueprintCallable)
-	void Attack_Player();
+	//UFUNCTION(BlueprintCallable)
+	//void Attack_Player();
 
 	UFUNCTION(BlueprintCallable)
 	void TakeDopingDamage(float DopingDamageAmount);
@@ -85,31 +94,35 @@ public:
 	UFUNCTION(BlueprintImplementableEvent, Category = "Combat")
 	void OnWeaponHitEvent(const FHitResult& HitResult);
 
-	UPROPERTY()
-	TArray<AActor*> OverlappingPlayers;
-
-	TArray<AActor*>& GetOverlappingPlayers() { return OverlappingPlayers; }
-
-	UPROPERTY()
-	bool CanSkill;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI")
-	bool CanAttack;
-
+	UFUNCTION()
 	void MonsterStopMove();
 
-	UPROPERTY()
-	float MonsterDistance;
+	UPROPERTY(BlueprintAssignable)
+	FScreamStartEvent ScreamStart;
 
+	//ScreamStart event broadcast.
+	UFUNCTION()
+	void FuncScream();
+
+	//플레이어 발견 시 FuncScream()호출을 위한 함수.
 	UFUNCTION(BlueprintCallable)
-	void SpawnNiagaraEffect(FVector SpawnLocation);
+	void FindPlayer();
+
+	//포효 스킬 시 즉시 사용이 아닌 일정 시간 이후에 사용하도록 하기 위한 함수.
+	UFUNCTION(BlueprintCallable)
+	void StartScreamTime(float delayTime);
+
+	FTimerHandle ScreamStartPoint;
 
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Skill")
-	float SkillAttackCoolTime;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Area")
+	bool isAttackArea;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Area")
+	bool isCanAttack;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
 	UAnimMontage* HitReactionMontage;
@@ -121,41 +134,59 @@ protected:
 	UAnimMontage* DeathReactionMontage;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
-	UAnimMontage* SkillAttackMontage;
+	UAnimMontage* AttackMontage;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
-	class UAnimMontage* AttackMontage;
+	/*UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
+	class UAnimMontage* AttackMontage;*/
 
-	//UFUNCTION(BlueprintCallable, Category = "AI")
-	//void SkillAttackPrepare();
+	UPROPERTY()
+	bool valueStopAnimationSound;
 
-	UFUNCTION(BlueprintCallable, Category = "AI")
-	void SkillAttack();
+	UPROPERTY()
+	FTimerHandle SetAnimationSound;
+
+	UPROPERTY()
+	FTimerHandle DeathDelayTimerHandle;
 
 	UFUNCTION()
-	void OnSkillAreaOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
-
-	UFUNCTION()
-	void OnSkillAreaOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
-
 	void PlayHitAnimation();
 
+	UFUNCTION(NetMulticast, Reliable)
+	void Multicast_PlayHitAnimation();
+
+	UFUNCTION()
 	void PlayHitHighDamageAnimation();
 
+	UFUNCTION()
 	void PlayDeathAnimation();
 
+	UFUNCTION(NetMulticast, Reliable)
+	void Multicast_PlayDeathAnimation();
+
+	UFUNCTION()
+	void PlayAttackAnimation();
+
+	UFUNCTION()
 	void DestroyMonster();
 
-	void PlaySkillAttackAnimation();
-
-	FTimerHandle MonsterSkillCoolTime;
-
-	void SkillCoolTime();
-
-	FTimerHandle DeathDelayTimerHandle;
 	//Timer Function
+	UFUNCTION()
 	void DelayedFunction(float DelayTime);
 
+	UFUNCTION()
+	void DelayedAnimationSound(float DelayTime);
+
+	UFUNCTION()
+	void StopAnimationSound();
+
+	UFUNCTION(BlueprintImplementableEvent)
+	void AttackPlayer();
+
+	UFUNCTION(BlueprintCallable)
+	void ServerAttackPlayer();
+
+	UFUNCTION(BlueprintCallable)
+	void AttackOverlap(AActor* OtherActor);
 public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;

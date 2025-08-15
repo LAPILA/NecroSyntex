@@ -25,8 +25,10 @@ public:
 
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite)
+	float MaxHealth = 500.0f;
 
-	UPROPERTY(Replicated, EditAnywhere)
+	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite)
 	float Health = 500.0f;
 
 	UPROPERTY(Replicated)
@@ -49,5 +51,14 @@ public:
 
 	UFUNCTION(Server, Reliable, BlueprintCallable)
 	void TakedDamage(AActor* DamagedActor, float Damage);
+
+	UFUNCTION(BlueprintImplementableEvent)
+	void HealthBarUpdate();
+
+	UFUNCTION(BlueprintImplementableEvent)
+	void HealthBarVisible();
+
+	UFUNCTION(BlueprintImplementableEvent)
+	void HealthBarHidden();
 
 };

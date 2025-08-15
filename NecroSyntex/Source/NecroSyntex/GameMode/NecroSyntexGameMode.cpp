@@ -19,20 +19,23 @@ ANecroSyntexGameMode::ANecroSyntexGameMode()
 {
 	//Delay mode (if you want, delete)
 	bDelayedStart = true;
-
+	MissionManager = CreateDefaultSubobject<UMissionComp>(TEXT("MissionManager"));
 }
 
 void ANecroSyntexGameMode::BeginPlay()
 {
 	Super::BeginPlay();
 
-	MissionManager = NewObject<UMissionManager>(this, UMissionManager::StaticClass());
+	//MissionManager = NewObject<UMissionComp>(this, UMissionComp::StaticClass());
 	MissionManager->Init(this);
 
 
 	LevelStartingTime = GetWorld()->GetTimeSeconds();
 	UE_LOG(LogTemp, Warning, TEXT("LevelStartingTime: %f"), LevelStartingTime);
 	UE_LOG(LogTemp, Warning, TEXT("WarmUpTime: %f"), WarmUpTime);
+
+
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("BeginPlay 1111111111"));
 }
 
 void ANecroSyntexGameMode::OnMatchStateSet()
@@ -116,7 +119,7 @@ void ANecroSyntexGameMode::RequestRespawn(ACharacter* ElimmedCharacter, AControl
 	}
 	if (ElimmedController)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("ElimmedController valid"))
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("RequestRespawn"));
 		TArray<AActor*> PlayerStarts;
 		UGameplayStatics::GetAllActorsOfClass(this, APlayerStart::StaticClass(), PlayerStarts);
 		int32 Selection = FMath::RandRange(0, PlayerStarts.Num() - 1);
@@ -124,14 +127,49 @@ void ANecroSyntexGameMode::RequestRespawn(ACharacter* ElimmedCharacter, AControl
 		ANecroSyntexGameState* NecroSyntexGameState = GetGameState<ANecroSyntexGameState>();
 		NecroSyntexGameState->PlayerReviveUpdate();
 
-		RestartPlayerAtPlayerStart(ElimmedController, PlayerStarts[Selection]);
+		ANecroSyntexPlayerController* MyPC = Cast<ANecroSyntexPlayerController>(ElimmedController);
+		if (!MyPC) return;
+		ANecroSyntexPlayerState* PS = MyPC->GetPlayerState<ANecroSyntexPlayerState>();
+		if (PS && PS->SelectedCharacterClass)
+		{
+			DefaultPawnClass = PS->SelectedCharacterClass;
 
+			if (PlayerStarts.Num() > 0)
+			{
+				AActor* ChosenStart = PlayerStarts[FMath::RandRange(0, PlayerStarts.Num() - 1)];
+				RestartPlayerAtPlayerStart(MyPC, ChosenStart);
+			}
+			else
+			{
+				GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Not Player Start"));
+				return;
+			}
+
+			// GetPawn() null 체크 후 안전하게 처리
+			if (APlayerCharacter* NewCharacter = Cast<APlayerCharacter>(MyPC->GetPawn()))
+			{
+				GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Player Charactar Yes"));
+
+				MyPC->ClientRestart(NewCharacter);
+				GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("ClientRestart"));
+			}
+			else
+			{
+				GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Not Player Character"));
+			}
+		}
+		else
+		{
+			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Not State"));
+		}
 
 	}
 }
 
 void ANecroSyntexGameMode::SetupPlayers()
 {
+
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("SetupPlayers 작동 1"));
 
 	for (FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
 	{
@@ -145,8 +183,10 @@ void ANecroSyntexGameMode::SetupPlayers()
 		if (APawn* OldPawn = MyPC->GetPawn())
 		{
 			OldPawn->Destroy();
+			UE_LOG(LogTemp, Error, TEXT("캐릭터 디스트로이"));
 		}
 
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("SetupPlayers 작동 2"));
 
 		if (PS && PS->SelectedCharacterClass)
 		{
@@ -163,12 +203,15 @@ void ANecroSyntexGameMode::SetupPlayers()
 			{
 				AActor* ChosenStart = PlayerStarts[FMath::RandRange(0, PlayerStarts.Num() - 1)];
 				RestartPlayerAtPlayerStart(MyPC, ChosenStart);
+				UE_LOG(LogTemp, Error, TEXT("플레이어 캐릭터 생성"));
 			}
 			else
 			{
 				UE_LOG(LogTemp, Error, TEXT("❌ PlayerStart 없음!"));
 				continue;
 			}
+
+			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("SetupPlayers 작동 3"));
 
 			// DefaultPawnClass 원복
 			//DefaultPawnClass = OldDefault;
@@ -177,12 +220,6 @@ void ANecroSyntexGameMode::SetupPlayers()
 			if (APlayerCharacter* NewCharacter = Cast<APlayerCharacter>(MyPC->GetPawn()))
 			{
 				UE_LOG(LogTemp, Warning, TEXT("777777 - 캐릭터 생성 성공"));
-
-				/*if (NewCharacter->UDC)
-				{
-					NewCharacter->UDC->SetFirstDopingKey(PS->FirstDopingCode);
-					NewCharacter->UDC->SetSecondDopingKey(PS->SecondDopingCode);
-				}*/
 
 				MyPC->ClientRestart(NewCharacter);
 				UE_LOG(LogTemp, Warning, TEXT("99999 - ClientRestart 호출"));
@@ -200,11 +237,86 @@ void ANecroSyntexGameMode::SetupPlayers()
 }
 
 
+void ANecroSyntexGameMode::LevelMissionStart()
+{
+	MissionStart.Broadcast();
+}
+
+void ANecroSyntexGameMode::LevelMissionSuccess()
+{
+	MissionSuccess.Broadcast();
+}
+
+void ANecroSyntexGameMode::LevelMissionFail()
+{
+	MissionFail.Broadcast();
+}
+
+void ANecroSyntexGameMode::CallMissionEndEvent()
+{
+	MissionEndEvent.Broadcast();
+}
+
 void ANecroSyntexGameMode::PostLogin(APlayerController* NewPlayer)
 {
 	Super::PostLogin(NewPlayer);
 
-	ANecroSyntexPlayerController* PC = Cast<ANecroSyntexPlayerController>(NewPlayer);
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Post Login 작동 1"));
+
+}
+
+void ANecroSyntexGameMode::HandleStartingNewPlayer_Implementation(APlayerController* NewPlayer)
+{
+	Super::HandleStartingNewPlayer_Implementation(NewPlayer);
+
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("HandleStartingNewPlayer 작동 1"));
+
+	ANecroSyntexPlayerController* NSPC = Cast<ANecroSyntexPlayerController>(NewPlayer);
+	if (!NSPC) {
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("none NSPC"));
+		return;
+	}
+
+	NSPC->GetInstanceAndSetSelectedCharacter();
+
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Playerselected set 작동"));
+
+	ANecroSyntexPlayerState* NSPS = NSPC->GetPlayerState<ANecroSyntexPlayerState>();
+	if (APawn* OldPawn = NSPC->GetPawn()) {
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("oldpawn destroy 작동"));
+		OldPawn->Destroy();
+	}
+
+	if (NSPS && NSPS->SelectedCharacterClass) {
+
+		TSubclassOf<APawn> OldDefault = DefaultPawnClass;
+		DefaultPawnClass = NSPS->SelectedCharacterClass;
+
+		TArray<AActor*> PlayerStarts;
+		UGameplayStatics::GetAllActorsOfClass(this, APlayerStart::StaticClass(), PlayerStarts);
+
+		if (PlayerStarts.Num() > 0)
+		{
+			AActor* ChosenStart = PlayerStarts[FMath::RandRange(0, PlayerStarts.Num() - 1)];
+			RestartPlayerAtPlayerStart(NSPC, ChosenStart);
+		}
+		else {
+			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("PlayerStarts Zero"));
+			return;
+		}
+
+
+		if (APlayerCharacter* NewCharacter = Cast<APlayerCharacter>(NSPC->GetPawn())) {
+			NSPC->ClientRestart(NewCharacter);
+			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("NewVer ClientRestart"));
+		}
+	}
+	else {
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("NSPS selected character 없음"));
+	}
+
+
+	/*ANecroSyntexPlayerController* PC = Cast<ANecroSyntexPlayerController>(NewPlayer);
 	if (PC)
 	{
 		if (ANecroSyntexGameState* GS = GetGameState<ANecroSyntexGameState>())
@@ -213,17 +325,11 @@ void ANecroSyntexGameMode::PostLogin(APlayerController* NewPlayer)
 			GS->SurvivingPlayer = GS->TotalPlayer;
 		}
 
-		PC->GetInstanceAndSetSelectedCharacter();//요거 주석 처리하면 멀티 가능.
-		SelectAndReadyComplete();//요거 주석 처리하면 멀티가능.
-	}
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("HandleStartingNewPlayer 작동 2"));
 
-	//UE_LOG(LogTemp, Warning, TEXT("111111"));
-	//ANecroSyntexPlayerController* PC = Cast<ANecroSyntexPlayerController>(NewPlayer);
-	//if (PC)
-	//{
-	//	TotalPlayers++;
-	//	PC->ShowCharacterSelectUI(); // 클라이언트에서 UI 띄우기
-	//}
+		PC->GetInstanceAndSetSelectedCharacter();
+		SelectAndReadyComplete();
+	}*/
 }
 
 void ANecroSyntexGameMode::SelectAndReadyComplete_Implementation()
@@ -235,24 +341,11 @@ void ANecroSyntexGameMode::SelectAndReadyComplete_Implementation()
 
 }
 
-void ANecroSyntexGameMode::ShowCharacterSelectionUI()
-{
-	// 현재 접속한 모든 플레이어 컨트롤러 가져오기
-	for (FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
-	{
-		ANecroSyntexPlayerController* PC = Cast<ANecroSyntexPlayerController>(*It);
-		if (PC)
-		{
-			PC->ShowCharacterSelectUI(); // 클라이언트에서 UI 띄우기
-		}
-	}
-}
-
 void ANecroSyntexGameMode::CheckAllPlayersReady()
 {
 	if (ANecroSyntexGameState* GS = GetGameState<ANecroSyntexGameState>())
 	{
-		if (PlayersReadyCount >= GS->TotalPlayer) {
+		if (PlayersReadyCount >= GS->PlayerArray.Num()) {
 			SetupPlayers();
 		}
 	}

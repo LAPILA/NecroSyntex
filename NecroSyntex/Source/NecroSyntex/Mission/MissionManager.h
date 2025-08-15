@@ -10,9 +10,9 @@
 /**
  * 
  */
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FMissionStart);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FMissionSuccess);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FMissionFail);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FMissionStart22);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FMissionSuccess22);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FMissionFail22);
 
 UCLASS()
 class NECROSYNTEX_API UMissionManager : public UObject
@@ -46,13 +46,13 @@ public:
 	void CurrentMissionFail();
 
 	UPROPERTY(BlueprintAssignable)
-	FMissionSuccess MissionSuccess;
+	FMissionSuccess22 MissionSuccess;
 
 	UPROPERTY(BlueprintAssignable)
-	FMissionStart MissionStart;
+	FMissionStart22 MissionStart;
 
 	UPROPERTY(BlueprintAssignable)
-	FMissionFail MissionFail;
+	FMissionFail22 MissionFail;
 
 	/*UFUNCTION()
 	void ActivateSpawners(FName MissionName, FName Region);*/
@@ -99,6 +99,8 @@ public:
 	void DefenseMissionFail();
 	UFUNCTION()
 	void EndDefenseMission();
+
+	class ADefenseTarget* CurrentDefenseTarget;
 
 	FTimerHandle DefenseTimerHandle;
 

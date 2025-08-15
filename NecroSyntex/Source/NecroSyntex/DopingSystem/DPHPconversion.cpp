@@ -15,10 +15,17 @@ UDPHPconversion::UDPHPconversion()
 
 }
 
-void UDPHPconversion::UseDopingItem(APlayerCharacter* DopedPC)
+bool UDPHPconversion::UseDopingItem(APlayerCharacter* DopedPC)
 {
 	// Buff 적용 및 타이머 시작
-	BuffOn(DopedPC);
+	if (DopedPC->Health - 20.0f > 0)
+	{
+		BuffOn(DopedPC);
+		return true;
+	}
+	else {
+		return false;
+	}
 }
 
 void UDPHPconversion::BuffOn(APlayerCharacter* DopedPC)
@@ -30,6 +37,7 @@ void UDPHPconversion::BuffOn(APlayerCharacter* DopedPC)
 	else {
 		DopedPC->Shield += 50.0f;
 	}
+	DopedPC->UpdateHUDShield();
 	DeBuffOn(DopedPC);
 
 	UE_LOG(LogTemp, Warning, TEXT("UDPHPconversion BuffOn"));
@@ -50,6 +58,7 @@ void UDPHPconversion::DeBuffOn(APlayerCharacter* DopedPC)
 	else {
 		DopedPC->Health -= 20.0f;
 	}
+	DopedPC->UpdateHUDHealth();
 
 
 	UE_LOG(LogTemp, Warning, TEXT("UDPHPconversion DeBuffOn."));

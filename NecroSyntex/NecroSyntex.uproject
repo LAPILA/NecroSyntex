@@ -13,7 +13,8 @@
             "UMG",
             "AIModule",
             "GameplayCameras",
-            "CoreUObject"
+            "CoreUObject",
+            "AdvancedSessions"
          ]
       }
    ],
@@ -35,31 +36,6 @@
          "MarketplaceURL": "com.epicgames.launcher://ue/Fab/product/74a15004-2adf-4fe3-abc6-16190fb582c5"
       },
       {
-         "Name": "AdvancedSteamSessions",
-         "Enabled": false
-      },
-      {
-         "Name": "SteamIntegrationKit",
-         "Enabled": true,
-         "MarketplaceURL": "com.epicgames.launcher://ue/marketplace/product/122c9894af2649c8a9c2a25452562547"
-      },
-      {
-         "Name": "AdvancedSessions",
-         "Enabled": false
-      },
-      {
-         "Name": "OnlineSubsystemNull",
-         "Enabled": false
-      },
-      {
-         "Name": "OnlineSubsystemUtils",
-         "Enabled": false
-      },
-      {
-         "Name": "OnlineSubsystem",
-         "Enabled": false
-      },
-      {
          "Name": "OnlineSubsystemIOS",
          "Enabled": false,
          "SupportedTargetPlatforms": [
@@ -75,8 +51,40 @@
          ]
       },
       {
-         "Name": "OnlineBase",
-         "Enabled": false
+         "Name": "SunPosition",
+         "Enabled": true
+      },
+      {
+         "Name": "FieldSystemPlugin",
+         "Enabled": true
+      },
+      {
+         "Name": "MovieRenderPipeline",
+         "Enabled": true
+      },
+      {
+         "Name": "OnlineServices",
+         "Enabled": true
+      },
+      {
+         "Name": "OnlineSubsystemSteam",
+         "Enabled": true
+      },
+      {
+         "Name": "OnlineFramework",
+         "Enabled": true
+      },
+      {
+         "Name": "OnlineServicesNull",
+         "Enabled": true
+      },
+      {
+         "Name": "AdvancedSteamSessions",
+         "Enabled": true
+      },
+      {
+         "Name": "AdvancedSessions",
+         "Enabled": true
       }
    ],
    "TargetPlatforms": [

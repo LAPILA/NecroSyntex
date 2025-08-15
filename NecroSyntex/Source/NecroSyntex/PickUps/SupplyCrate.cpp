@@ -2,18 +2,14 @@
 #include "Components/SphereComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "NiagaraComponent.h"
-#include "NiagaraFunctionLibrary.h"
 #include "Sound/SoundCue.h"
 #include "Kismet/GameplayStatics.h"
 #include "Net/UnrealNetwork.h"
 #include "NecroSyntex/Character/PlayerCharacter.h"
-#include "NecroSyntex/NecroSyntaxComponents/CombatComponent.h"
 #include "NecroSyntex/Weapon/Weapon.h"
+#include "NecroSyntex/NecroSyntaxComponents/CombatComponent.h"
+#include "NecroSyntex/DopingSystem/DopingComponent.h"
 #include "EngineUtils.h"
-#include "NecroSyntex/Voice/VoiceComponent.h"
-
-#define SC_LOG(Format, ...) UE_LOG(LogTemp, Warning, TEXT("[SupplyCrate] " Format), ##__VA_ARGS__)
-#define TRY_PLAY_VOICE(Cue)  Cast<APlayerCharacter>(GetOwner())->GetVoiceComp()->PlayVoice(Cue)
 
 ASupplyCrate::ASupplyCrate()
 {
@@ -25,15 +21,10 @@ ASupplyCrate::ASupplyCrate()
 
     CrateMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("CrateMesh"));
     CrateMesh->SetupAttachment(RootScene);
-    CrateMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
-    CrateMesh->SetRenderCustomDepth(true);
-    CrateMesh->SetCustomDepthStencilValue(CUSTOM_DEPTH_BLUE);   // ▶ Outline
 
     InteractSphere = CreateDefaultSubobject<USphereComponent>(TEXT("InteractSphere"));
     InteractSphere->SetupAttachment(RootScene);
     InteractSphere->SetSphereRadius(180.f);
-    InteractSphere->SetCollisionResponseToAllChannels(ECR_Ignore);
-    InteractSphere->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
 
     GlowFX = CreateDefaultSubobject<UNiagaraComponent>(TEXT("GlowFX"));
     GlowFX->SetupAttachment(RootScene);
@@ -42,164 +33,126 @@ ASupplyCrate::ASupplyCrate()
 void ASupplyCrate::BeginPlay()
 {
     Super::BeginPlay();
-
-    if (HasAuthority())
-    {
-        InteractSphere->OnComponentBeginOverlap.AddDynamic(
-            this, &ASupplyCrate::HandleOverlap);
-    }
+    InteractSphere->OnComponentBeginOverlap.AddDynamic(this, &ASupplyCrate::HandleOverlap);
 }
 
-/* ------------------------------------------------- *
- * Overlap → PlayerCharacter 에게 “이 상자” 등록
- * ------------------------------------------------- */
-void ASupplyCrate::HandleOverlap(UPrimitiveComponent*, AActor* OtherActor,
-    UPrimitiveComponent*, int32, bool,
-    const FHitResult&)
+void ASupplyCrate::HandleOverlap(UPrimitiveComponent*, AActor* OtherActor, UPrimitiveComponent*, int32, bool, const FHitResult&)
 {
     if (APlayerCharacter* PC = Cast<APlayerCharacter>(OtherActor))
     {
         PC->SetOverlappingSupplyCrate(this);
-
-        if (!GetOwner())
-        {
-            SetOwner(PC);
-        }
     }
 }
 
-/* ------------------------------------------------- *
- *  Interact (Client or Server)
- * ------------------------------------------------- */
 void ASupplyCrate::Interact(APlayerCharacter* InteractingPC)
 {
-    if (!InteractingPC || bAlreadyProcessed) return;
-
-    if (GetLocalRole() < ROLE_Authority)
-        ServerOpenCrate(InteractingPC);
-    else
-        ServerOpenCrate(InteractingPC);
+    if (bAlreadyProcessed) return;
+    if (HasAuthority()) ServerOpenCrate(InteractingPC);
 }
 
-bool ASupplyCrate::ServerOpenCrate_Validate(APlayerCharacter*) { return true; }
+bool ASupplyCrate::ServerOpenCrate_Validate(APlayerCharacter* InteractingPC) { return InteractingPC != nullptr; }
 
-void ASupplyCrate::ServerOpenCrate_Implementation(APlayerCharacter*)
+void ASupplyCrate::ServerOpenCrate_Implementation(APlayerCharacter* InteractingPC)
 {
     if (bAlreadyProcessed) return;
-
-    TRY_PLAY_VOICE(EVoiceCue::Pickup_Supply);
     bAlreadyProcessed = true;
-
+    GlowFX->Activate();
     SpawnRandomWeapon();
     GiveAmmoToAllPlayers();
-
-    bOpened = true;
-    OnRep_Opened();                  // 서버측에서도 FX 재생
+    MulticastOpenCrate();
+    if (CrateMesh)
+    {
+        CrateMesh->SetOverlayMaterial(nullptr);
+    }
 }
 
-/* ------------------------------------------------- *
- *  Loot 스폰
- * ------------------------------------------------- */
+void ASupplyCrate::MulticastOpenCrate_Implementation()
+{
+    bOpened = true;
+    PlayEffects();
+}
+
 void ASupplyCrate::SpawnRandomWeapon()
 {
     UWorld* World = GetWorld();
     if (!World) return;
 
     const float Roll = FMath::FRand();
-
-    auto MakeImpulseDir = []() -> FVector
-        {
-            // 수평 랜덤 + 위쪽 0.7 혼합  → 항상 위쪽으로 살짝 뜸
-            FVector Horz = FMath::VRand();  Horz.Z = 0.f;  Horz.Normalize();
-            return (Horz + FVector(0, 0, 0.7f)).GetSafeNormal();
-        };
-
     auto SpawnWeapon = [&](TSubclassOf<AWeapon> Class)
         {
-            if (!Class) return;
-
-            const FVector ImpulseDir = MakeImpulseDir();
-            const float  Lift = CrateMesh->Bounds.BoxExtent.Z + 100.f;
-            const FVector SpawnLoc = GetActorLocation() + FVector(0, 0, Lift);
-
+            FVector SpawnLoc = GetActorLocation() + FVector(0, 0, 100.f);
             FActorSpawnParameters Params;
-            Params.SpawnCollisionHandlingOverride =
-                ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
+            Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
 
-            AWeapon* W = World->SpawnActor<AWeapon>(Class, SpawnLoc, GetActorRotation(), Params);
-            if (!W) { SC_LOG("   !! Spawn FAILED"); return; }
+            // 무기 스폰
+            AWeapon* W = World->SpawnActor<AWeapon>(Class, SpawnLoc, FRotator::ZeroRotator, Params);
+            if (!W)
+            {
+                UE_LOG(LogTemp, Warning, TEXT("Spawn FAILED"));
+                return;
+            }
 
+            // 물리 및 중력 설정 (루트 컴포넌트가 UPrimitiveComponent인지 확인 후 처리)
             if (UPrimitiveComponent* Root = Cast<UPrimitiveComponent>(W->GetRootComponent()))
             {
                 Root->SetSimulatePhysics(true);
                 Root->SetEnableGravity(true);
                 Root->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
                 Root->WakeAllRigidBodies();
-                Root->AddImpulse(ImpulseDir * 900.f, NAME_None, true);
+                Root->AddImpulse(FVector(0, 0, 300.f), NAME_None, true);
             }
-            SC_LOG("   -> %s  Spawn@%s  Impulse=%s",
-                *W->GetClass()->GetName(),
-                *SpawnLoc.ToCompactString(),
-                *ImpulseDir.ToCompactString());
+            else
+            {
+                UE_LOG(LogTemp, Warning, TEXT("Root is not a UPrimitiveComponent"));
+            }
         };
 
     /* ---- 확률 판정 ---- */
     if (Roll <= NormalWeaponChance && NormalWeaponClasses.Num())
         SpawnWeapon(NormalWeaponClasses[FMath::RandHelper(NormalWeaponClasses.Num())]);
-
     else if (Roll <= NormalWeaponChance + SpecialWeaponChance && SpecialWeaponClasses.Num())
         SpawnWeapon(SpecialWeaponClasses[FMath::RandHelper(SpecialWeaponClasses.Num())]);
 }
 
- /* ------------------------------------------------- *
-  *  모든 플레이어에게 ‘현재 무기 타입’ 1 Mag 지급
-  * ------------------------------------------------- */
 void ASupplyCrate::GiveAmmoToAllPlayers()
 {
     for (TActorIterator<APlayerCharacter> It(GetWorld()); It; ++It)
     {
         APlayerCharacter* PC = *It;
-        if (!PC) continue;
+        if (!PC || !PC->GetCombat()) continue;
 
-        /** 플레이어가 장착한 무기와 Combat 컴포넌트 */
-        AWeapon* CurWeapon = PC->GetEquippedWeapon();
-        UCombatComponent* Combat = PC->GetCombat();
-        if (!CurWeapon || !Combat) continue;
+        TArray<EWeaponType> OwnedWeaponTypes;
+        PC->GetCombat()->GetOwnedWeaponTypes(OwnedWeaponTypes);
 
-        const EWeaponType  Type = CurWeapon->GetWeaponType();
-        const int32        Mag = CurWeapon->GetMagCapacity();
+        for (EWeaponType WeaponType : OwnedWeaponTypes)
+        {
+            int32 MaxAmmo = PC->GetCombat()->GetMaxAmmoForWeaponType(WeaponType);
+            int32 AmmoToGive = MaxAmmo * MagCount;
+            PC->GetCombat()->PickUpAmmo(WeaponType, AmmoToGive);
+        }
 
-        /* ▶ Combat 방식으로 ‘CarriedAmmo’ 증가 */
-        Combat->PickUpAmmo(Type, Mag);
-
-        SC_LOG("GiveAmmo: %s  +%d  (Type %d)",
-            *PC->GetName(), Mag, static_cast<int32>(Type));
+        PC->UDC->One_DopingItemNum += 1;
+        PC->UDC->Two_DopingItemNum += 1;
+        PC->SetHUDRemainFirstDoping();
+        PC->SetHUDRemainSecondDoping();
     }
 }
 
-/* ------------------------------------------------- *
- *  FX ‑ 사운드, Glow 끄기, 충돌 차단
- * ------------------------------------------------- */
 void ASupplyCrate::PlayEffects()
 {
     if (OpenSound)
         UGameplayStatics::PlaySoundAtLocation(this, OpenSound, GetActorLocation());
+}
 
-    if (GlowFX) GlowFX->Deactivate();
-    CrateMesh->SetRenderCustomDepth(false);
-    InteractSphere->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+void ASupplyCrate::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+    Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+    DOREPLIFETIME(ASupplyCrate, bOpened);
 }
 
 void ASupplyCrate::OnRep_Opened()
 {
-    if (bOpened)
-        PlayEffects();
-}
-
-void ASupplyCrate::GetLifetimeReplicatedProps(
-    TArray< FLifetimeProperty >& OutLifetimeProps) const
-{
-    Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-
-    DOREPLIFETIME(ASupplyCrate, bOpened);
+    // 플레이 효과 실행
+    PlayEffects();
+    UE_LOG(LogTemp, Log, TEXT("Supply Crate opened - OnRep_Opened called"));
 }

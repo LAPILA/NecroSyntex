@@ -71,15 +71,19 @@ void ANecroSyntexGameState::PlayerDeathUpdate_Implementation()
 
 	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Player DIe!"));
 	SurvivingPlayer--;
-	if (SurvivingPlayer == 0)
+	if (SurvivingPlayer <= 0)
 	{
-		if (OngoingMission) {
+		ANecroSyntexGameMode* NecroSyntexGameMode = GetWorld()->GetAuthGameMode<ANecroSyntexGameMode>();
+		NecroSyntexGameMode->MissionManager->CurrentMissionFail();
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Mission Fail Call!"));
+		/*if (OngoingMission) {
 			ANecroSyntexGameMode* NecroSyntexGameMode = GetWorld()->GetAuthGameMode<ANecroSyntexGameMode>();
 			NecroSyntexGameMode->MissionManager->CurrentMissionFail();
+			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Mission Fail Call!"));
 		}
 		else {
 
-		}
+		}*/
 	}
 }
 

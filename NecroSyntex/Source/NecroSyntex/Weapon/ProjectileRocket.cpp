@@ -13,7 +13,9 @@ AProjectileRocket::AProjectileRocket()
 {
     ProjectileMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Rocket Mesh"));
     ProjectileMesh->SetupAttachment(RootComponent);
-    ProjectileMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+    //duream code edit collision setting.
+    ProjectileMesh->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+    //ProjectileMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
     RocketMovementComponent = CreateDefaultSubobject<URocketMovementComponent>(TEXT("RocketMovementComponent"));
     RocketMovementComponent->bRotationFollowsVelocity = true;
@@ -46,6 +48,12 @@ void AProjectileRocket::BeginPlay()
         UE_LOG(LogTemp, Warning, TEXT("Hit Self"));
         CollisionBox->OnComponentHit.AddDynamic(this, &AProjectileRocket::OnHit);
     }
+    //duream code add start.
+    else if (HasAuthority()) {
+        //CollisionBox->SetCollisionResponseToChannel(ECC_Pawn, ECR_Block);
+        CollisionBox->OnComponentHit.AddDynamic(this, &AProjectileRocket::OnHit);
+    }
+    //duream code add end.
 
     SpawnTrailSystem();
 
@@ -74,6 +82,7 @@ void AProjectileRocket::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, 
     {
         return;
     }
+
     ExplodeDamage();
     APawn* FiringPawn = GetInstigator();
     if (FiringPawn && HasAuthority())

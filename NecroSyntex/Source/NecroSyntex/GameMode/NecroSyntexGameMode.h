@@ -5,12 +5,15 @@
 #include "CoreMinimal.h"
 #include "GameFramework/GameMode.h"
 #include "NecroSyntex/Mission/MissionManager.h"
+#include "NecroSyntex/Mission/MissionComp.h"
 #include "NecroSyntexGameMode.generated.h"
 
 namespace MatchState
 {
 	extern NECROSYNTEX_API const FName Cooldown; // Match duration has been reached. Display winner and begin cooldown timer.
 }
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FMissionEvent);
 
 UCLASS()
 class NECROSYNTEX_API ANecroSyntexGameMode : public AGameMode
@@ -44,10 +47,6 @@ private:
 
 public:
 
-	//������ ���� ����
-	 // ��� �÷��̾�� ĳ���� ���� UI�� ǥ��
-	void ShowCharacterSelectionUI();
-
 	// �÷��̾ ĳ���͸� �����ϸ� ������ �˸��� �Լ�
 	UFUNCTION(Server, Reliable)
 	void SelectAndReadyComplete();
@@ -73,10 +72,35 @@ public:
 
 
 	// Mission
-	UPROPERTY(BlueprintReadWrite)
-	UMissionManager* MissionManager;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	UMissionComp* MissionManager;
+
+	UPROPERTY(BlueprintAssignable)
+	FMissionEvent MissionStart;
+
+	UPROPERTY(BlueprintAssignable)
+	FMissionEvent MissionSuccess;
+
+	UPROPERTY(BlueprintAssignable)
+	FMissionEvent MissionFail;
+
+	UPROPERTY(BlueprintAssignable)
+	FMissionEvent MissionEndEvent;
+
+	UFUNCTION()
+	void LevelMissionStart();
+
+	UFUNCTION()
+	void LevelMissionSuccess();
+
+	UFUNCTION()
+	void LevelMissionFail();
+
+	UFUNCTION()
+	void CallMissionEndEvent();
 
 
 protected:
 	virtual void PostLogin(APlayerController* NewPlayer) override;
+	virtual void HandleStartingNewPlayer_Implementation(APlayerController* NewPlayer) override;
 };

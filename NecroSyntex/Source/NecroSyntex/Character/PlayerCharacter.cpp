@@ -33,6 +33,8 @@
 #include "NecroSyntex/NecroSyntaxComponents/LagCompensationComponent.h"
 #include "NecroSyntex/PickUps/HealingStation.h"
 #include "NecroSyntex\PickUps\SupplyCrate.h"
+#include "NecroSyntex/NecroSyntaxComponents/DR_FlashDroneComponent.h"
+#include "NecroSyntex/NecroSyntaxComponents/DR_FlashDrone.h"
 
 // Animation
 #include "PlayerAnimInstance.h"
@@ -122,6 +124,11 @@ APlayerCharacter::APlayerCharacter()
 	//================= Voice Pack ================
 	VoiceComp = CreateDefaultSubobject<UVoiceComponent>(TEXT("VoiceComponent"));
 	VoiceComp->SetIsReplicated(true);
+
+	FlashDroneComponent = CreateDefaultSubobject<UDR_FlashDroneComponent>(TEXT("FlashDroneComp"));
+
+	bReplicates = true;
+	SetReplicateMovement(true);
 }
 
 #pragma endregion
@@ -136,16 +143,23 @@ void APlayerCharacter::BeginPlay()
 		VoiceComp->VoiceSet = DefaultVoiceSet;
 	}
 
-	TRY_PLAY_VOICE(EVoiceCue::GameStart);
-
 	// Input mapping
 	if (APlayerController* PC = Cast<APlayerController>(GetController()))
 	{
 		if (UEnhancedInputLocalPlayerSubsystem* SubSys = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PC->GetLocalPlayer()))
 		{
+			SubSys->ClearAllMappings();
 			SubSys->AddMappingContext(DefaultMappingContext, 0);
+			UE_LOG(LogTemp, Warning, TEXT("AddMappingContext 확인"));
+		}
+		else {
+			UE_LOG(LogTemp, Warning, TEXT("AddMappingContext 작동X"));
 		}
 	}
+	else {
+		UE_LOG(LogTemp, Warning, TEXT("AddMapping 전 GetController 작동X"));
+	}
+
 
 	// Initialize weapons and HUD
 	SpawnDefaultWeapon();
@@ -179,8 +193,41 @@ void APlayerCharacter::BeginPlay()
 	if (HasAuthority())
 	{
 		GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
+		Health = MaxHealth;
+		Shield = MaxShield;
+	}
+
+	if (HasAuthority() && FlashDroneComponent)
+	{
+		FActorSpawnParameters SpawnParams;
+		SpawnParams.Owner = this;
 	}
 }
+void APlayerCharacter::PossessedBy(AController* NewController)
+{
+	Super::PossessedBy(NewController);
+
+	ANecroSyntexPlayerController* NPC = Cast<ANecroSyntexPlayerController>(NewController);
+	if (!NPC) {
+		GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, TEXT("NecroSyntex Not Possessd XXXXXX"));
+	}
+	else {
+		GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, TEXT("NecroSyntex Possessd OOOOOOOO"));
+		UE_LOG(LogTemp, Error, TEXT("Possessed 작동"));
+	}
+
+	if (UDC) {
+		UDC->InitDopingSkillSet();
+	}
+	else {
+		UE_LOG(LogTemp, Error, TEXT("UDC 인식 안됨"));
+	}
+
+	bDisableGameplay = false;
+
+}
+
+
 #pragma endregion
 
 #pragma region Tick
@@ -217,7 +264,22 @@ void APlayerCharacter::Tick(float DeltaTime)
 		HandleHeadBob(DeltaTime);
 	}
 
+	if (IsLocallyControlled() && FlashDroneComponent)
+	{
+		if (ADR_FlashDrone* Drone = FlashDroneComponent->GetFlashDrone())
+		{
+			const FVector AimTarget = (Combat && Combat->bAiming) ? Combat->HitTarget
+				: FVector::ZeroVector;
+			Drone->SetAimTarget(AimTarget);
+		}
+	}
+
 	PollInit();
+
+	//Player speed update code.
+	if (HasAuthority()) {
+		UpdateMaxWalkSpeed();
+	}
 }
 #pragma endregion
 
@@ -247,8 +309,8 @@ void APlayerCharacter::PostInitializeComponents()
 void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent)) {
-
 		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &APlayerCharacter::Move);
+		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &APlayerCharacter::Look);
 		EnhancedInputComponent->BindAction(EquipAction, ETriggerEvent::Triggered, this, &APlayerCharacter::EquipButtonPressed);
 		EnhancedInputComponent->BindAction(CrouchAction, ETriggerEvent::Started, this, &APlayerCharacter::CrouchButtonPressed);
 		EnhancedInputComponent->BindAction(AimAction, ETriggerEvent::Started, this, &APlayerCharacter::AimButtonPressed);
@@ -259,17 +321,31 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 		EnhancedInputComponent->BindAction(FireAction, ETriggerEvent::Completed, this, &APlayerCharacter::FireButtonReleased);
 		EnhancedInputComponent->BindAction(FlashAction, ETriggerEvent::Triggered, this, &APlayerCharacter::FlashButtonPressed);
 		EnhancedInputComponent->BindAction(ReloadAction, ETriggerEvent::Started, this, &APlayerCharacter::ReloadButtonPressed);
-		EnhancedInputComponent->BindAction(ThrowGrenade, ETriggerEvent::Triggered, this, &APlayerCharacter::GrenadeButtonPressed);
+		EnhancedInputComponent->BindAction(ThrowGrenade, ETriggerEvent::Started, this, &APlayerCharacter::GrenadeButtonPressed);
+		EnhancedInputComponent->BindAction(ThrowGrenade, ETriggerEvent::Completed, this, &APlayerCharacter::ResetGrenadeState);
 		EnhancedInputComponent->BindAction(SwapWeaponAction, ETriggerEvent::Triggered, this, &APlayerCharacter::SwapWeaponWheel);
 		EnhancedInputComponent->BindAction(UDCskill1, ETriggerEvent::Triggered, this, &APlayerCharacter::FirstDoping);
 		EnhancedInputComponent->BindAction(UDCskill2, ETriggerEvent::Triggered, this, &APlayerCharacter::SecondDoping);
 		EnhancedInputComponent->BindAction(UDCModeChange, ETriggerEvent::Triggered, this, &APlayerCharacter::DopingModeChange);
+		EnhancedInputComponent->BindAction(SwapFirstWeapon, ETriggerEvent::Triggered, this, &APlayerCharacter::SwapToFirstWeapon);
+		EnhancedInputComponent->BindAction(SwapSecondWeapon, ETriggerEvent::Triggered, this, &APlayerCharacter::SwapToSecondWeapon);
+		EnhancedInputComponent->BindAction(SwapThirdWeapon, ETriggerEvent::Triggered, this, &APlayerCharacter::SwapToThirdWeapon);
+		UE_LOG(LogTemp, Warning, TEXT("Enhanced Input success"));
+	}
+	else {
+		UE_LOG(LogTemp, Warning, TEXT("Enhanced Input fail"));
 	}
 }
 
 void APlayerCharacter::Move(const FInputActionValue& Value)
 {
-	if (bDisableGameplay) return;
+	UE_LOG(LogTemp, Warning, TEXT("bdisalbeGameplay is false 송태환 망할"));
+	if (bDisableGameplay) {
+		return;
+	}
+	else {
+		UE_LOG(LogTemp, Warning, TEXT("bdisalbeGameplay is false 송태환 이놈아 만들꺼면 제대로 만들지"));
+	}
 	FVector2D MovementVector = Value.Get<FVector2D>();
 
 	if (ReservedMoving)
@@ -285,138 +361,115 @@ void APlayerCharacter::Move(const FInputActionValue& Value)
 		const FVector ForwardDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
 		const FVector RightDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
 
-		float TargetSpeed = WalkSpeed;
-
-		// 상태 기반
-		if (bIsCrouched)
-		{
-			TargetSpeed = CrouchSpeed;
-		}
-		else if (Combat && Combat->bAiming)
-		{
-			TargetSpeed = AimWalkSpeed;
-		}
-		else if (IsLocallyReloading())
-		{
-			TargetSpeed = WalkSpeed * 0.6f;
-		}
-		else if (bIsSprinting || bWantsToSprint)
-		{
-			if (MovementVector.Y >= 0.5f)
-			{
-				bIsSprinting = true;
-				TargetSpeed = RunningSpeed;
-			}
-			else
-			{
-				bIsSprinting = false;
-				TargetSpeed = WalkSpeed;
-			}
-		}
-
-		// 방향 감속
-		if (!bIsSprinting)
-		{
-			if (MovementVector.Y < -0.1f)
-			{
-				TargetSpeed *= 0.6f;
-			}
-			else if (FMath::Abs(MovementVector.X) > 0.1f && FMath::Abs(MovementVector.Y) < 0.2f)
-			{
-				TargetSpeed *= 0.75f;
-			}
-		}
-		else
-		{
-			if (MovementVector.Y < 0.5f)
-			{
-				TargetSpeed *= 0.9f;
-			}
-		}
-
-		if (HasAuthority())
-		{
-			GetCharacterMovement()->MaxWalkSpeed = TargetSpeed;
-		}
-		else
-		{
-			static float SmoothedSpeed = WalkSpeed;
-			const float InterpSpeed = 10.f;
-			SmoothedSpeed = FMath::FInterpTo(SmoothedSpeed, TargetSpeed, GetWorld()->GetDeltaSeconds(), InterpSpeed);
-			GetCharacterMovement()->MaxWalkSpeed = SmoothedSpeed;
-		}
-
+		// 클라는 AddMovementInput만.
 		AddMovementInput(ForwardDirection, MovementVector.Y);
 		AddMovementInput(RightDirection, MovementVector.X);
 	}
 }
 
+void APlayerCharacter::Look(const FInputActionValue& Value)
+{
+	if (bDisableGameplay) return;
+	FVector2D LookInput = Value.Get<FVector2D>();
+
+	// 서버에 회전 입력 전송 (본인 컨트롤일 때만)
+	if (Controller && IsLocallyControlled())
+	{
+		if (!HasAuthority()) {
+			ServerUpdateLook(LookInput.X, LookInput.Y);
+		}
+		//ServerUpdateLook(LookInput.X, LookInput.Y);
+		
+		AddControllerYawInput(LookInput.X);
+		AddControllerPitchInput(LookInput.Y);
+	}
+}
+
+void APlayerCharacter::ServerUpdateLook_Implementation(float YawInput, float PitchInput)
+{
+	if (Controller)
+	{
+		FRotator NewRotation = Controller->GetControlRotation();
+		NewRotation.Yaw += YawInput;
+		NewRotation.Pitch = FMath::Clamp(NewRotation.Pitch + PitchInput, -89.f, 89.f);
+		Controller->SetControlRotation(NewRotation);
+
+		// **핵심: RootComponent(캡슐)의 회전도 변경해야 복제된다**
+		SetActorRotation(FRotator(0.f, NewRotation.Yaw, 0.f));
+	}
+}
+bool APlayerCharacter::ServerUpdateLook_Validate(float, float) { return true; }
 
 void APlayerCharacter::SprintStart()
 {
 	if (bDisableGameplay) return;
 
 	bWantsToSprint = true;
+	if (!HasAuthority())
+	{
+		// 클라 예측 반영
+		bIsSprinting = true;
+		GetCharacterMovement()->MaxWalkSpeed = RunningSpeed;
+		ServerSprintStart();
+		return;
+	}
 
 	if (!bIsSprinting && GetVelocity().Size() > 0.f)
 	{
 		bIsSprinting = true;
-
-		if (HasAuthority())
-		{
-			GetCharacterMovement()->MaxWalkSpeed = RunningSpeed;
-		}
-		else
-		{
-			ServerSprintStart();
-		}
+		//action state setting.
+		MoveActionState = 1;
+		GetCharacterMovement()->MaxWalkSpeed = RunningSpeed;
 	}
 }
-
 void APlayerCharacter::SprintStop()
 {
 	if (bDisableGameplay) return;
 
 	bWantsToSprint = false;
+	if (!HasAuthority())
+	{
+		// 클라 예측 반영
+		bIsSprinting = false;
+		GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
+		ServerSprintStop();
+		return;
+	}
 
 	if (bIsSprinting)
 	{
 		bIsSprinting = false;
-
-		if (HasAuthority())
-		{
-			GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
-		}
-		else
-		{
-			ServerSprintStop();
-		}
+		//action state setting.
+		MoveActionState = 0;
+		GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
 	}
 }
 
+
 void APlayerCharacter::ServerSprintStart_Implementation()
 {
-	GetCharacterMovement()->MaxWalkSpeed = RunningSpeed;
+	SprintStart();
 }
-
 void APlayerCharacter::ServerSprintStop_Implementation()
 {
-	GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
+	SprintStop();
 }
+bool APlayerCharacter::ServerSprintStart_Validate() { return true; }
+bool APlayerCharacter::ServerSprintStop_Validate() { return true; }
 
-bool APlayerCharacter::ServerSprintStart_Validate()
-{
-	return true;
-}
-
-bool APlayerCharacter::ServerSprintStop_Validate()
-{
-	return true;
-}
 
 void APlayerCharacter::CrouchButtonPressed()
 {
 	if (bDisableGameplay) return;
+	if (Combat->CombatState == ECombatState::ECS_ThrowingGrenade) return;
+
+	if (!HasAuthority())
+	{
+		if (bIsCrouched) UnCrouch();
+		else Crouch();
+		ServerCrouchButtonPressed();
+		return;
+	}
 
 	if (bIsCrouched)
 	{
@@ -426,18 +479,26 @@ void APlayerCharacter::CrouchButtonPressed()
 	else
 	{
 		Crouch();
+		//action state setting.
+		MoveActionState = 2;
 		GetCharacterMovement()->MaxWalkSpeed = CrouchSpeed;
 	}
 }
+
+void APlayerCharacter::ServerCrouchButtonPressed_Implementation()
+{
+	CrouchButtonPressed();
+}
+bool APlayerCharacter::ServerCrouchButtonPressed_Validate() { return true; }
+
 #pragma endregion
 
 #pragma region Combat Actions
 void APlayerCharacter::FireButtonPressed(const FInputActionValue& Value)
 {
-	if (bElimed || bDisableGameplay)
-	{
-		return;
-	}
+	if (bElimed || bDisableGameplay) return;
+
+	if (Combat && Combat->CombatState == ECombatState::ECS_ThrowingGrenade) return;
 
 	if (Combat && Combat->EquippedWeapon)
 	{
@@ -447,10 +508,9 @@ void APlayerCharacter::FireButtonPressed(const FInputActionValue& Value)
 
 void APlayerCharacter::FireButtonReleased(const FInputActionValue& Value)
 {
-	if (bElimed || bDisableGameplay)
-	{
-		return;
-	}
+	if (bElimed || bDisableGameplay) return;
+
+	if (Combat && Combat->CombatState == ECombatState::ECS_ThrowingGrenade) return;
 
 	if (Combat && Combat->EquippedWeapon)
 	{
@@ -469,11 +529,32 @@ void APlayerCharacter::ReloadButtonPressed()
 
 void APlayerCharacter::GrenadeButtonPressed()
 {
+	if (bDisableGameplay) return;
+	if (bIsMontagePlaying || Combat == nullptr) return;
+
+	// 이미 던지는 중이면 무시
+	if (Combat->CombatState == ECombatState::ECS_ThrowingGrenade)
+	{
+		return;
+	}
+
+	// 상태 설정 및 몽타주 타이머 시작
+	Combat->CombatState = ECombatState::ECS_ThrowingGrenade;
+	SetMontagePlaying(true);
+
+	// 실제 수류탄 투척 함수 실행
+	Combat->ThrowGrenade();
+}
+
+void APlayerCharacter::ResetGrenadeState()
+{
 	if (Combat)
 	{
-		Combat->ThrowGrenade();
+		Combat->CombatState = ECombatState::ECS_Unoccupied;
 	}
+	SetMontagePlaying(false);
 }
+
 
 bool APlayerCharacter::IsLocallyReloading()
 {
@@ -519,9 +600,10 @@ void APlayerCharacter::ServerEquipButtonPressed_Implementation()
 
 void APlayerCharacter::SwapWeaponWheel()
 {
+	if (bDisableGameplay) return;
 	if (Combat)
 	{
-		Combat->CycleWeapons();
+		PlaySwapMontage();
 	}
 
 	if (!HasAuthority())
@@ -539,8 +621,60 @@ void APlayerCharacter::ServerSwapWeaponWheel_Implementation()
 {
 	if (Combat)
 	{
-		Combat->CycleWeapons();
+		PlaySwapMontage();
 	}
+}
+
+void APlayerCharacter::SwapToFirstWeapon()
+{
+	if (bDisableGameplay) return;
+	if (CanSwapWeapon())
+	{
+		Combat->SwapWeaponByNumber(1);
+		StartWeaponSwapCooldown();
+	}
+}
+
+void APlayerCharacter::SwapToSecondWeapon()
+{
+	if (bDisableGameplay) return;
+	if (CanSwapWeapon())
+	{
+		Combat->SwapWeaponByNumber(2);
+		StartWeaponSwapCooldown();
+	}
+}
+
+void APlayerCharacter::SwapToThirdWeapon()
+{
+	if (bDisableGameplay) return;
+	if (CanSwapWeapon())
+	{
+		Combat->SwapWeaponByNumber(3);
+		StartWeaponSwapCooldown();
+	}
+}
+
+bool APlayerCharacter::CanSwapWeapon() const
+{
+	return (Combat && !bDisableGameplay && Combat->bCanSwapWeapon);
+}
+
+void APlayerCharacter::StartWeaponSwapCooldown()
+{
+	Combat->bCanSwapWeapon = false;
+	GetWorld()->GetTimerManager().SetTimer(
+		Combat->SwapCooldownTimer,
+		this,
+		&APlayerCharacter::ResetWeaponSwapCooldown,
+		Combat->SwapCooldownTime,
+		false
+	);
+}
+
+void APlayerCharacter::ResetWeaponSwapCooldown()
+{
+	Combat->bCanSwapWeapon = true;
 }
 
 void APlayerCharacter::AimButtonPressed()
@@ -550,6 +684,7 @@ void APlayerCharacter::AimButtonPressed()
 	{
 		Combat->SetAiming(true);
 	}
+
 }
 void APlayerCharacter::AimButtonReleased()
 {
@@ -562,6 +697,13 @@ void APlayerCharacter::AimButtonReleased()
 
 void APlayerCharacter::FlashButtonPressed()
 {
+	if (!FlashDroneComponent) return;
+
+	if (ADR_FlashDrone* Drone = FlashDroneComponent->GetFlashDrone())
+	{
+		bFlashLightOn = !bFlashLightOn;          // 토글
+		Drone->ToggleFlash(bFlashLightOn);       // 앞서 만든 RPC 호출
+	}
 }
 #pragma endregion
 
@@ -576,6 +718,19 @@ void APlayerCharacter::PlayFireMontage(bool bAiming)
 		FName SectionName;
 		SectionName = bAiming ? FName("RifleAim") : FName("RifleHip");
 		AnimInstance->Montage_JumpToSection(SectionName);
+	}
+
+	if (IsLocallyControlled() && NecroSyntexPlayerController && NecroSyntexPlayerController->PlayerCameraManager)
+	{
+		if (WalkHeadBob)
+		{
+			NecroSyntexPlayerController->PlayerCameraManager->StartCameraShake(
+				WalkHeadBob,
+				1.0f,
+				ECameraShakePlaySpace::CameraLocal,
+				FRotator::ZeroRotator
+			);
+		}
 	}
 }
 
@@ -598,9 +753,34 @@ void APlayerCharacter::PlayThrowGrenadeMontage()
 	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
 	if (AnimInstance && ThrowGrenadeMontage)
 	{
+		// 델리게이트 바인딩: 종료 시 호출
+		AnimInstance->OnMontageEnded.RemoveDynamic(this, &APlayerCharacter::OnThrowGrenadeMontageEnded);
+		AnimInstance->OnMontageEnded.AddDynamic(this, &APlayerCharacter::OnThrowGrenadeMontageEnded);
+
+		// 몽타주 재생
 		AnimInstance->Montage_Play(ThrowGrenadeMontage);
 	}
 }
+
+void APlayerCharacter::OnThrowGrenadeMontageEnded(UAnimMontage* Montage, bool bInterrupted)
+{
+	// 몽타주가 끝났을 때 처리
+	if (Montage == ThrowGrenadeMontage)
+	{
+		if (Combat)
+		{
+			Combat->ThrowGrenadeFinished();
+		}
+
+		// 델리게이트 제거
+		UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+		if (AnimInstance)
+		{
+			AnimInstance->OnMontageEnded.RemoveDynamic(this, &APlayerCharacter::OnThrowGrenadeMontageEnded);
+		}
+	}
+}
+
 
 void APlayerCharacter::PlaySwapMontage()
 {
@@ -707,6 +887,40 @@ void APlayerCharacter::ReloadMontageEndedHandler(UAnimMontage* Montage, bool bIn
 	}
 }
 
+void APlayerCharacter::SetMontagePlaying(bool bIsPlaying)
+{
+	bIsMontagePlaying = bIsPlaying;
+}
+
+void APlayerCharacter::ResetMontageState()
+{
+	SetMontagePlaying(false);
+	if (Combat)
+	{
+		Combat->CombatState = ECombatState::ECS_Unoccupied;
+		Combat->bCanFire = true;
+
+		// 무기 상태 복구
+		if (Combat->EquippedWeapon)
+		{
+			Combat->AttachActorToRightHand(Combat->EquippedWeapon);
+		}
+
+		// 모든 상태 초기화
+		bIsSprinting = false;
+		bWantsToSprint = false;
+		if (bIsCrouched)
+		{
+			UnCrouch();
+			GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
+		}
+		else
+		{
+			GetCharacterMovement()->MaxWalkSpeed = Combat->BaseWalkSpeed;
+		}
+	}
+}
+
 
 #pragma endregion
 
@@ -719,7 +933,19 @@ void APlayerCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, const U
 	}
 
 	TRY_PLAY_VOICE(EVoiceCue::TakeHit);
+	TakeDamageNotify(Damage);
 	PlayerHitReactMontage();
+
+	float NewDamage = Damage - Defense;
+	if (NewDamage <= 0.0f) {
+		NewDamage = 0.0f;
+	}
+
+	if (GEngine)
+	{
+		FString DamageText = FString::Printf(TEXT("Received : %f"), NewDamage);
+		GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, DamageText);
+	}
 
 	if (Combat && Combat->CombatState == ECombatState::ECS_Reloading)
 	{
@@ -728,7 +954,7 @@ void APlayerCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, const U
 
 	if (Shield > 0)
 	{
-		float NewShieldValue = FMath::Clamp(Shield - (Damage - Defense), 0.f, MaxShield);
+		float NewShieldValue = FMath::Clamp(Shield - NewDamage, 0.f, MaxShield);
 
 		if (NewShieldValue == 0 && Shield != 0)
 		{
@@ -743,7 +969,7 @@ void APlayerCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, const U
 	}
 	else
 	{
-		Health = FMath::Clamp(Health - (Damage - Defense), 0.f, MaxHealth);
+		Health = FMath::Clamp(Health - NewDamage, 0.f, MaxHealth);
 		UpdateHUDHealth();
 
 		if (Health <= Health / 20) TRY_PLAY_VOICE(EVoiceCue::LowHP);
@@ -917,6 +1143,11 @@ void APlayerCharacter::UpdateHUDHealth()
 	}
 }
 
+void APlayerCharacter::ClientUpdateHUDHealth_Implementation()
+{
+	UpdateHUDHealth();
+}
+
 void APlayerCharacter::UpdateHUDShield()
 {
 	NecroSyntexPlayerController = NecroSyntexPlayerController == nullptr ? Cast<ANecroSyntexPlayerController>(Controller) : NecroSyntexPlayerController;
@@ -924,6 +1155,11 @@ void APlayerCharacter::UpdateHUDShield()
 	{
 		NecroSyntexPlayerController->SetHUDShield(Shield, MaxShield);
 	}
+}
+
+void APlayerCharacter::ClientUpdateHUDShield_Implementation()
+{
+	UpdateHUDShield();
 }
 
 void APlayerCharacter::UpdateHUDAmmo()
@@ -1083,18 +1319,34 @@ float APlayerCharacter::CalculateSpeed()
 #pragma region Doping System
 void APlayerCharacter::FirstDoping()
 {
+
+	if (bDisableGameplay) return;
+	if (bIsMontagePlaying || Combat->CombatState != ECombatState::ECS_Unoccupied)
+	{
+		return;
+	}
+
 	if (UDC)
 	{
-	
+		SetMontagePlaying(true);
 		UDC->PressedFirstDopingKey();
+		GetWorldTimerManager().SetTimer(MontageEndTimer, this, &APlayerCharacter::ResetMontageState, 0.5f, false);
 	}
 }
 
 void APlayerCharacter::SecondDoping()
 {
+	if (bDisableGameplay) return;
+	if (bIsMontagePlaying || Combat->CombatState != ECombatState::ECS_Unoccupied)
+	{
+		return;
+	}
+
 	if (UDC)
 	{
+		SetMontagePlaying(true);
 		UDC->PressedSecondDopingKey();
+		GetWorldTimerManager().SetTimer(MontageEndTimer, this, &APlayerCharacter::ResetMontageState, 0.5f, false);
 	}
 }
 
@@ -1119,6 +1371,23 @@ UDopingComponent* APlayerCharacter::GetDopingComponent()
 void APlayerCharacter::HandleHeadBob(float DeltaTime)
 {
 	if (!IsLocallyControlled()) return;
+	if (bElimed) return;
+
+	static float AimStartTime = 0.f;
+	static bool bWasAiming = false;
+	bool bNowAiming = IsAiming();
+
+	if (bNowAiming && !bWasAiming)
+	{
+		AimStartTime = GetWorld()->GetTimeSeconds();
+	}
+	bWasAiming = bNowAiming;
+
+	if (bNowAiming)
+	{
+		if (GetWorld()->GetTimeSeconds() - AimStartTime < 3.f)
+			return; // 조준 시작 후 3초까지는 헤드밥 억제
+	}
 
 	if (!NecroSyntexPlayerController || !NecroSyntexPlayerController->PlayerCameraManager)
 	{
@@ -1154,12 +1423,16 @@ void APlayerCharacter::HandleHeadBob(float DeltaTime)
 	}
 }
 
+
 void APlayerCharacter::HSDeBuffON()
 {
-	GetWorld()->GetFirstPlayerController()->ClientStartCameraShake(UDeBuffCameraShake::StaticClass());
+	if (ANecroSyntexPlayerController* PC = Cast<ANecroSyntexPlayerController>(GetController()))
+	{
+		PC->ClientStartCameraShake(UDeBuffCameraShake::StaticClass());
+	}
 }
 
-void APlayerCharacter::SPStrengthDeBuffON()
+void APlayerCharacter::SPStrengthDeBuffON_Implementation()
 {
 
 	// 블러 효과 추가
@@ -1174,9 +1447,17 @@ void APlayerCharacter::SPStrengthDeBuffON()
 	FollowCamera->PostProcessBlendWeight = 1.0f;
 }
 
-void APlayerCharacter::SPStrengthDeBuffOFF()
+void APlayerCharacter::SPStrengthDeBuffOFF_Implementation()
 {
-	FollowCamera->PostProcessBlendWeight = 0.0f;
+	FollowCamera->PostProcessBlendWeight = 1.0f;
+
+	// 블러 효과 추가
+	FollowCamera->PostProcessSettings.bOverride_MotionBlurAmount = true;
+	FollowCamera->PostProcessSettings.MotionBlurAmount = 0.0f; // 블러 강도 (0.0 ~ 1.0)
+
+	// 색수차(번짐) 효과 추가
+	FollowCamera->PostProcessSettings.bOverride_SceneFringeIntensity = true;
+	FollowCamera->PostProcessSettings.SceneFringeIntensity = 0.0f; // 색수차 강도
 }
 
 #pragma endregion
@@ -1189,7 +1470,9 @@ void APlayerCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 	DOREPLIFETIME_CONDITION(APlayerCharacter, bIsSprinting, COND_SkipOwner);
 	DOREPLIFETIME(APlayerCharacter, bDisableGameplay);
 	DOREPLIFETIME(APlayerCharacter, Health);
+	DOREPLIFETIME(APlayerCharacter, MaxHealth);
 	DOREPLIFETIME(APlayerCharacter, Shield);
+	DOREPLIFETIME(APlayerCharacter, MaxShield);
 	DOREPLIFETIME(APlayerCharacter, HealingStationActor);
 	DOREPLIFETIME(APlayerCharacter, OverlappingSupplyCrate);
 
@@ -1201,7 +1484,7 @@ void APlayerCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 	DOREPLIFETIME(APlayerCharacter, ROF);
 	DOREPLIFETIME(APlayerCharacter, DopingDamageBuff);
 	DOREPLIFETIME(APlayerCharacter, ReservedMoving);
-
+	DOREPLIFETIME(APlayerCharacter, MoveActionState);
 }
 
 void APlayerCharacter::OnRep_ReplicatedMovement()
@@ -1211,13 +1494,9 @@ void APlayerCharacter::OnRep_ReplicatedMovement()
 	TimeSinceLastMovementReplication = 0.f;
 }
 
-void APlayerCharacter::OnRep_bIsSprinting()
+void APlayerCharacter::OnRep_IsSprinting()
 {
-	if (!IsLocallyControlled())
-	{
-		GetCharacterMovement()->MaxWalkSpeed =
-			bIsSprinting ? RunningSpeed : WalkSpeed;
-	}
+	GetCharacterMovement()->MaxWalkSpeed = bIsSprinting ? RunningSpeed : WalkSpeed;
 }
 
 void APlayerCharacter::OnRep_OverlappingWeapon(AWeapon* LastWeapon)
@@ -1242,7 +1521,16 @@ void APlayerCharacter::OnRep_Health(float LastHealth)
 	}
 }
 
+void APlayerCharacter::OnRep_MaxHealth()
+{
+	UpdateHUDHealth();
+}
+
 void APlayerCharacter::OnRep_Shield(float LastShield)
+{
+	UpdateHUDShield();
+}
+void APlayerCharacter::OnRep_MaxShield()
 {
 	UpdateHUDShield();
 }
@@ -1265,6 +1553,20 @@ void APlayerCharacter::PollInit()
 void APlayerCharacter::SetHealingStationActor(AHealingStation* Station)
 {
 	HealingStationActor = Station;
+}
+
+void APlayerCharacter::UseGrenade()
+{
+	Combat->RemoveGrenade(1);
+}
+
+int32 APlayerCharacter::GetCurrentGrenadeCount() const
+{
+	if (Combat)
+	{
+		return Combat->GetGrenades();
+	}
+	return 0;
 }
 
 void APlayerCharacter::SetOverlappingWeapon(AWeapon* Weapon)
@@ -1349,4 +1651,27 @@ void APlayerCharacter::ServerRequestHealing_Implementation()
 		HealingStationActor->Interact(this);
 	}
 }
+
+void APlayerCharacter::UpdateMaxWalkSpeed()
+{
+	switch (MoveActionState)
+	{
+	case 0:
+		GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
+		break;
+
+	case 1:
+		GetCharacterMovement()->MaxWalkSpeed = RunningSpeed;
+		break;
+
+	case 2:
+		GetCharacterMovement()->MaxWalkSpeed = CrouchSpeed;
+		break;
+
+	default:
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("who???"));
+		break;
+	}
+}
+
 #pragma endregion

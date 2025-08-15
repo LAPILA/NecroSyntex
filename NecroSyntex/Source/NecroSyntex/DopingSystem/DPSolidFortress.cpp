@@ -13,11 +13,13 @@ UDPSolidFortress::UDPSolidFortress()
 	CheckDeBuff = false;
 }
 
-void UDPSolidFortress::UseDopingItem(APlayerCharacter* DopedPC)
+bool UDPSolidFortress::UseDopingItem(APlayerCharacter* DopedPC)
 {
 	UE_LOG(LogTemp, Warning, TEXT("SolidFortress Use"));
 	//효과
 	BuffOn(DopedPC);
+
+	return true;
 }
 
 void UDPSolidFortress::BuffOn(APlayerCharacter* DopedPC)
@@ -26,6 +28,7 @@ void UDPSolidFortress::BuffOn(APlayerCharacter* DopedPC)
 		HPBuffNum = DopedPC->MaxHealth * 0.5f;
 
 		DopedPC->MaxHealth = DopedPC->MaxHealth + HPBuffNum;
+		DopedPC->UpdateHUDHealth();
 
 		DopedPC->CurrentDoped += 1;
 
@@ -41,6 +44,7 @@ void UDPSolidFortress::BuffOff(APlayerCharacter* DopedPC)
 {
 	if (CheckBuff == true) {
 		DopedPC->MaxHealth = DopedPC->MaxHealth - HPBuffNum;
+		DopedPC->UpdateHUDHealth();
 		CheckBuff = false;
 	}
 }

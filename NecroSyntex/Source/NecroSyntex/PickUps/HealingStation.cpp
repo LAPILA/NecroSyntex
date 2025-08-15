@@ -17,6 +17,14 @@ AHealingStation::AHealingStation()
     OverlapBox->SetupAttachment(RootComponent);
     OverlapBox->SetBoxExtent(FVector(200.f, 200.f, 150.f));
     bCanUse = true;
+
+    //duream code start.
+    //HealingMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("HealingMesh"));
+    //UStaticMeshComponent* ExistingMesh = Cast<UStaticMeshComponent>(RootComponent->GetChildComponent(0));
+    //HealingMesh->SetupAttachment(RootComponent);
+    //HealingMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+    //duream code end.
 }
 
 void AHealingStation::BeginPlay()
@@ -95,6 +103,10 @@ void AHealingStation::ServerInteract_Implementation(APlayerCharacter* PlayerChar
     HealAllPlayers();
     bCanUse = false;
     OnRep_bCanUse();
+    if (HealingMesh)
+    {
+        HealingMesh->SetOverlayMaterial(nullptr);
+    }
     GetWorldTimerManager().SetTimer(CooldownTimerHandle, this, &AHealingStation::ResetCooldown, CooldownTime, false);
 }
 

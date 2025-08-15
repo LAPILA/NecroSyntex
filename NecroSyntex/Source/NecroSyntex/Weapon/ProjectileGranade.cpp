@@ -10,7 +10,9 @@ AProjectileGranade::AProjectileGranade()
 {
 	ProjectileMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Grenade Mesh"));
 	ProjectileMesh->SetupAttachment(RootComponent);
-	ProjectileMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	//duream code edit collision setting.
+	ProjectileMesh->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+	//ProjectileMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
 	ProjectileMovementComponent = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("ProjectileMovementComponent"));
 	ProjectileMovementComponent->bRotationFollowsVelocity = true;
@@ -31,10 +33,14 @@ void AProjectileGranade::BeginPlay()
 	StartDestroyTimer();
 
 	ProjectileMovementComponent->OnProjectileBounce.AddDynamic(this, &AProjectileGranade::OnBounce);
+	
+	//CollisionBox->SetCollisionResponseToChannel(ECC_Pawn, ECR_Block);
 }
 
 void AProjectileGranade::OnBounce(const FHitResult& ImpactResult, const FVector& ImpactVelocity)
 {
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("bounce~~~~~"));
+	//ProjectileMesh->SetCollisionResponseToChannel(ECC_Pawn, ECR_Block);
 	if (BounceSound)
 	{
 		UGameplayStatics::PlaySoundAtLocation(

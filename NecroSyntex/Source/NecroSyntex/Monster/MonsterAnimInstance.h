@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "BasicMonsterAI.h"
+#include "EliteMonsterAI.h"
 #include "Animation/AnimInstance.h"
 #include "MonsterAnimInstance.generated.h"
 
@@ -24,4 +25,7 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
 	bool DieTime;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
+	bool isScreamSkillTime;
 };

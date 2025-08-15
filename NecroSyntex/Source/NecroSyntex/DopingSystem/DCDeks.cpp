@@ -7,10 +7,6 @@ void UDCDeks::BeginPlay()
 {
 	Super::BeginPlay();
 
-
-
-
-
 }
 
 void UDCDeks::Passive_Start()
@@ -35,6 +31,7 @@ void UDCDeks::Passive_End()
 
 	OwnerCharacter->Defense = OwnerCharacter->Defense - 10.0f;
 	UE_LOG(LogTemp, Warning, TEXT("Decks Passive OFF"));
+	passive_call = true;
 }
 
 void UDCDeks::FirstDopingUse()

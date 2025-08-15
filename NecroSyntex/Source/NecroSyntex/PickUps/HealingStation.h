@@ -14,6 +14,10 @@ public:
 
     UFUNCTION(BlueprintCallable)
     void Interact(class APlayerCharacter* PlayerCharacter);
+
+    //duream code add healingmesh;
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+    UStaticMeshComponent* HealingMesh;
 protected:
     virtual void BeginPlay() override;
 

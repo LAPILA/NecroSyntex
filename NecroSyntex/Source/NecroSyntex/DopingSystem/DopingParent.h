@@ -40,7 +40,7 @@ public:
 
 	// 아이템 사용 함수
 	UFUNCTION(BlueprintCallable, Category = "Doping")
-	virtual void UseDopingItem(APlayerCharacter* DopedPC);
+	virtual bool UseDopingItem(APlayerCharacter* DopedPC);
 
 	APlayerCharacter* APC;
 
@@ -70,4 +70,8 @@ public:
 	void EndCooldown();
 
 	void TimerEnd();
+
+	//buff debuf 상태 get하는 함수. duream 추가.
+	virtual bool GetBuff() const { return  CheckBuff; };
+	virtual bool GetDeBuff() const { return CheckDeBuff; };
 };

@@ -504,6 +504,7 @@ void ANecroSyntexPlayerController::HandleMatchHasStarted()
 	if (MyCharacter)
 	{
 		MyCharacter->bDisableGameplay = false;
+		MyCharacter->GetVoiceComp()->PlayVoice(EVoiceCue::GameStart);
 	}
 }
 
@@ -541,7 +542,8 @@ void ANecroSyntexPlayerController::HandleCooldown()
 				FString InfoTextString;
 				if (TopPlayers.Num() == 0)
 				{
-					InfoTextString = FString("There is no winner.");
+					//Need to change
+					InfoTextString = FString("Game will be start soon");
 				}
 				else if (TopPlayers.Num() == 1 && TopPlayers[0] == NecroSyntexPlayerState)
 				{

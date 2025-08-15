@@ -1,6 +1,8 @@
 ﻿// VoiceComponent.cpp
 #include "VoiceComponent.h"
 #include "Kismet/GameplayStatics.h"
+#include "Components/AudioComponent.h"
+#include "Sound/SoundClass.h"
 #include "Net/UnrealNetwork.h"
 
 UVoiceComponent::UVoiceComponent()
@@ -29,6 +31,15 @@ void UVoiceComponent::BeginPlay()
 	}
 }
 
+void UVoiceComponent::SetSoundClass(UAudioComponent* AudioComp, USoundClass* SoundClass)
+{
+	if (AudioComp && SoundClass)
+	{
+		AudioComp->SoundClassOverride = SoundClass;
+		UE_LOG(LogTemp, Log, TEXT("Sound class set: %s"), *SoundClass->GetName());
+	}
+}
+
 void UVoiceComponent::PlayVoice(EVoiceCue Cue, float Vol, float Pitch)
 {
 	/* 1) 권한 가드 ─ 소유 클라이언트(AutonomousProxy) 또는 서버만 실행 */
@@ -39,7 +50,8 @@ void UVoiceComponent::PlayVoice(EVoiceCue Cue, float Vol, float Pitch)
 
 	USoundBase* Snd = nullptr;
 	USoundAttenuation* Attn = nullptr;
-	VoiceSet->GetVoice(Cue, Snd, Attn);
+	USoundClass* SoundClass = nullptr;
+	VoiceSet->GetVoice(Cue, Snd, Attn, SoundClass);
 	if (!Snd) return;
 
 	const float MinInterval = CooldownTable[Cue];
@@ -66,13 +78,59 @@ void UVoiceComponent::ServerPlayVoice_Implementation(EVoiceCue Cue, float V, flo
 
 void UVoiceComponent::MulticastPlayVoice_Implementation(EVoiceCue Cue, float V, float P)
 {
-	if (!VoiceSet) return;
+    if (!VoiceSet) return;
 
-	USoundBase* Snd = nullptr;
-	USoundAttenuation* Attn = nullptr;
-	VoiceSet->GetVoice(Cue, Snd, Attn);
-	if (!Snd) return;
+    USoundBase* Snd = nullptr;
+    USoundAttenuation* Attn = nullptr;
+    USoundClass* SoundClass = nullptr;
+    VoiceSet->GetVoice(Cue, Snd, Attn, SoundClass);
+    if (!Snd) return;
 
-	const FVector Loc = GetOwner()->GetActorLocation();
-	UGameplayStatics::PlaySoundAtLocation(this, Snd, Loc, V, P, 0.f, Attn);
+    AActor* Owner = GetOwner();
+    if (!Owner) return;
+
+    // 사운드 클래스 이름 디버깅
+    if (SoundClass)
+    {
+        UE_LOG(LogTemp, Log, TEXT("Setting SoundClass: %s"), *SoundClass->GetName());
+    }
+    else
+    {
+        UE_LOG(LogTemp, Warning, TEXT("SoundClass is NULL"));
+    }
+
+    UAudioComponent* AudioComp = UGameplayStatics::SpawnSoundAttached(
+        Snd,
+        Owner->GetRootComponent(),
+        NAME_None,
+        FVector::ZeroVector,
+        FRotator::ZeroRotator,
+        EAttachLocation::KeepRelativeOffset,
+        true,
+        V,
+        P
+    );
+
+    if (AudioComp)
+    {
+        AudioComp->bAutoDestroy = true;
+
+        // SoundClass 강제 설정
+        if (SoundClass)
+        {
+            AudioComp->SoundClassOverride = SoundClass;
+            AudioComp->SetVolumeMultiplier(V);  // 볼륨 강제 설정
+            AudioComp->Play();  // 설정 후 재생
+        }
+        else
+        {
+            UE_LOG(LogTemp, Warning, TEXT("SoundClass was not applied."));
+        }
+
+        UE_LOG(LogTemp, Log, TEXT("Voice attached to %s"), *Owner->GetName());
+    }
+    else
+    {
+        UE_LOG(LogTemp, Warning, TEXT("Failed to attach voice to %s"), *Owner->GetName());
+    }
 }

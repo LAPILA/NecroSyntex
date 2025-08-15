@@ -23,7 +23,7 @@ public:
 	float RunningDeBuffNum;
 
 
-	void UseDopingItem(APlayerCharacter* DopedPC) override;
+	bool UseDopingItem(APlayerCharacter* DopedPC) override;
 
 	void BuffOn(APlayerCharacter* DopedPC) override;
 
@@ -32,4 +32,7 @@ public:
 	void BuffOff(APlayerCharacter* DopedPC) override;
 
 	void DeBuffOff(APlayerCharacter* DopedPC) override;
+
+	virtual bool GetBuff() const override { return  CheckBuff; };
+	virtual bool GetDeBuff() const override { return CheckDeBuff; };
 };
