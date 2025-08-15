@@ -614,4 +614,11 @@ public:
 	bool IsLocallyReloading();
 	FORCEINLINE ULagCompensationComponent* GetLagCompensation() const { return LagCompensation; }
 	FORCEINLINE UVoiceComponent* GetVoiceComp() const { return VoiceComp; }
+
+	//Player move action speed update by duream.
+	UPROPERTY(Replicated)
+	int MoveActionState;
+
+	UFUNCTION()
+	void UpdateMaxWalkSpeed();
 };
