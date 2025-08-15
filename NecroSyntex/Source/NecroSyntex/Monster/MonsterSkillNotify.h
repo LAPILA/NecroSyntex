@@ -16,4 +16,16 @@ class NECROSYNTEX_API UMonsterSkillNotify : public UAnimNotify
 	
 public:
 	virtual void Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation) override;
+
+	UPROPERTY(EditAnywhere)
+	bool isScreamSkill = false;
+
+	/*UPROPERTY(EditAnywhere)
+	float decreaseSpeed;*/
+
+	UPROPERTY()
+	float reducedSpeed = 0;
+
+	//UFUNCTION(NetMulticast, Reliable, BlueprintCallable)
+	//void MulticastRestoreSpeed(AActor* Target, float speed);
 };

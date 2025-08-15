@@ -148,9 +148,18 @@ void APlayerCharacter::BeginPlay()
 	{
 		if (UEnhancedInputLocalPlayerSubsystem* SubSys = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PC->GetLocalPlayer()))
 		{
+			SubSys->ClearAllMappings();
 			SubSys->AddMappingContext(DefaultMappingContext, 0);
+			UE_LOG(LogTemp, Warning, TEXT("AddMappingContext 확인"));
+		}
+		else {
+			UE_LOG(LogTemp, Warning, TEXT("AddMappingContext 작동X"));
 		}
 	}
+	else {
+		UE_LOG(LogTemp, Warning, TEXT("AddMapping 전 GetController 작동X"));
+	}
+
 
 	// Initialize weapons and HUD
 	SpawnDefaultWeapon();
@@ -213,6 +222,9 @@ void APlayerCharacter::PossessedBy(AController* NewController)
 	else {
 		UE_LOG(LogTemp, Error, TEXT("UDC 인식 안됨"));
 	}
+
+	bDisableGameplay = false;
+
 }
 
 
@@ -292,8 +304,8 @@ void APlayerCharacter::PostInitializeComponents()
 void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent)) {
-
 		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &APlayerCharacter::Move);
+		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &APlayerCharacter::Look);
 		EnhancedInputComponent->BindAction(EquipAction, ETriggerEvent::Triggered, this, &APlayerCharacter::EquipButtonPressed);
 		EnhancedInputComponent->BindAction(CrouchAction, ETriggerEvent::Started, this, &APlayerCharacter::CrouchButtonPressed);
 		EnhancedInputComponent->BindAction(AimAction, ETriggerEvent::Started, this, &APlayerCharacter::AimButtonPressed);
@@ -322,7 +334,13 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 
 void APlayerCharacter::Move(const FInputActionValue& Value)
 {
-	if (bDisableGameplay) return;
+	UE_LOG(LogTemp, Warning, TEXT("bdisalbeGameplay is false 송태환 망할"));
+	if (bDisableGameplay) {
+		return;
+	}
+	else {
+		UE_LOG(LogTemp, Warning, TEXT("bdisalbeGameplay is false 송태환 이놈아 만들꺼면 제대로 만들지"));
+	}
 	FVector2D MovementVector = Value.Get<FVector2D>();
 
 	if (ReservedMoving)
@@ -343,6 +361,39 @@ void APlayerCharacter::Move(const FInputActionValue& Value)
 		AddMovementInput(RightDirection, MovementVector.X);
 	}
 }
+
+void APlayerCharacter::Look(const FInputActionValue& Value)
+{
+	if (bDisableGameplay) return;
+	FVector2D LookInput = Value.Get<FVector2D>();
+
+	// 서버에 회전 입력 전송 (본인 컨트롤일 때만)
+	if (Controller && IsLocallyControlled())
+	{
+		if (!HasAuthority()) {
+			ServerUpdateLook(LookInput.X, LookInput.Y);
+		}
+		//ServerUpdateLook(LookInput.X, LookInput.Y);
+		
+		AddControllerYawInput(LookInput.X);
+		AddControllerPitchInput(LookInput.Y);
+	}
+}
+
+void APlayerCharacter::ServerUpdateLook_Implementation(float YawInput, float PitchInput)
+{
+	if (Controller)
+	{
+		FRotator NewRotation = Controller->GetControlRotation();
+		NewRotation.Yaw += YawInput;
+		NewRotation.Pitch = FMath::Clamp(NewRotation.Pitch + PitchInput, -89.f, 89.f);
+		Controller->SetControlRotation(NewRotation);
+
+		// **핵심: RootComponent(캡슐)의 회전도 변경해야 복제된다**
+		SetActorRotation(FRotator(0.f, NewRotation.Yaw, 0.f));
+	}
+}
+bool APlayerCharacter::ServerUpdateLook_Validate(float, float) { return true; }
 
 void APlayerCharacter::SprintStart()
 {
@@ -1257,6 +1308,7 @@ float APlayerCharacter::CalculateSpeed()
 #pragma region Doping System
 void APlayerCharacter::FirstDoping()
 {
+
 	if (bDisableGameplay) return;
 	if (bIsMontagePlaying || Combat->CombatState != ECombatState::ECS_Unoccupied)
 	{

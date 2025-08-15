@@ -38,6 +38,9 @@ private:
 	UInputAction* MoveAction;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UInputAction* LookAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* EquipAction;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
@@ -228,6 +231,10 @@ protected:
 	UFUNCTION(Server, Reliable, WithValidation)
 	void ServerCrouchButtonPressed();
 
+	void Look(const FInputActionValue& Value);
+
+	UFUNCTION(Server, Reliable, WithValidation)
+	void ServerUpdateLook(float YawInput,float PitchInput);
 	/**
 	* Hit boxes used for server-side rewind
 	*/
