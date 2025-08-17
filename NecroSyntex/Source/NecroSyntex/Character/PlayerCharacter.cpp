@@ -276,10 +276,7 @@ void APlayerCharacter::Tick(float DeltaTime)
 
 	PollInit();
 
-	//Player speed update code.
-	if (HasAuthority()) {
-		UpdateMaxWalkSpeed();
-	}
+	UpdateMaxWalkSpeed();
 }
 #pragma endregion
 
@@ -339,13 +336,10 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 
 void APlayerCharacter::Move(const FInputActionValue& Value)
 {
-	UE_LOG(LogTemp, Warning, TEXT("bdisalbeGameplay is false 송태환 망할"));
 	if (bDisableGameplay) {
 		return;
 	}
-	else {
-		UE_LOG(LogTemp, Warning, TEXT("bdisalbeGameplay is false 송태환 이놈아 만들꺼면 제대로 만들지"));
-	}
+
 	FVector2D MovementVector = Value.Get<FVector2D>();
 
 	if (ReservedMoving)
@@ -1478,6 +1472,7 @@ void APlayerCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 
 	DOREPLIFETIME(APlayerCharacter, WalkSpeed);
 	DOREPLIFETIME(APlayerCharacter, RunningSpeed);
+	DOREPLIFETIME(APlayerCharacter, CrouchSpeed);
 	DOREPLIFETIME(APlayerCharacter, MLAtaackPoint);
 	DOREPLIFETIME(APlayerCharacter, Defense);
 	DOREPLIFETIME(APlayerCharacter, Blurred);
