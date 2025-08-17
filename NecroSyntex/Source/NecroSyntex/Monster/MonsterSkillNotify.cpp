@@ -41,7 +41,9 @@ void UMonsterSkillNotify::Notify(USkeletalMeshComponent* MeshComp, UAnimSequence
 					GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("no buff debuff"));
 					slowWalkSpeed = FMath::Max(0.0f, originWalkSpeed - 300.0f);
 					slowRunningSpeed = FMath::Max(0.0f, originRunningSpeed - 300.0f);
-					player->GetCharacterMovement()->MaxWalkSpeed = slowWalkSpeed;
+					player->WalkSpeed = slowWalkSpeed;
+					player->RunningSpeed = slowRunningSpeed;
+					//player->GetCharacterMovement()->MaxWalkSpeed = slowWalkSpeed;
 					GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Timer start"));
 					player->GetWorldTimerManager().SetTimer(RestoreHandle, this, &UMonsterSkillNotify::RestoredSpeed, 5.0f, false);
 				}
@@ -49,6 +51,8 @@ void UMonsterSkillNotify::Notify(USkeletalMeshComponent* MeshComp, UAnimSequence
 					GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("use buff"));
 					slowWalkSpeed = FMath::Max(0.0f, originWalkSpeed - 300.0f);
 					slowRunningSpeed = FMath::Max(0.0f, originRunningSpeed - 300.0f);
+					player->WalkSpeed = slowWalkSpeed;
+					player->RunningSpeed = slowRunningSpeed;
 					GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Timer start"));
 					player->GetWorldTimerManager().SetTimer(RestoreHandle, this, &UMonsterSkillNotify::RestoredSpeed, 5.0f, false);
 				}
@@ -56,6 +60,8 @@ void UMonsterSkillNotify::Notify(USkeletalMeshComponent* MeshComp, UAnimSequence
 					GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("use debuff"));
 					slowWalkSpeed = FMath::Max(0.0f, originWalkSpeed - 300.0f);
 					slowRunningSpeed = FMath::Max(0.0f, originRunningSpeed - 300.0f);
+					player->WalkSpeed = slowWalkSpeed;
+					player->RunningSpeed = slowRunningSpeed;
 					GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Timer start"));
 					player->GetWorldTimerManager().SetTimer(RestoreHandle, this, &UMonsterSkillNotify::RestoredSpeed, 5.0f, false);
 				}
@@ -86,7 +92,7 @@ void UMonsterSkillNotify::RestoredSpeed()
 		}
 		restorePlayer->WalkSpeed = originWalkSpeed;
 		restorePlayer->RunningSpeed = originRunningSpeed;
-		restorePlayer->GetCharacterMovement()->MaxWalkSpeed = originWalkSpeed;
+		//restorePlayer->GetCharacterMovement()->MaxWalkSpeed = originWalkSpeed;
 		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("speed restored complete!!!!"));
 		targetPlayer.Remove(restorePlayer);
 	}

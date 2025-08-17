@@ -75,6 +75,9 @@ public:
 	void UpdateWalkSpeed(); //float NewWalkSpeed in parameter
 
 	UFUNCTION(BlueprintCallable)
+	void UpdateSpeed(float speed);
+
+	UFUNCTION(BlueprintCallable)
 	void AttackCoolTime();
 
 	//UFUNCTION(BlueprintCallable)
