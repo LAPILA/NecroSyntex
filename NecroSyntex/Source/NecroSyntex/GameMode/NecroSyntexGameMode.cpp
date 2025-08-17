@@ -316,7 +316,7 @@ void ANecroSyntexGameMode::HandleStartingNewPlayer_Implementation(APlayerControl
 	}
 
 
-	/*ANecroSyntexPlayerController* PC = Cast<ANecroSyntexPlayerController>(NewPlayer);
+	ANecroSyntexPlayerController* PC = Cast<ANecroSyntexPlayerController>(NewPlayer);
 	if (PC)
 	{
 		if (ANecroSyntexGameState* GS = GetGameState<ANecroSyntexGameState>())
@@ -327,9 +327,9 @@ void ANecroSyntexGameMode::HandleStartingNewPlayer_Implementation(APlayerControl
 
 		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("HandleStartingNewPlayer 작동 2"));
 
-		PC->GetInstanceAndSetSelectedCharacter();
-		SelectAndReadyComplete();
-	}*/
+		/*PC->GetInstanceAndSetSelectedCharacter();
+		SelectAndReadyComplete();*/
+	}
 }
 
 void ANecroSyntexGameMode::SelectAndReadyComplete_Implementation()
