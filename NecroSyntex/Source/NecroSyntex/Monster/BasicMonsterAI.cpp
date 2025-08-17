@@ -69,6 +69,13 @@ void ABasicMonsterAI::UpdateWalkSpeed()
 	}
 }
 
+void ABasicMonsterAI::UpdateSpeed(float speed)
+{
+	if (GetCharacterMovement()) {
+		GetCharacterMovement()->MaxWalkSpeed = speed;
+	}
+}
+
 //Weapon Damage
 float ABasicMonsterAI::TakeDamage_Implementation(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
 {
