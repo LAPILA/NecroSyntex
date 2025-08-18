@@ -1,93 +1,93 @@
 {
-	"FileVersion": 3,
-	"EngineAssociation": "5.3",
-	"Category": "",
-	"Description": "",
-	"Modules": [
-		{
-			"Name": "NecroSyntex",
-			"Type": "Runtime",
-			"LoadingPhase": "Default",
-			"AdditionalDependencies": [
-				"Engine",
-				"UMG",
-				"AIModule",
-				"GameplayCameras",
-				"CoreUObject",
-				"AdvancedSessions"
-			]
-		}
-	],
-	"Plugins": [
-		{
-			"Name": "ModelingToolsEditorMode",
-			"Enabled": true,
-			"TargetAllowList": [
-				"Editor"
-			]
-		},
-		{
-			"Name": "MultiplayerSessions",
-			"Enabled": false
-		},
-		{
-			"Name": "UltimateMultiplayerLobby",
-			"Enabled": true,
-			"MarketplaceURL": "com.epicgames.launcher://ue/Fab/product/74a15004-2adf-4fe3-abc6-16190fb582c5"
-		},
-		{
-			"Name": "OnlineSubsystemIOS",
-			"Enabled": false,
-			"SupportedTargetPlatforms": [
-				"IOS",
-				"TVOS"
-			]
-		},
-		{
-			"Name": "OnlineSubsystemGooglePlay",
-			"Enabled": false,
-			"SupportedTargetPlatforms": [
-				"Android"
-			]
-		},
-		{
-			"Name": "SunPosition",
-			"Enabled": true
-		},
-		{
-			"Name": "FieldSystemPlugin",
-			"Enabled": true
-		},
-		{
-			"Name": "MovieRenderPipeline",
-			"Enabled": true
-		},
-		{
-			"Name": "OnlineServices",
-			"Enabled": true
-		},
-		{
-			"Name": "OnlineSubsystemSteam",
-			"Enabled": true
-		},
-		{
-			"Name": "OnlineFramework",
-			"Enabled": true
-		},
-		{
-			"Name": "OnlineServicesNull",
-			"Enabled": true
-		},
-		{
-			"Name": "AdvancedSteamSessions",
-			"Enabled": true
-		},
-		{
-			"Name": "AdvancedSessions",
-			"Enabled": true
-		}
-	],
-	"TargetPlatforms": [
-		"Windows"
-	]
+   "FileVersion": 3,
+   "EngineAssociation": "5.3",
+   "Category": "",
+   "Description": "",
+   "Modules": [
+      {
+         "Name": "NecroSyntex",
+         "Type": "Runtime",
+         "LoadingPhase": "Default",
+         "AdditionalDependencies": [
+            "Engine",
+            "UMG",
+            "AIModule",
+            "GameplayCameras",
+            "CoreUObject",
+            "AdvancedSessions"
+         ]
+      }
+   ],
+   "Plugins": [
+      {
+         "Name": "ModelingToolsEditorMode",
+         "Enabled": true,
+         "TargetAllowList": [
+            "Editor"
+         ]
+      },
+      {
+         "Name": "MultiplayerSessions",
+         "Enabled": false
+      },
+      {
+         "Name": "UltimateMultiplayerLobby",
+         "Enabled": true,
+         "MarketplaceURL": "com.epicgames.launcher://ue/Fab/product/74a15004-2adf-4fe3-abc6-16190fb582c5"
+      },
+      {
+         "Name": "OnlineSubsystemIOS",
+         "Enabled": false,
+         "SupportedTargetPlatforms": [
+            "IOS",
+            "TVOS"
+         ]
+      },
+      {
+         "Name": "OnlineSubsystemGooglePlay",
+         "Enabled": false,
+         "SupportedTargetPlatforms": [
+            "Android"
+         ]
+      },
+      {
+         "Name": "SunPosition",
+         "Enabled": true
+      },
+      {
+         "Name": "FieldSystemPlugin",
+         "Enabled": true
+      },
+      {
+         "Name": "MovieRenderPipeline",
+         "Enabled": true
+      },
+      {
+         "Name": "OnlineServices",
+         "Enabled": true
+      },
+      {
+         "Name": "OnlineSubsystemSteam",
+         "Enabled": true
+      },
+      {
+         "Name": "OnlineFramework",
+         "Enabled": true
+      },
+      {
+         "Name": "OnlineServicesNull",
+         "Enabled": true
+      },
+      {
+         "Name": "AdvancedSteamSessions",
+         "Enabled": true
+      },
+      {
+         "Name": "AdvancedSessions",
+         "Enabled": true
+      }
+   ],
+   "TargetPlatforms": [
+      "Windows"
+   ]
 }
