@@ -265,8 +265,6 @@ void APlayerCharacter::Tick(float DeltaTime)
 	}
 
 	PollInit();
-
-	UpdateMaxWalkSpeed();
 }
 #pragma endregion
 
@@ -401,8 +399,6 @@ void APlayerCharacter::SprintStart()
 	if (!bIsSprinting && GetVelocity().Size() > 0.f)
 	{
 		bIsSprinting = true;
-		//action state setting.
-		MoveActionState = 1;
 		GetCharacterMovement()->MaxWalkSpeed = RunningSpeed;
 	}
 }
@@ -423,8 +419,6 @@ void APlayerCharacter::SprintStop()
 	if (bIsSprinting)
 	{
 		bIsSprinting = false;
-		//action state setting.
-		MoveActionState = 0;
 		GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
 	}
 }
@@ -463,8 +457,6 @@ void APlayerCharacter::CrouchButtonPressed()
 	else
 	{
 		Crouch();
-		//action state setting.
-		MoveActionState = 2;
 		GetCharacterMovement()->MaxWalkSpeed = CrouchSpeed;
 	}
 }
@@ -1465,7 +1457,6 @@ void APlayerCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 	DOREPLIFETIME(APlayerCharacter, ROF);
 	DOREPLIFETIME(APlayerCharacter, DopingDamageBuff);
 	DOREPLIFETIME(APlayerCharacter, ReservedMoving);
-	DOREPLIFETIME(APlayerCharacter, MoveActionState);
 }
 
 void APlayerCharacter::OnRep_ReplicatedMovement()
@@ -1630,28 +1621,6 @@ void APlayerCharacter::ServerRequestHealing_Implementation()
 	if (HealingStationActor)
 	{
 		HealingStationActor->Interact(this);
-	}
-}
-
-void APlayerCharacter::UpdateMaxWalkSpeed()
-{
-	switch (MoveActionState)
-	{
-	case 0:
-		GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
-		break;
-
-	case 1:
-		GetCharacterMovement()->MaxWalkSpeed = RunningSpeed;
-		break;
-
-	case 2:
-		GetCharacterMovement()->MaxWalkSpeed = CrouchSpeed;
-		break;
-
-	default:
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("who???"));
-		break;
 	}
 }
 

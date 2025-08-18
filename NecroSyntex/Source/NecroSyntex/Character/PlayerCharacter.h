@@ -294,7 +294,6 @@ protected:
 	UPROPERTY(ReplicatedUsing = OnRep_IsSprinting)
 	bool bIsSprinting;
 
-	bool bWantsToSprint = false;
 
 private:
 	UFUNCTION()
@@ -592,6 +591,8 @@ public:
 	void SetOverlappingWeapon(AWeapon* Weapon);
 	bool IsWeaponEquipped();
 	bool IsAiming();
+
+	bool bWantsToSprint = false;
 	FORCEINLINE float GetAO_Yaw() const { return AO_Yaw; }
 	FORCEINLINE float GetAO_Pitch() const { return AO_Pitch; }
 	AWeapon* GetEquippedWeapon();
@@ -621,10 +622,4 @@ public:
 		}
 		return nullptr;
 	}
-	//Player move action speed update by duream.
-	UPROPERTY(Replicated)
-	int MoveActionState;
-
-	UFUNCTION()
-	void UpdateMaxWalkSpeed();
 };

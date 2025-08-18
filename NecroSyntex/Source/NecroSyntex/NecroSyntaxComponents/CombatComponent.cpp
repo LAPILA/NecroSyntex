@@ -836,7 +836,6 @@ void UCombatComponent::Reload()
 void UCombatComponent::FinishReloading()
 {
 	if (!Character) return;
-
 	bLocallyReloading = false;
 
 	if (Character->bIsCrouched)
@@ -1385,14 +1384,29 @@ void UCombatComponent::InterpFOV(float DeltaTime)
 void UCombatComponent::SetAiming(bool bIsAiming)
 {
 	if (!Character || !EquippedWeapon) return;
-	if (bAiming == bIsAiming) return;
 
 	bAiming = bIsAiming;
 	ServerSetAiming(bIsAiming);
 
-	if (bAiming) Character->GetCharacterMovement()->MaxWalkSpeed = Character->AimWalkSpeed;
-	else if (Character->bIsCrouched) Character->GetCharacterMovement()->MaxWalkSpeed = Character->CrouchSpeed;
-	else Character->GetCharacterMovement()->MaxWalkSpeed = Character->WalkSpeed;
+	if (bAiming)
+	{
+		Character->GetCharacterMovement()->MaxWalkSpeed = Character->AimWalkSpeed;
+	}
+	else
+	{
+		if (Character->bIsCrouched)
+		{
+			Character->GetCharacterMovement()->MaxWalkSpeed = Character->CrouchSpeed;
+		}
+		else if (Character->bWantsToSprint)
+		{
+			Character->GetCharacterMovement()->MaxWalkSpeed = Character->RunningSpeed;
+		}
+		else
+		{
+			Character->GetCharacterMovement()->MaxWalkSpeed = Character->WalkSpeed;
+		}
+	}
 }
 
 void UCombatComponent::ServerSetAiming_Implementation(bool bIsAiming)
