@@ -94,9 +94,9 @@ void UCombatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 		SetHUDCrosshairs(DeltaTime);
 		InterpFOV(DeltaTime);
 
-		if (Character && Character->FlashDroneComponent && Character->FlashDroneComponent->GetFlashDrone())
+		if (ADR_FlashDrone* Drone = Character->GetFlashDrone())
 		{
-			Character->FlashDroneComponent->GetFlashDrone()->SetAimTarget(HitTarget);
+			Drone->SetAimTarget(HitTarget);
 		}
 	}
 }

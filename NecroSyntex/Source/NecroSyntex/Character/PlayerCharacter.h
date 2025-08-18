@@ -11,6 +11,7 @@
 #include "NecroSyntex/Interfaces/InteractWithCrossHairsInterface.h"
 #include "NecroSyntex/NecroSyntexType/CombatState.h"
 #include "NecroSyntex/Voice/VoiceComponent.h"
+#include "NecroSyntex/NecroSyntaxComponents/DR_FlashDrone.h"
 #include "NecroSyntex/NecroSyntaxComponents/DR_FlashDroneComponent.h"
 #include "PlayerCharacter.generated.h"
 
@@ -614,7 +615,12 @@ public:
 	bool IsLocallyReloading();
 	FORCEINLINE ULagCompensationComponent* GetLagCompensation() const { return LagCompensation; }
 	FORCEINLINE UVoiceComponent* GetVoiceComp() const { return VoiceComp; }
-
+	FORCEINLINE ADR_FlashDrone* GetFlashDrone() const {
+		if (FlashDroneComponent) {
+			return FlashDroneComponent->GetFlashDrone();
+		}
+		return nullptr;
+	}
 	//Player move action speed update by duream.
 	UPROPERTY(Replicated)
 	int MoveActionState;

@@ -1,33 +1,20 @@
-﻿#include "DR_FlashDroneComponent.h"
+﻿// Copyright NecroSyntex. All Rights Reserved.
+
+#include "DR_FlashDroneComponent.h"
 #include "Net/UnrealNetwork.h"
 #include "GameFramework/Character.h"
-#include "UObject/ConstructorHelpers.h"
 #include "DR_FlashDrone.h"
 
 UDR_FlashDroneComponent::UDR_FlashDroneComponent()
 {
     PrimaryComponentTick.bCanEverTick = false;
     SetIsReplicatedByDefault(true);
-
-    static ConstructorHelpers::FClassFinder<ADR_FlashDrone> DroneBP(
-        TEXT("/Game/Maincontents/Blueprints/Drone/BP_DR_FlashDrone")
-    );
-    if (DroneBP.Succeeded())
-    {
-        FlashDroneClass = DroneBP.Class;
-    }
-    else
-    {
-        UE_LOG(LogTemp, Error, TEXT("FlashDrone BP not found – check the path"));
-    }
 }
-
 
 void UDR_FlashDroneComponent::BeginPlay()
 {
     Super::BeginPlay();
 
-    // **서버** 에서만 드론을 생성하고, 다음 틱에 실행
     if (GetOwner()->HasAuthority())
     {
         GetWorld()->GetTimerManager().SetTimerForNextTick(
@@ -37,7 +24,7 @@ void UDR_FlashDroneComponent::BeginPlay()
 
 void UDR_FlashDroneComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
-    if (FlashDrone && !FlashDrone->IsPendingKill())
+    if (IsValid(FlashDrone))
     {
         FlashDrone->Destroy();
     }
@@ -47,7 +34,8 @@ void UDR_FlashDroneComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 
 void UDR_FlashDroneComponent::SpawnDrone_Internal()
 {
-    if (FlashDrone || !FlashDroneClass) return;
+    if (!GetOwner() || !GetWorld()) return;
+    if (IsValid(FlashDrone) || !FlashDroneClass) return;
 
     ACharacter* OwnerChar = Cast<ACharacter>(GetOwner());
     if (!OwnerChar) return;
@@ -62,10 +50,10 @@ void UDR_FlashDroneComponent::SpawnDrone_Internal()
     FlashDrone = GetWorld()->SpawnActor<ADR_FlashDrone>(
         FlashDroneClass, SpawnLoc, FRotator::ZeroRotator, Params);
 
-    if (FlashDrone)
+    if (IsValid(FlashDrone))
     {
-        FlashDrone->AttachToActor(OwnerChar, FAttachmentTransformRules::KeepWorldTransform);
         FlashDrone->InitFollowing(OwnerChar, MaxDistanceFromPlayer);
+        FlashDrone->AddTickPrerequisiteActor(OwnerChar);
     }
     else
     {
@@ -77,7 +65,7 @@ void UDR_FlashDroneComponent::ForceRespawn()
 {
     if (!GetOwner() || !GetOwner()->HasAuthority()) return;
 
-    if (FlashDrone && !FlashDrone->IsPendingKill())
+    if (IsValid(FlashDrone))
     {
         FlashDrone->Destroy();
     }
@@ -85,8 +73,7 @@ void UDR_FlashDroneComponent::ForceRespawn()
     SpawnDrone_Internal();
 }
 
-void UDR_FlashDroneComponent::GetLifetimeReplicatedProps(
-    TArray< FLifetimeProperty >& OutLifetimeProps) const
+void UDR_FlashDroneComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
     Super::GetLifetimeReplicatedProps(OutLifetimeProps);
     DOREPLIFETIME(UDR_FlashDroneComponent, FlashDrone);

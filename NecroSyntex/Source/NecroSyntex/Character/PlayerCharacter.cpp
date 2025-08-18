@@ -264,16 +264,6 @@ void APlayerCharacter::Tick(float DeltaTime)
 		HandleHeadBob(DeltaTime);
 	}
 
-	if (IsLocallyControlled() && FlashDroneComponent)
-	{
-		if (ADR_FlashDrone* Drone = FlashDroneComponent->GetFlashDrone())
-		{
-			const FVector AimTarget = (Combat && Combat->bAiming) ? Combat->HitTarget
-				: FVector::ZeroVector;
-			Drone->SetAimTarget(AimTarget);
-		}
-	}
-
 	PollInit();
 
 	UpdateMaxWalkSpeed();
@@ -693,11 +683,7 @@ void APlayerCharacter::FlashButtonPressed()
 {
 	if (!FlashDroneComponent) return;
 
-	if (ADR_FlashDrone* Drone = FlashDroneComponent->GetFlashDrone())
-	{
-		bFlashLightOn = !bFlashLightOn;          // 토글
-		Drone->ToggleFlash(bFlashLightOn);       // 앞서 만든 RPC 호출
-	}
+	// To Do: 필요 시 제작
 }
 #pragma endregion
 
