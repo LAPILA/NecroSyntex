@@ -264,19 +264,7 @@ void APlayerCharacter::Tick(float DeltaTime)
 		HandleHeadBob(DeltaTime);
 	}
 
-	if (IsLocallyControlled() && FlashDroneComponent)
-	{
-		if (ADR_FlashDrone* Drone = FlashDroneComponent->GetFlashDrone())
-		{
-			const FVector AimTarget = (Combat && Combat->bAiming) ? Combat->HitTarget
-				: FVector::ZeroVector;
-			Drone->SetAimTarget(AimTarget);
-		}
-	}
-
 	PollInit();
-
-	UpdateMaxWalkSpeed();
 }
 #pragma endregion
 
@@ -411,8 +399,6 @@ void APlayerCharacter::SprintStart()
 	if (!bIsSprinting && GetVelocity().Size() > 0.f)
 	{
 		bIsSprinting = true;
-		//action state setting.
-		MoveActionState = 1;
 		GetCharacterMovement()->MaxWalkSpeed = RunningSpeed;
 	}
 }
@@ -433,8 +419,6 @@ void APlayerCharacter::SprintStop()
 	if (bIsSprinting)
 	{
 		bIsSprinting = false;
-		//action state setting.
-		MoveActionState = 0;
 		GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
 	}
 }
@@ -473,8 +457,6 @@ void APlayerCharacter::CrouchButtonPressed()
 	else
 	{
 		Crouch();
-		//action state setting.
-		MoveActionState = 2;
 		GetCharacterMovement()->MaxWalkSpeed = CrouchSpeed;
 	}
 }
@@ -693,11 +675,7 @@ void APlayerCharacter::FlashButtonPressed()
 {
 	if (!FlashDroneComponent) return;
 
-	if (ADR_FlashDrone* Drone = FlashDroneComponent->GetFlashDrone())
-	{
-		bFlashLightOn = !bFlashLightOn;          // 토글
-		Drone->ToggleFlash(bFlashLightOn);       // 앞서 만든 RPC 호출
-	}
+	// To Do: 필요 시 제작
 }
 #pragma endregion
 
@@ -1479,7 +1457,6 @@ void APlayerCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 	DOREPLIFETIME(APlayerCharacter, ROF);
 	DOREPLIFETIME(APlayerCharacter, DopingDamageBuff);
 	DOREPLIFETIME(APlayerCharacter, ReservedMoving);
-	DOREPLIFETIME(APlayerCharacter, MoveActionState);
 }
 
 void APlayerCharacter::OnRep_ReplicatedMovement()
@@ -1644,28 +1621,6 @@ void APlayerCharacter::ServerRequestHealing_Implementation()
 	if (HealingStationActor)
 	{
 		HealingStationActor->Interact(this);
-	}
-}
-
-void APlayerCharacter::UpdateMaxWalkSpeed()
-{
-	switch (MoveActionState)
-	{
-	case 0:
-		GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
-		break;
-
-	case 1:
-		GetCharacterMovement()->MaxWalkSpeed = RunningSpeed;
-		break;
-
-	case 2:
-		GetCharacterMovement()->MaxWalkSpeed = CrouchSpeed;
-		break;
-
-	default:
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("who???"));
-		break;
 	}
 }
 

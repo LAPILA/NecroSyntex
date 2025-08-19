@@ -12,11 +12,13 @@ class NECROSYNTEX_API UDR_FlashDroneComponent : public UActorComponent
 public:
     UDR_FlashDroneComponent();
 
+    UFUNCTION(BlueprintPure, Category = "Drone")
     ADR_FlashDrone* GetFlashDrone() const { return FlashDrone; }
 
     /** 언제라도 강제로 새로 스폰하고 싶을 때 호출 */
     UFUNCTION(BlueprintCallable, Category = "FlashDrone")
     void ForceRespawn();
+
 
 protected:
     virtual void BeginPlay() override;
@@ -29,7 +31,7 @@ protected:
     UPROPERTY(Replicated)
     ADR_FlashDrone* FlashDrone = nullptr;
 
-    UPROPERTY(EditDefaultsOnly, Category = "FlashDrone")
+    UPROPERTY(EditDefaultsOnly, Category = "Drone")
     TSubclassOf<ADR_FlashDrone> FlashDroneClass;
 
     UPROPERTY(EditDefaultsOnly, Category = "FlashDrone")
