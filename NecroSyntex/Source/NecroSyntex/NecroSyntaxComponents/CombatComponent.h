@@ -49,7 +49,6 @@ public:
 	void ServerLaunchGrenade(const FVector_NetQuantize& Target);
 
 	void PickUpAmmo(EWeaponType WeaponType, int32 AmmoAmount);
-	bool bLocallyReloading = false;
 
 	void ResetFireState();
 

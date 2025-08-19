@@ -535,7 +535,7 @@ void APlayerCharacter::ResetGrenadeState()
 bool APlayerCharacter::IsLocallyReloading()
 {
 	if (Combat == nullptr) return false;
-	return Combat->bLocallyReloading;
+	return GetCombatState() == ECombatState::ECS_Reloading;
 }
 
 void APlayerCharacter::ReloadTimerFinished()
