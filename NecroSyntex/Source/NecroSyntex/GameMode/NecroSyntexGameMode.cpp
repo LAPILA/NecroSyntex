@@ -326,9 +326,6 @@ void ANecroSyntexGameMode::HandleStartingNewPlayer_Implementation(APlayerControl
 		}
 
 		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("HandleStartingNewPlayer 작동 2"));
-
-		/*PC->GetInstanceAndSetSelectedCharacter();
-		SelectAndReadyComplete();*/
 	}
 }
 

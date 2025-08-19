@@ -357,6 +357,7 @@ void UDopingComponent::FirstDopingUse() {
 		OwnerCharacter->SetHUDRemainFirstDoping();
 		OwnerCharacter->PlayDopingEffect();
 		OwnerCharacter->PlayDopingMontage();
+		OwnerCharacter->MulticastPlayDopingMontage();
 		passive_call = true;
 		ClientPlayDopingEffect();
 		FirstDopingCoolStart();
@@ -388,6 +389,7 @@ void UDopingComponent::SecondDopingUse() {
 		OwnerCharacter->SetHUDRemainSecondDoping();
 		OwnerCharacter->PlayDopingEffect();
 		OwnerCharacter->PlayDopingMontage();
+		OwnerCharacter->MulticastPlayDopingMontage();
 		passive_call = true;
 		ClientPlayDopingEffect();
 		SecondDopingCoolStart();

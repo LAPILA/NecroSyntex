@@ -1,31 +1,39 @@
-﻿// DR_FlashDrone.cpp
+﻿// Copyright NecroSyntex. All Rights Reserved.
+
 #include "DR_FlashDrone.h"
+#include "GameFramework/Pawn.h"
 #include "Components/SpotLightComponent.h"
 #include "Components/StaticMeshComponent.h"
+#include "Components/SphereComponent.h"
 #include "TimerManager.h"
-#include "DrawDebugHelpers.h"
+#include "Net/UnrealNetwork.h"
 
 ADR_FlashDrone::ADR_FlashDrone()
 {
     PrimaryActorTick.bCanEverTick = true;
     bReplicates = true;
-    SetReplicateMovement(true);
+    SetReplicateMovement(false);
 
-    RootComp = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
-    RootComponent = RootComp;
+    CollisionComp = CreateDefaultSubobject<USphereComponent>(TEXT("CollisionComp"));
+    RootComponent = CollisionComp;
+    CollisionComp->InitSphereRadius(35.f);
+    CollisionComp->SetCollisionProfileName(TEXT("Pawn"));
+    CollisionComp->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Ignore);
 
     DroneMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Mesh"));
     DroneMesh->SetupAttachment(RootComponent);
+    DroneMesh->SetCastShadow(false);
 
     SpotLight = CreateDefaultSubobject<USpotLightComponent>(TEXT("SpotLight"));
     SpotLight->SetupAttachment(DroneMesh);
-    SpotLight->Intensity = 50'000.f;
+    SpotLight->Intensity = 50000.f;
     SpotLight->SetRelativeLocation(FVector(0, 0, 30.f));
 }
 
 void ADR_FlashDrone::BeginPlay()
 {
     Super::BeginPlay();
+
     if (HasAuthority())
     {
         GetWorldTimerManager().SetTimer(
@@ -35,113 +43,95 @@ void ADR_FlashDrone::BeginPlay()
     }
 }
 
+void ADR_FlashDrone::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+    Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+    DOREPLIFETIME(ADR_FlashDrone, CurrentAimTarget);
+    DOREPLIFETIME(ADR_FlashDrone, ReplicatedLocation);
+    DOREPLIFETIME(ADR_FlashDrone, ReplicatedRotation);
+    DOREPLIFETIME(ADR_FlashDrone, TargetActor);
+}
+
 void ADR_FlashDrone::InitFollowing(AActor* InTarget, float InMaxDist)
 {
     TargetActor = InTarget;
     MaxDistance = InMaxDist;
+    InterpolationTargetLocation = GetActorLocation();
+    InterpolationTargetRotation = GetActorRotation();
 }
 
 void ADR_FlashDrone::Tick(float DeltaTime)
 {
     Super::Tick(DeltaTime);
-    if (!TargetActor) return;
+    if (!IsValid(TargetActor)) return;
 
-    /* ─── 1) 위치 계산 ─── */
-    FVector Base =
-        TargetActor->GetActorLocation()
-        + TargetActor->GetActorRightVector() * PivotRightOffset
-        + FVector(0, 0, OrbitHeight);
-    const bool bNowAiming = CurrentAimTarget.SizeSquared() > 1.f;
-
-    FVector DesiredLoc;
-    if (bNowAiming)
+    if (HasAuthority())
     {
-        const FVector AimDir = (CurrentAimTarget - Base).GetSafeNormal();
-        const FVector Right = FVector::CrossProduct(FVector::UpVector, AimDir).GetSafeNormal();
-        const FVector Up = FVector::CrossProduct(AimDir, Right);
+        // 1. 목표 위치 계산
+        const APawn* OwningPawn = Cast<APawn>(TargetActor);
+        FVector Base = TargetActor->GetActorLocation() + TargetActor->GetActorRightVector() * PivotRightOffset + FVector(0, 0, OrbitHeight);
+        const bool bNowAiming = CurrentAimTarget.SizeSquared() > 1.f;
+        FVector DesiredLoc;
+        if (bNowAiming)
+        {
+            const FVector AimDir = (CurrentAimTarget - Base).GetSafeNormal();
+            const FVector Right = FVector::CrossProduct(FVector::UpVector, AimDir).GetSafeNormal();
+            const FVector Up = FVector::CrossProduct(AimDir, Right);
+            DesiredLoc = Base + AimDir * AimOffset.X + Right * AimOffset.Y + Up * AimOffset.Z;
+        }
+        else
+        {
+            OrbitYaw = FMath::Fmod(OrbitYaw + OrbitSpeed * DeltaTime, 360.f);
+            const float Rad = FMath::DegreesToRadians(OrbitYaw);
+            DesiredLoc = Base + FVector(FMath::Cos(Rad), FMath::Sin(Rad), 0) * OrbitRadius;
+        }
 
-        DesiredLoc = Base
-            + AimDir * AimOffset.X     // 앞/뒤
-            + Right * AimOffset.Y     // 오른쪽
-            + Up * AimOffset.Z;    // 위/아래  ← **피치에 반응**
+        // 2. 서버 측 드론 위치 이동
+        FVector NewLocation = FMath::VInterpTo(GetActorLocation(), DesiredLoc, DeltaTime, FollowInterpSpeed);
+        FHitResult HitResult;
+        SetActorLocation(NewLocation, true, &HitResult);
+        if (HitResult.bBlockingHit) { SetActorLocation(HitResult.Location); }
+
+        // 3. 서버 측 드론 회전 계산 및 적용
+        FVector Dir;
+        if (bNowAiming) {
+            Dir = (CurrentAimTarget - SpotLight->GetComponentLocation()).GetSafeNormal();
+        }
+        else {
+            if (OwningPawn && OwningPawn->GetController()) {
+                Dir = OwningPawn->GetController()->GetControlRotation().Vector();
+            }
+            else {
+                Dir = TargetActor->GetActorForwardVector();
+            }
+        }
+        const float TurnSpd = bNowAiming ? 20.f : 10.f;
+        FRotator TargetRotation = Dir.Rotation();
+        SpotLight->SetWorldRotation(FMath::RInterpTo(SpotLight->GetComponentRotation(), TargetRotation, DeltaTime, TurnSpd));
+
+        // 4. 최종 위치와 회전 값을 복제 변수에 저장
+        ReplicatedLocation = GetActorLocation();
+        ReplicatedRotation = SpotLight->GetComponentRotation();
     }
     else
     {
-        OrbitYaw = FMath::Fmod(OrbitYaw + OrbitSpeed * DeltaTime, 360.f);
-        const float Rad = FMath::DegreesToRadians(OrbitYaw);
-        DesiredLoc = Base + FVector(FMath::Cos(Rad), FMath::Sin(Rad), 0) * OrbitRadius;
-    }
-
-    SetActorLocation(FMath::VInterpTo(GetActorLocation(), DesiredLoc, DeltaTime, FollowInterpSpeed));
-
-    /* ─── 2) 밝기 감지 ─── */
-    UpdateAutoLight();
-
-    /* ─── 3) 라이트 방향 ─── */
-    UpdateLightDirection();
-}
-
-void ADR_FlashDrone::UpdateAutoLight()
-{
-    if (!SpotLight || !TargetActor) return;
-
-    FHitResult Hit;
-    FVector Start = GetActorLocation();
-    FVector End = Start - FVector(0, 0, 250.f);
-
-    FCollisionQueryParams P; P.AddIgnoredActor(this); P.AddIgnoredActor(TargetActor);
-    bool bHit = GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECC_Visibility, P);
-
-    const float Ambient = bHit ? 0.f : 1.f;      // 예시 로직
-    SetLightActive(Ambient < 0.25f);
-}
-
-void ADR_FlashDrone::CheckDistanceAndTeleport()
-{
-    if (!TargetActor) return;
-    if (FVector::DistSquared(GetActorLocation(), TargetActor->GetActorLocation()) > FMath::Square(MaxDistance))
-    {
-        ForceTeleportToTarget();
+        // 클라이언트는 서버가 보내준 위치와 회전 값을 향해 부드럽게 보간합니다.
+        SetActorLocation(FMath::VInterpTo(GetActorLocation(), InterpolationTargetLocation, DeltaTime, FollowInterpSpeed));
+        SpotLight->SetWorldRotation(FMath::RInterpTo(SpotLight->GetComponentRotation(), InterpolationTargetRotation, DeltaTime, FollowInterpSpeed));
     }
 }
 
-void ADR_FlashDrone::UpdateLightDirection()
+void ADR_FlashDrone::OnRep_ServerState()
 {
-    if (!SpotLight) return;
-
-    const bool bNowAiming = CurrentAimTarget.SizeSquared() > 1.f;
-    const FVector Start = GetActorLocation();
-    const FVector Dir = bNowAiming ?
-        (CurrentAimTarget - Start).GetSafeNormal() :
-        (TargetActor->GetActorForwardVector() + FVector(0, 0, -0.18f)).GetSafeNormal();
-
-    const float TurnSpd = bNowAiming ? 20.f : 6.f;
-    const FRotator Target = Dir.Rotation();
-    SpotLight->SetWorldRotation(FMath::RInterpTo(
-        SpotLight->GetComponentRotation(), Target,
-        GetWorld()->GetDeltaSeconds(), TurnSpd));
-}
-
-void ADR_FlashDrone::SetLightActive(bool bActive)
-{
-    if (SpotLight) SpotLight->SetVisibility(bActive);
-}
-
-void ADR_FlashDrone::ForceTeleportToTarget()
-{
-    if (TargetActor)
-        SetActorLocation(TargetActor->GetActorLocation() + FVector(0, 0, OrbitHeight));
+    InterpolationTargetLocation = ReplicatedLocation;
+    InterpolationTargetRotation = ReplicatedRotation;
 }
 
 void ADR_FlashDrone::SetAimTarget(const FVector& NewTarget)
 {
-    if (HasAuthority())
+    // 클라이언트는 계산 없이 서버에 조준 위치만 보고합니다.
+    if (!HasAuthority())
     {
-        CurrentAimTarget = NewTarget;
-    }
-    else
-    {
-        CurrentAimTarget = NewTarget;
         ServerSetAimTarget(NewTarget);
     }
 }
@@ -151,34 +141,23 @@ void ADR_FlashDrone::ServerSetAimTarget_Implementation(const FVector_NetQuantize
     CurrentAimTarget = NewTarget;
 }
 
-void ADR_FlashDrone::OnRep_AimTarget() {}
 
-void ADR_FlashDrone::GetLifetimeReplicatedProps(TArray< FLifetimeProperty >& OutLifetimeProps) const
-{
-    Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-    DOREPLIFETIME(ADR_FlashDrone, CurrentAimTarget);
-}
+void ADR_FlashDrone::CheckDistanceAndTeleport() { if (TargetActor && FVector::DistSquared(GetActorLocation(), TargetActor->GetActorLocation()) > FMath::Square(MaxDistance)) { ForceTeleportToTarget(); } }
 
-void ADR_FlashDrone::ToggleFlash(bool bOn)
+void ADR_FlashDrone::ForceTeleportToTarget()
 {
-    if (HasAuthority())
+    if (HasAuthority() && IsValid(TargetActor))
     {
-        bFlashOn = bOn;
-        SetLightActive(bFlashOn);
-    }
-    else
-    {
-        ServerToggleFlash(bOn);      // 클라 → 서버
+        const FVector TeleportLocation = TargetActor->GetActorLocation() + FVector(0, 0, OrbitHeight);
+        const FRotator TeleportRotation = TargetActor->GetActorRotation();
+        Multicast_ForceTeleport(TeleportLocation, TeleportRotation);
     }
 }
 
-void ADR_FlashDrone::ServerToggleFlash_Implementation(bool bOn)
+void ADR_FlashDrone::Multicast_ForceTeleport_Implementation(const FVector& NewLocation, const FRotator& NewRotation)
 {
-    bFlashOn = bOn;
-    SetLightActive(bFlashOn);        // 서버에서 즉시 적용(→Rep)
-}
-
-void ADR_FlashDrone::OnRep_FlashOn()
-{
-    SetLightActive(bFlashOn);        // 원격 클라이언트 동기화
+    SetActorLocation(NewLocation);
+    SpotLight->SetWorldRotation(NewRotation);
+    InterpolationTargetLocation = NewLocation;
+    InterpolationTargetRotation = NewRotation;
 }
