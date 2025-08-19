@@ -105,6 +105,8 @@ public:
 	void OnThrowGrenadeMontageEnded(UAnimMontage* Montage, bool bInterrupted);
 	void PlaySwapMontage();
 	void PlayDopingMontage();
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastPlayDopingMontage();
 	virtual void OnRep_ReplicatedMovement() override;
 
 	void Elim();
@@ -523,11 +525,17 @@ public:
 
 
 	//Speed
-	UPROPERTY(Replicated, EditDefaultsOnly, Category = "Movement")
+	UPROPERTY(ReplicatedUsing = OnRep_WalkSpeed, EditDefaultsOnly, Category = "Movement")
 	float WalkSpeed = 600.f;
 
-	UPROPERTY(Replicated, EditDefaultsOnly, Category = "Movement")
+	UFUNCTION()
+	void OnRep_WalkSpeed();
+
+	UPROPERTY(ReplicatedUsing = OnRep_RunningSpeed, EditDefaultsOnly, Category = "Movement")
 	float RunningSpeed = 1200.f;
+
+	UFUNCTION()
+	void OnRep_RunningSpeed();
 
 	UPROPERTY(Replicated, EditDefaultsOnly, Category = "Movement")
 	float AimWalkSpeed = 400.f;
@@ -543,6 +551,12 @@ public:
 
 	UPROPERTY(Replicated, EditDefaultsOnly, Category = "Movement")
 	float MaxCharacterSpeed = 10000.f;
+
+	UFUNCTION()
+	void UpdateMaxWalkSpeed();
+
+	UFUNCTION(Server, Reliable)
+	void Server_UpdateMaxWalkSpeed();
 
 
 

@@ -264,6 +264,8 @@ void APlayerCharacter::Tick(float DeltaTime)
 		HandleHeadBob(DeltaTime);
 	}
 
+	UpdateMaxWalkSpeed();
+
 	PollInit();
 }
 #pragma endregion
@@ -466,6 +468,32 @@ void APlayerCharacter::ServerCrouchButtonPressed_Implementation()
 	CrouchButtonPressed();
 }
 bool APlayerCharacter::ServerCrouchButtonPressed_Validate() { return true; }
+
+void APlayerCharacter::UpdateMaxWalkSpeed()
+{
+	if (bIsCrouched) {
+		GetCharacterMovement()->MaxWalkSpeed = CrouchSpeed;
+	}
+	else if (bWantsToSprint) {
+		GetCharacterMovement()->MaxWalkSpeed = RunningSpeed;
+	}
+	else {
+		GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
+	}
+}
+
+void APlayerCharacter::Server_UpdateMaxWalkSpeed_Implementation()
+{
+	if (bIsCrouched) {
+		GetCharacterMovement()->MaxWalkSpeed = CrouchSpeed;
+	}
+	else if (bWantsToSprint) {
+		GetCharacterMovement()->MaxWalkSpeed = RunningSpeed;
+	}
+	else {
+		GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
+	}
+}
 
 #pragma endregion
 
@@ -772,6 +800,12 @@ void APlayerCharacter::PlayDopingMontage()
 	}
 }
 
+void APlayerCharacter::MulticastPlayDopingMontage_Implementation()
+{
+	PlayDopingMontage();
+}
+
+
 void APlayerCharacter::PlayerHitReactMontage()
 {
 	if (Combat == nullptr || Combat->EquippedWeapon == nullptr) return;
@@ -878,18 +912,17 @@ void APlayerCharacter::ResetMontageState()
 			Combat->AttachActorToRightHand(Combat->EquippedWeapon);
 		}
 
-		// 모든 상태 초기화
-		bIsSprinting = false;
-		bWantsToSprint = false;
-		if (bIsCrouched)
-		{
-			UnCrouch();
-			GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
-		}
-		else
-		{
-			GetCharacterMovement()->MaxWalkSpeed = Combat->BaseWalkSpeed;
-		}
+		//// 모든 상태 초기화
+		//bIsSprinting = false;
+		//bWantsToSprint = false;
+		//if (bIsCrouched)
+		//{
+		//	UnCrouch();
+		//}
+
+		//GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
+		// 아래에 서버도 업데이트 함수 넣어야함
+
 	}
 }
 
@@ -1505,6 +1538,18 @@ void APlayerCharacter::OnRep_Shield(float LastShield)
 void APlayerCharacter::OnRep_MaxShield()
 {
 	UpdateHUDShield();
+}
+
+void APlayerCharacter::OnRep_WalkSpeed()
+{
+	Server_UpdateMaxWalkSpeed();
+	UpdateMaxWalkSpeed();
+}
+
+void APlayerCharacter::OnRep_RunningSpeed()
+{
+	Server_UpdateMaxWalkSpeed();
+	UpdateMaxWalkSpeed();
 }
 #pragma endregion
 
