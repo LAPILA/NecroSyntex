@@ -19,10 +19,12 @@ ADR_FlashDrone::ADR_FlashDrone()
     CollisionComp->InitSphereRadius(35.f);
     CollisionComp->SetCollisionProfileName(TEXT("Pawn"));
     CollisionComp->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Ignore);
+    CollisionComp->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Ignore);
 
     DroneMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Mesh"));
     DroneMesh->SetupAttachment(RootComponent);
     DroneMesh->SetCastShadow(false);
+    DroneMesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Ignore);
 
     SpotLight = CreateDefaultSubobject<USpotLightComponent>(TEXT("SpotLight"));
     SpotLight->SetupAttachment(DroneMesh);

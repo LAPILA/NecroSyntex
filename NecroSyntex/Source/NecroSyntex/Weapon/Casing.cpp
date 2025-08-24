@@ -30,5 +30,9 @@ void ACasing::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitive
 	{
 		UGameplayStatics::PlaySoundAtLocation(this, ShellSound, GetActorLocation());
 	}
-	Destroy();
+
+	CasingMesh->SetSimulatePhysics(false);
+	CasingMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+	SetLifeSpan(2.0f);
 }
