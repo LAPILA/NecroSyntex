@@ -40,19 +40,19 @@ void UMonsterSkillNotify::Notify(USkeletalMeshComponent* MeshComp, UAnimSequence
 				Doping_LegForce(player);
 				
 				//무통증 도핑
-				Doping_PainLess(player);
+				//Doping_PainLess(player);
 				
 				//마지막 불꽃 도핑
-				Doping_FinalEmber(player);
+				//Doping_FinalEmber(player);
 				
 				//단단한 요새 도핑
-				Doping_SolidFortress(player);
+				//Doping_SolidFortress(player);
 
 				//수호의 역설 도핑
-				Doping_Paradox(player);
+				//Doping_Paradox(player);
 
 				//혼돈의 저주 도핑
-				Doping_CurseofChaos(player);
+				//Doping_CurseofChaos(player);
 			}
 			else {
 				GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("nonononoeeeeee"));
@@ -80,7 +80,7 @@ void UMonsterSkillNotify::RestoredSpeed()
 		}
 		restorePlayer->WalkSpeed = originWalkSpeed;
 		restorePlayer->RunningSpeed = originRunningSpeed;
-		//restorePlayer->GetCharacterMovement()->MaxWalkSpeed = originWalkSpeed;
+		restorePlayer->GetCharacterMovement()->MaxWalkSpeed = originWalkSpeed;
 		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("speed restored complete!!!!"));
 		targetPlayer.Remove(restorePlayer);
 	}
@@ -91,12 +91,12 @@ void UMonsterSkillNotify::Doping_LegForce(APlayerCharacter* player)
 {
 	if (!player->UDC->LegEnforce->GetBuff() && !player->UDC->LegEnforce->GetDeBuff()) {
 		//평상시 감소값 + 타이머
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("no buff debuff"));
-		slowWalkSpeed = FMath::Max(0.0f, originWalkSpeed - LegNumber);
-		slowRunningSpeed = FMath::Max(0.0f, originRunningSpeed - LegNumber);
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Leg no buff debuff"));
+		slowWalkSpeed = FMath::Max(0.0f, originWalkSpeed - 300.0f);
+		slowRunningSpeed = FMath::Max(0.0f, originRunningSpeed - 300.0f);
 		player->WalkSpeed = slowWalkSpeed;
 		player->RunningSpeed = slowRunningSpeed;
-		//player->GetCharacterMovement()->MaxWalkSpeed = slowWalkSpeed;
+		player->GetCharacterMovement()->MaxWalkSpeed = slowWalkSpeed;
 		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Timer start"));
 		player->GetWorldTimerManager().SetTimer(RestoreHandle, this, &UMonsterSkillNotify::RestoredSpeed, 5.0f, false);
 	}

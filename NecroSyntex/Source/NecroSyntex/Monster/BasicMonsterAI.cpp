@@ -20,12 +20,16 @@
 #include "NecroSyntex/Character/PlayerCharacter.h"
 #include "M_Spawner.h"
 #include <Kismet/GameplayStatics.h>
+#include <Net/UnrealNetwork.h>
 
 // Sets default values
 ABasicMonsterAI::ABasicMonsterAI()
 {
 	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = false;
+
+	bReplicates = true;
+	SetReplicateMovement(true);
 
 	MonsterHP = 100.0f;
 	MonsterAD = 20.0f;
@@ -109,27 +113,23 @@ float ABasicMonsterAI::TakeDamage_Implementation(float DamageAmount, FDamageEven
 	if (MonsterHP <= 0.0f) {
 		UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
 		UMonsterAnimInstance* MonsterAnim = Cast<UMonsterAnimInstance>(AnimInstance);
-		AController* TempController = GetController();
-		AAIController* AIController = Cast<AAIController>(TempController);
 
 		MonsterAnim->DieTime = true;
+
+		//MonsterStopMove();
+		MoveStop_Implementation();
 
 		GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 		if (GetMesh())
 		{
 			GetMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 		}
-
-		if (AIController) {
-			//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("AI Controller UnPossess()"));
-			AIController->UnPossess();  // AIController 해제
-		}
-
+		//bIsDead = true;
+		
+		//OnRep_StopMove();
+		//OnRep_IsDead();
 		PlayDeathAnimation();
-
-		MonsterStopMove();
-
-		DelayedFunction(2.2f); // 일정 시간 후 제거 또는 리스폰
+		//FlushNetDormancy();
 	}
 	return DamageAmount;
 }
@@ -188,9 +188,7 @@ void ABasicMonsterAI::TakeDopingDamage(float DopingDamageAmount)
 
 void ABasicMonsterAI::MonsterStopMove()
 {
-	if (GetCharacterMovement()) {
-		GetCharacterMovement()->MaxWalkSpeed = 0.0f;
-	}
+	GetCharacterMovement()->MaxWalkSpeed = stopSpeed;
 }
 
 void ABasicMonsterAI::AttackCoolTime()
@@ -207,9 +205,14 @@ void ABasicMonsterAI::PlayHitAnimation()//약한 데미지인 경우 hit 애니메이션 재생
 
 void ABasicMonsterAI::Multicast_PlayHitAnimation_Implementation()
 {
-	if (HitReactionMontage && GetMesh() && GetMesh()->GetAnimInstance()) {
+	//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("Multicast_PlayHitAnimation_Implementation Call"));
+	bIsHit = true;
+	/*if (HitReactionMontage && GetMesh() && GetMesh()->GetAnimInstance()) {
 		GetMesh()->GetAnimInstance()->Montage_Play(HitReactionMontage);
-	}
+	}*/
+	OnRep_IsHit();
+	ForceNetUpdate();
+	FlushNetDormancy();
 }
 
 void ABasicMonsterAI::PlayHitHighDamageAnimation()//강한 데미지인 경우 hit 애니메이션 재생
@@ -219,19 +222,107 @@ void ABasicMonsterAI::PlayHitHighDamageAnimation()//강한 데미지인 경우 hit 애니�
 	}
 }
 
+void ABasicMonsterAI::OnRep_IsHit()
+{
+	if (!bIsHit) {
+		return;
+	}
+
+	if (HitReactionMontage && GetMesh() && GetMesh()->GetAnimInstance()) {
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("OnRep Hit Call"));
+		GetMesh()->GetAnimInstance()->Montage_Play(HitReactionMontage);
+	}
+}
+
 void ABasicMonsterAI::PlayDeathAnimation()//죽음 애니메이션 재생
 {
-	if (HasAuthority()) {
-		Multicast_PlayDeathAnimation();
+	if (!HasAuthority()) {
+		return;
 	}
+	bIsDead = true;
+	
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("Server : PlayDeathAnimation Start"));
+	//Multicast_PlayDeathAnimation();
+	
+	OnRep_IsDead();
+	ForceNetUpdate();
+	FlushNetDormancy();
 }
 
 void ABasicMonsterAI::Multicast_PlayDeathAnimation_Implementation()
 {
-	if (DeathReactionMontage && GetMesh() && GetMesh()->GetAnimInstance()) {
-		//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("DeathReaction Start"));
+	//bIsDead = true;
+	//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("Multicast_PlayDeathAnimation_Implementation Start"));
+	/*if (DeathReactionMontage && GetMesh() && GetMesh()->GetAnimInstance()) {
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("Multicast_PlayDeathAnimation_Implementation Start"));
 		GetMesh()->GetAnimInstance()->Montage_Play(DeathReactionMontage);
+	}*/
+	//OnRep_IsDead();
+	//ForceNetUpdate();
+	//FlushNetDormancy();
+}
+
+void ABasicMonsterAI::OnRep_IsDead()
+{
+	if (!bIsDead || bAlreadyDead) {
+		return;
 	}
+	
+	// 죽음 몽타주 재생
+	if (USkeletalMeshComponent* MeshComp = GetMesh())
+	{
+		if (UAnimInstance* Anim = MeshComp->GetAnimInstance())
+		{
+			if (auto* MonsterAnim = Cast<UMonsterAnimInstance>(Anim))
+			{
+				MonsterAnim->DieTime = true;
+			}
+
+			if (DeathReactionMontage)
+			{
+				bAlreadyDead = true;
+				Anim->Montage_Play(DeathReactionMontage);
+			}
+		}
+	}
+
+	if (AAIController* AIController = Cast<AAIController>(GetController()))
+	{
+		AIController->UnPossess();
+	}
+
+	DelayedFunction(2.2f);
+}
+
+void ABasicMonsterAI::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	DOREPLIFETIME_CONDITION_NOTIFY(ABasicMonsterAI, bIsDead, COND_None, REPNOTIFY_OnChanged);
+	DOREPLIFETIME_CONDITION_NOTIFY(ABasicMonsterAI, bIsStopMove, COND_None, REPNOTIFY_OnChanged);
+	DOREPLIFETIME_CONDITION_NOTIFY(ABasicMonsterAI, bIsHit, COND_None, REPNOTIFY_OnChanged);
+}
+
+void ABasicMonsterAI::OnRep_StopMove()
+{
+	if (!bIsStopMove) {
+		return;
+	}
+
+	//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("OnRep_StopMove"));
+	GetCharacterMovement()->MaxWalkSpeed = stopSpeed;
+
+	if (AAIController* AI = Cast<AAIController>(GetController())) {
+		AI->StopMovement();
+	}
+}
+
+void ABasicMonsterAI::MoveStop_Implementation()
+{
+	bIsStopMove = true;
+
+	OnRep_StopMove();
+	ForceNetUpdate();
+	FlushNetDormancy();
 }
 
 void ABasicMonsterAI::PlayAttackAnimation()//공격 애니메이션 재생
@@ -256,6 +347,7 @@ void ABasicMonsterAI::DelayedAnimationSound(float DelayTime)
 void ABasicMonsterAI::StopAnimationSound()
 {
 	valueStopAnimationSound = false;
+	bIsHit = false;
 }
 
 void ABasicMonsterAI::DestroyMonster()

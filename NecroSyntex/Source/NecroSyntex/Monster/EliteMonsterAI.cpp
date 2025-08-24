@@ -140,7 +140,7 @@ TArray<AActor*>& AEliteMonsterAI::GetOverlappingPlayers()
 
 void AEliteMonsterAI::OnScreamSkillAreaOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Overlap!!!!!!!!!!!"));
+	//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Overlap!!!!!!!!!!!"));
 	if (MonsterHP <= 0) {
 		UE_LOG(LogTemp, Warning, TEXT("No Skill"));
 		return;
@@ -148,7 +148,7 @@ void AEliteMonsterAI::OnScreamSkillAreaOverlapBegin(UPrimitiveComponent* Overlap
 
 	if (OtherActor && OtherActor != this && OtherActor->ActorHasTag("Player")) {
 		if (!ScreamOverlappingPlayers.Contains(OtherActor)) {
-			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("inin Overlap!!!!!!!!!!!"));
+			//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("inin Overlap!!!!!!!!!!!"));
 			ScreamOverlappingPlayers.Add(OtherActor);
 		}
 	}
@@ -156,7 +156,7 @@ void AEliteMonsterAI::OnScreamSkillAreaOverlapBegin(UPrimitiveComponent* Overlap
 
 void AEliteMonsterAI::OnScreamSkillAreaOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("OverlapEND!!!!!!!!!!!"));
+	//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("OverlapEND!!!!!!!!!!!"));
 	if (ScreamOverlappingPlayers.Contains(OtherActor)) {
 		ScreamOverlappingPlayers.Remove(OtherActor);
 	}
@@ -165,7 +165,6 @@ void AEliteMonsterAI::OnScreamSkillAreaOverlapEnd(UPrimitiveComponent* Overlappe
 TArray<AActor*>& AEliteMonsterAI::GetScreamOverlappingPlayers()
 {
 	return ScreamOverlappingPlayers;
-	// TODO: 여기에 return 문을 삽입합니다.
 }
 
 void AEliteMonsterAI::CallAttackSkill()
