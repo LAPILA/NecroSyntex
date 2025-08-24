@@ -166,13 +166,6 @@ void APlayerCharacter::BeginPlay()
 	UpdateHUDShield();
 	UpdateHUDHealth();
 
-	if (Combat && Combat->EquippedWeapon)
-	{
-		InitialCarriedAmmo = Combat->CarriedAmmo;
-		InitialWeaponAmmo = Combat->EquippedWeapon->GetAmmo();
-		bInitializeAmmo = true;
-	}
-
 	if (HasAuthority())
 	{
 		OnTakeAnyDamage.AddDynamic(this, &APlayerCharacter::ReceiveDamage);

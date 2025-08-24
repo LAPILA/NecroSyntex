@@ -135,10 +135,6 @@ public:
 	UFUNCTION(Client, Reliable, BlueprintCallable)
 	void ClientUpdateHUDShield();
 
-	bool bInitializeAmmo = false;
-	int32 InitialCarriedAmmo = 0;
-	int32 InitialWeaponAmmo = 0;
-
 	UFUNCTION(BlueprintCallable)
 	void SpawnDefaultWeapon();
 
