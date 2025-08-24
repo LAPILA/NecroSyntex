@@ -16,6 +16,8 @@ void AShotgun::FireShotgun(const TArray<FVector_NetQuantize>& HitTargets)
 	if (OwnerPawn == nullptr) return;
 	AController* InstigatorController = OwnerPawn->GetController();
 
+	if (InstigatorController == nullptr) return;
+
 	const USkeletalMeshSocket* MuzzleFlashSocket = GetWeaponMesh()->GetSocketByName("MuzzleFlash");
 	if (MuzzleFlashSocket)
 	{

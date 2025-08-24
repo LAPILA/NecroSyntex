@@ -270,8 +270,8 @@ private:
 
 	float LastServerFireTime = 0.f;
 	float LastServerShotgunFireTime = 0.f;
-	bool bFirstFireAfterSwap;
 public:
+	friend class ANecroSyntexPlayerController;
 	FORCEINLINE int32 GetGrenades() const { return Grenades; }
 	void ResetSwapCooldown();
 	bool ShouldSwapWeapons();
