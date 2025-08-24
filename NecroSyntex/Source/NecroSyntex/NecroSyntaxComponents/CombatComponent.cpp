@@ -261,6 +261,7 @@ void UCombatComponent::FireTimerFinished()
 	{
 		Fire();
 	}
+
 	ReloadEmptyWeapon();
 }
 
@@ -1160,6 +1161,7 @@ void UCombatComponent::ServerFire_Implementation(const FVector_NetQuantize& Trac
 	{
 		LastServerFireTime = CurrentTime;
 		bFirstFireAfterSwap = false;
+		EquippedWeapon->SpendRound();
 		MulticastFire(TraceHitTarget);
 		return;
 	}

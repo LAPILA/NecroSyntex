@@ -184,27 +184,20 @@ private:
 	TSubclassOf<class ACasing> CasingClass;
 
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, ReplicatedUsing = OnRep_Ammo)
 	int32 Ammo;
 
-	UFUNCTION(Client, Reliable)
-	void ClientUpdateAmmo(int32 ServerAmmo);
+	UFUNCTION()
+	void OnRep_Ammo();
 
-	UFUNCTION(Client, Reliable)
-	void ClientAddAmmo(int32 AmmoToAdd);
-
-	void SpendRound();
 	UPROPERTY(EditAnywhere)
 	int32 MagCapacity;
-
-	// The number of unprocessed server requests for Ammo.
-	// Incremented in SpendRound, decremented in ClientUpdateAmmo.
-	int32 Sequence = 0;
 
 	UPROPERTY(EditAnywhere)
 	EWeaponType WeaponType;
 
 public:
+	void SpendRound();
 	void SetWeaponState(EWeaponState State);
 	FORCEINLINE USphereComponent* GetAreaSphere() const { return AreaSphere; }
 	FORCEINLINE USkeletalMeshComponent* GetWeaponMesh() const { return WeaponMesh; }
