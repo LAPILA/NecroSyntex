@@ -69,6 +69,7 @@ void UMonsterSkillNotify::Notify(USkeletalMeshComponent* MeshComp, UAnimSequence
 	}
 }
 
+// restore lag exist! need fix work.
 void UMonsterSkillNotify::RestoredSpeed()
 {
 	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("speed restored start!!!!"));
@@ -84,11 +85,13 @@ void UMonsterSkillNotify::RestoredSpeed()
 		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("speed restored complete!!!!"));
 		targetPlayer.Remove(restorePlayer);
 	}
-	
 }
 
 void UMonsterSkillNotify::Doping_LegForce(APlayerCharacter* player)
 {
+	if (!player->HasAuthority()) {
+		return;
+	}
 	if (!player->UDC->LegEnforce->GetBuff() && !player->UDC->LegEnforce->GetDeBuff()) {
 		//평상시 감소값 + 타이머
 		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Leg no buff debuff"));

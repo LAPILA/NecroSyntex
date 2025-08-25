@@ -94,7 +94,7 @@ float ABasicMonsterAI::TakeDamage_Implementation(float DamageAmount, FDamageEven
 	APlayerCharacter* DPA = Cast<APlayerCharacter>(DPC->GetPawn());
 
 	if (!DPA) {
-		UE_LOG(LogTemp, Warning, TEXT(""));
+		//UE_LOG(LogTemp, Warning, TEXT(""));
 		return 0.0f;
 	}
 
@@ -124,12 +124,8 @@ float ABasicMonsterAI::TakeDamage_Implementation(float DamageAmount, FDamageEven
 		{
 			GetMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 		}
-		//bIsDead = true;
 		
-		//OnRep_StopMove();
-		//OnRep_IsDead();
 		PlayDeathAnimation();
-		//FlushNetDormancy();
 	}
 	return DamageAmount;
 }
@@ -144,10 +140,11 @@ void ABasicMonsterAI::TakeDopingDamage(float DopingDamageAmount)
 		return;
 	}
 
-	MonsterStopMove();
+	//MonsterStopMove();
 
 	MonsterHP -= DopingDamageAmount;//if doping take damage setting speed slowly? 
 	PlayHitAnimation();
+	//while take damage monster damage animation cool time need?
 
 	GetWorld()->GetTimerManager().SetTimer(SpeedRestoreTimerHandle, this, &ABasicMonsterAI::UpdateWalkSpeed, SlowTime, false);
 	GetWorld()->GetTimerManager().SetTimer(AttackRestoreTimerHandle, this, &ABasicMonsterAI::AttackCoolTime, 0.02f, false);
@@ -156,10 +153,11 @@ void ABasicMonsterAI::TakeDopingDamage(float DopingDamageAmount)
 	if (MonsterHP <= 0.0f) {
 		UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
 		UMonsterAnimInstance* MonsterAnim = Cast<UMonsterAnimInstance>(AnimInstance);
-		AController* TempController = GetController();
-		AAIController* AIController = Cast<AAIController>(TempController);
 
 		MonsterAnim->DieTime = true;
+
+		//MonsterStopMove();
+		MoveStop_Implementation();
 
 		GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 		if (GetMesh())
@@ -167,21 +165,7 @@ void ABasicMonsterAI::TakeDopingDamage(float DopingDamageAmount)
 			GetMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 		}
 
-		if (AIController) {
-			//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("AI Controller UnPossess()"));
-			AIController->UnPossess();  // AIController 해제
-		}
-		else {
-			//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("AI Controller Nope"));
-		}
-
-		//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("PlayDeath"));
-
 		PlayDeathAnimation();
-
-		MonsterStopMove();
-
-		DelayedFunction(2.2f); // 일정 시간 후 제거
 	}
 	return;
 }

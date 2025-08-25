@@ -7,6 +7,7 @@
 #include "NecroSyntex/Monster/MonsterAnimInstance.h"
 #include "Components/BoxComponent.h"
 #include "Components/SphereComponent.h"
+#include <Net/UnrealNetwork.h>
 
 AEliteMonsterAI::AEliteMonsterAI()
 {
@@ -54,7 +55,7 @@ void AEliteMonsterAI::BeginPlay()
 {
 	Super::BeginPlay();
 
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("AI start"));
+	//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("AI start"));
 	DefaultChaseSpeed = ChaseSpeed;
 
 	if (SkillAttackArea) {
@@ -72,7 +73,6 @@ void AEliteMonsterAI::BeginPlay()
 	else {
 		UE_LOG(LogTemp, Warning, TEXT("ScreamSkillArea is nullptr"));
 	}
-
 }
 
 void AEliteMonsterAI::UpdateMoveSpeed(float inputSpeed)
@@ -84,16 +84,39 @@ void AEliteMonsterAI::UpdateMoveSpeed(float inputSpeed)
 
 void AEliteMonsterAI::PlaySkillAttackAnimation()//스킬 공격 애니메이션 재생
 {
-	if (HasAuthority()) {
-		Multicast_PlaySkillAttackAnimation();
+	bIsSkillAttack = true;
+
+	//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("OnRep_skill"));
+	OnRep_IsSkillAttack();
+	ForceNetUpdate();
+	FlushNetDormancy();
+}
+
+void AEliteMonsterAI::PlayScreamSkillAnimation()
+{
+	if (bIsSkillAttack) {
+		return;
 	}
+	//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("skillscream"));
+	bIsScreamSkill = true;
+
+	MoveStop_Implementation();
+	OnRep_IsScreamSkill();
+	ForceNetUpdate();
+	FlushNetDormancy();
 }
 
 void AEliteMonsterAI::Multicast_PlaySkillAttackAnimation_Implementation()
 {
-	if (SkillAttackMontage && GetMesh() && GetMesh()->GetAnimInstance()) {
-		GetMesh()->GetAnimInstance()->Montage_Play(SkillAttackMontage);
-	}
+	
+}
+
+void AEliteMonsterAI::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	
+	DOREPLIFETIME_CONDITION_NOTIFY(AEliteMonsterAI, bIsSkillAttack, COND_None, REPNOTIFY_OnChanged);
+	DOREPLIFETIME_CONDITION_NOTIFY(AEliteMonsterAI, bIsScreamSkill, COND_None, REPNOTIFY_OnChanged);
 }
 
 void AEliteMonsterAI::OnSkillAreaOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
@@ -128,9 +151,26 @@ void AEliteMonsterAI::SkillAttack()
 	PlaySkillAttackAnimation();
 }
 
+void AEliteMonsterAI::OnRep_IsScreamSkill()
+{
+	//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("start : OnRep_skillscream"));
+	if (!bIsScreamSkill) {
+		return;
+	}
+
+	//OnRep_StopMove();
+
+	if (SkillAttackMontage && GetMesh() && GetMesh()->GetAnimInstance()) {
+		//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, TEXT("play scream"));
+		GetMesh()->GetAnimInstance()->Montage_Play(ScreamMontage);
+	}
+	bIsScreamSkill = false;
+}
+
 void AEliteMonsterAI::SkillCoolTime()
 {
 	CanSkill = true;
+	bIsSkillAttack = false;
 }
 
 TArray<AActor*>& AEliteMonsterAI::GetOverlappingPlayers()
@@ -177,18 +217,36 @@ void AEliteMonsterAI::CallAttackSkill()
 		if (MonsterAnim->isSkillAttackTime) {
 			CanAttack = false;
 
-			MonsterStopMove();
+			//MonsterStopMove();
+			MoveStop_Implementation();
 
+			//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("Play skill"));
 			PlaySkillAttackAnimation();
 
-			GetWorld()->GetTimerManager().SetTimer(SpeedRestoreTimerHandle, this, &AEliteMonsterAI::UpdateWalkSpeed, 2.3f, false);
-			GetWorld()->GetTimerManager().SetTimer(AttackRestoreTimerHandle, this, &AEliteMonsterAI::AttackCoolTime, 2.0f, false);
+			//GetWorld()->GetTimerManager().SetTimer(SpeedRestoreTimerHandle, this, &AEliteMonsterAI::UpdateWalkSpeed, 2.3f, false);
+			//GetWorld()->GetTimerManager().SetTimer(AttackRestoreTimerHandle, this, &AEliteMonsterAI::AttackCoolTime, 2.0f, false);
 		}
 	}
 	else {
 		return;
 	}
 	CanSkill = false;
+	GetWorld()->GetTimerManager().SetTimer(MonsterSkillCoolTime, this, &AEliteMonsterAI::SkillCoolTime, SkillAttackCoolTime, false);
+}
+
+void AEliteMonsterAI::OnRep_IsSkillAttack()
+{
+	//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("start : OnRep_skill"));
+	if (!bIsSkillAttack) {
+		return;
+	}
+
+	if (SkillAttackMontage && GetMesh() && GetMesh()->GetAnimInstance()) {
+		GetMesh()->GetAnimInstance()->Montage_Play(SkillAttackMontage);
+	}
+
+	GetWorld()->GetTimerManager().SetTimer(SpeedRestoreTimerHandle, this, &AEliteMonsterAI::UpdateWalkSpeed, 2.3f, false);
+	GetWorld()->GetTimerManager().SetTimer(AttackRestoreTimerHandle, this, &AEliteMonsterAI::AttackCoolTime, 2.0f, false);
 	GetWorld()->GetTimerManager().SetTimer(MonsterSkillCoolTime, this, &AEliteMonsterAI::SkillCoolTime, SkillAttackCoolTime, false);
 }
 

@@ -23,6 +23,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Components")
 	class USphereComponent* ScreamSkillArea;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
+	UAnimMontage* ScreamMontage;
+
 	virtual void BeginPlay() override;
 
 	UFUNCTION(BlueprintCallable)
@@ -33,6 +36,15 @@ public:
 
 	UFUNCTION(NetMulticast, Reliable)
 	void Multicast_PlaySkillAttackAnimation();
+
+	UFUNCTION(BlueprintCallable)
+	void PlayScreamSkillAnimation();
+
+	UPROPERTY(ReplicatedUsing = OnRep_IsScreamSkill)
+	bool bIsScreamSkill = false;
+
+	UFUNCTION()
+	void OnRep_IsScreamSkill();
 
 	UFUNCTION()
 	void SkillCoolTime(); //attack skill cooltime.
@@ -78,6 +90,14 @@ public:
 
 	UFUNCTION()
 	void CallAttackSkill();
+
+	UPROPERTY(ReplicatedUsing = OnRep_IsSkillAttack)
+	bool bIsSkillAttack = false;
+
+	UFUNCTION()
+	void OnRep_IsSkillAttack();
+
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 	UFUNCTION(BlueprintCallable)
 	void AttackSkillStart(float delayTime);
