@@ -247,8 +247,15 @@ void AWeapon::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeP
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 	DOREPLIFETIME(AWeapon, WeaponState);
+	DOREPLIFETIME(AWeapon, Ammo);
 	DOREPLIFETIME_CONDITION(AWeapon, bUseServerSideRewind, COND_OwnerOnly);
 }
+
+void AWeapon::OnRep_Ammo()
+{
+	SetHUDAmmo();
+}
+
 
 void AWeapon::OnSphereOverlap(
 	UPrimitiveComponent* OverlappedComponent,
@@ -282,36 +289,8 @@ void AWeapon::SpendRound()
 {
 	Ammo = FMath::Clamp(Ammo - 1, 0, MagCapacity);
 	SetHUDAmmo();
-	if (HasAuthority())
-	{
-		ClientUpdateAmmo(Ammo);
-	}
-	else
-	{
-		++Sequence;
-	}
 }
 
-void AWeapon::ClientUpdateAmmo_Implementation(int32 ServerAmmo)
-{
-	if (HasAuthority()) return;
-	Ammo = ServerAmmo;
-	--Sequence;
-	Ammo -= Sequence;
-	SetHUDAmmo();
-}
-
-void AWeapon::ClientAddAmmo_Implementation(int32 AmmoToAdd)
-{
-	if (HasAuthority()) return;
-	Ammo = FMath::Clamp(Ammo + AmmoToAdd, 0, MagCapacity);
-	PlayerOwnerCharacter = PlayerOwnerCharacter == nullptr ? Cast<APlayerCharacter>(GetOwner()) : PlayerOwnerCharacter;
-	if (PlayerOwnerCharacter && PlayerOwnerCharacter->GetCombat() && IsFull())
-	{
-		PlayerOwnerCharacter->GetCombat()->JumpToShotgunEnd();
-	}
-	SetHUDAmmo();
-}
 void AWeapon::OnRep_Owner()
 {
 	Super::OnRep_Owner();
@@ -322,6 +301,11 @@ void AWeapon::OnRep_Owner()
 	}
 	else
 	{
+		PlayerOwnerCharacter = PlayerOwnerCharacter == nullptr ? Cast<APlayerCharacter>(GetOwner()) : PlayerOwnerCharacter;
+		if (PlayerOwnerCharacter && PlayerOwnerCharacter->GetController())
+		{
+			NecroSyntexPlayerOwnerController = NecroSyntexPlayerOwnerController == nullptr ? Cast<ANecroSyntexPlayerController>(PlayerOwnerCharacter->Controller) : NecroSyntexPlayerOwnerController;
+		}
 		SetHUDAmmo();
 	}
 }

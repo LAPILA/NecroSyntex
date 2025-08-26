@@ -420,13 +420,21 @@ void ANecroSyntexPlayerController::PollInit()
 				if (bInitializeWeaponAmmo) SetHUDWeaponAmmo(HUDWeaponAmmo);
 
 				APlayerCharacter* PlayerCharacter = Cast<APlayerCharacter>(GetPawn());
-				if (PlayerCharacter && PlayerCharacter->GetCombat())
+				if (PlayerCharacter)
 				{
-					if (bInitializeGrenades) SetHUDGrenades(PlayerCharacter->GetCombat()->GetGrenades());
-					SetHUDCarriedAmmo(PlayerCharacter->InitialCarriedAmmo);
-					SetHUDWeaponAmmo(PlayerCharacter->InitialWeaponAmmo);
+					UCombatComponent* Combat = PlayerCharacter->GetCombat();
+					if (Combat)
+					{
+						if (bInitializeGrenades) SetHUDGrenades(Combat->GetGrenades());
 
-					PlayerCharacter->bInitializeAmmo = false;
+						SetHUDCarriedAmmo(Combat->CarriedAmmo);
+
+						AWeapon* EquippedWeapon = Combat->GetEquippedWeapon();
+						if (EquippedWeapon)
+						{
+							SetHUDWeaponAmmo(EquippedWeapon->GetAmmo());
+						}
+					}
 				}
 			}
 		}

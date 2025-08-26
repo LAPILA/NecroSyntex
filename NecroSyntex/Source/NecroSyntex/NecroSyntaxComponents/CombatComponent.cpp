@@ -187,25 +187,22 @@ bool UCombatComponent::CanFire()
 {
 	if (!EquippedWeapon) return false;
 
-	// 첫 발사 이후에는 일반 발사 조건 체크
-	if (bFirstFireAfterSwap) return true;
-
-	// 탄약 부족 시 음성 출력
-	if (EquippedWeapon->IsEmpty() && CarriedAmmo == 0 && Character && Character->GetVoiceComp())
+	if (EquippedWeapon->GetWeaponType() == EWeaponType::EWT_Shotgun && CombatState == ECombatState::ECS_Reloading)
 	{
-		TRY_PLAY_VOICE(EVoiceCue::NoAmmo);
+		return !EquippedWeapon->IsEmpty() && bCanFire;
 	}
 
-	// 샷건 예외 처리
-	if (!EquippedWeapon->IsEmpty() && bCanFire &&
-		CombatState == ECombatState::ECS_Reloading &&
-		EquippedWeapon->GetWeaponType() == EWeaponType::EWT_Shotgun)
+	if (!EquippedWeapon->IsEmpty() && bCanFire && CombatState == ECombatState::ECS_Unoccupied)
 	{
 		return true;
 	}
 
-	// 일반 발사 조건 체크
-	return (!EquippedWeapon->IsEmpty() && bCanFire && CombatState == ECombatState::ECS_Unoccupied);
+	if (EquippedWeapon->IsEmpty() && CarriedAmmo == 0)
+	{
+		TRY_PLAY_VOICE(EVoiceCue::NoAmmo);
+	}
+
+	return false;
 }
 
 
@@ -261,6 +258,7 @@ void UCombatComponent::FireTimerFinished()
 	{
 		Fire();
 	}
+
 	ReloadEmptyWeapon();
 }
 
@@ -465,7 +463,6 @@ void UCombatComponent::ResetFireState()
 {
 	bCanFire = true;
 	bFireButtonPressed = false;
-	bFirstFireAfterSwap = true;
 
 	if (Character)
 	{
@@ -1156,14 +1153,6 @@ void UCombatComponent::ServerFire_Implementation(const FVector_NetQuantize& Trac
 	const float Tolerance = 0.02f;
 	const float ClientTimeDifference = FMath::Abs(CurrentTime - LastServerFireTime);
 
-	if (bFirstFireAfterSwap)
-	{
-		LastServerFireTime = CurrentTime;
-		bFirstFireAfterSwap = false;
-		MulticastFire(TraceHitTarget);
-		return;
-	}
-
 	if ((ClientTimeDifference + Tolerance) < FireDelaySec)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("[CHEAT DETECTED?] %s fired too quickly (%.3f s < %.3f s)"),
@@ -1175,6 +1164,8 @@ void UCombatComponent::ServerFire_Implementation(const FVector_NetQuantize& Trac
 	}
 
 	LastServerFireTime = CurrentTime;
+
+	EquippedWeapon->SpendRound();
 	MulticastFire(TraceHitTarget);
 }
 

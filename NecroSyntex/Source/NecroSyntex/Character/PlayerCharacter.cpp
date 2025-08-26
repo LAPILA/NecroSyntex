@@ -166,13 +166,6 @@ void APlayerCharacter::BeginPlay()
 	UpdateHUDShield();
 	UpdateHUDHealth();
 
-	if (Combat && Combat->EquippedWeapon)
-	{
-		InitialCarriedAmmo = Combat->CarriedAmmo;
-		InitialWeaponAmmo = Combat->EquippedWeapon->GetAmmo();
-		bInitializeAmmo = true;
-	}
-
 	if (HasAuthority())
 	{
 		OnTakeAnyDamage.AddDynamic(this, &APlayerCharacter::ReceiveDamage);
@@ -1167,28 +1160,6 @@ void APlayerCharacter::ClientUpdateHUDShield_Implementation()
 	UpdateHUDShield();
 }
 
-void APlayerCharacter::UpdateHUDAmmo()
-{
-	if (!Combat || !Combat->EquippedWeapon) return;
-
-	if (NecroSyntexPlayerController == nullptr)
-	{
-		NecroSyntexPlayerController = Cast<ANecroSyntexPlayerController>(Controller);
-	}
-
-	if (NecroSyntexPlayerController)
-	{
-		NecroSyntexPlayerController->SetHUDCarriedAmmo(Combat->CarriedAmmo);
-		NecroSyntexPlayerController->SetHUDWeaponAmmo(Combat->EquippedWeapon->GetAmmo());
-		bInitializeAmmo = false;
-	}
-	else
-	{
-		InitialCarriedAmmo = Combat->CarriedAmmo;
-		InitialWeaponAmmo = Combat->EquippedWeapon->GetAmmo();
-		bInitializeAmmo = true;
-	}
-}
 #pragma endregion
 
 #pragma region Aim Offset & Rotation
