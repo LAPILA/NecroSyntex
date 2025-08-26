@@ -99,6 +99,9 @@ public:
 	UFUNCTION()
 	void CallMissionEndEvent();
 
+	UFUNCTION()
+	void SpawnNecroSyntexPlayerCharacter(APlayerController* NewPlayer);
+
 
 protected:
 	virtual void PostLogin(APlayerController* NewPlayer) override;

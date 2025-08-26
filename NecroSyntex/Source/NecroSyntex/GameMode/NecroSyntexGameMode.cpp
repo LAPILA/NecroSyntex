@@ -257,6 +257,65 @@ void ANecroSyntexGameMode::CallMissionEndEvent()
 	MissionEndEvent.Broadcast();
 }
 
+void ANecroSyntexGameMode::SpawnNecroSyntexPlayerCharacter(APlayerController* NewPlayer)
+{
+
+	ANecroSyntexPlayerController* NSPC = Cast<ANecroSyntexPlayerController>(NewPlayer);
+	if (!NSPC) {
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("none NSPC"));
+		return;
+	}
+
+	NSPC->GetInstanceAndSetSelectedCharacter();
+
+	ANecroSyntexPlayerState* NSPS = NSPC->GetPlayerState<ANecroSyntexPlayerState>();
+	if (APawn* OldPawn = NSPC->GetPawn()) {
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("oldpawn destroy 작동"));
+		OldPawn->Destroy();
+	}
+
+	if (NSPS && NSPS->SelectedCharacterClass) {
+
+		TSubclassOf<APawn> OldDefault = DefaultPawnClass;
+		DefaultPawnClass = NSPS->SelectedCharacterClass;
+
+		TArray<AActor*> PlayerStarts;
+		UGameplayStatics::GetAllActorsOfClass(this, APlayerStart::StaticClass(), PlayerStarts);
+
+		if (PlayerStarts.Num() > 0)
+		{
+			AActor* ChosenStart = PlayerStarts[FMath::RandRange(0, PlayerStarts.Num() - 1)];
+			RestartPlayerAtPlayerStart(NSPC, ChosenStart);
+		}
+		else {
+			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("PlayerStarts Zero"));
+			return;
+		}
+
+
+		if (APlayerCharacter* NewCharacter = Cast<APlayerCharacter>(NSPC->GetPawn())) {
+			NSPC->ClientRestart(NewCharacter);
+			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("NewVer ClientRestart"));
+		}
+	}
+	else {
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("NSPS selected character 없음"));
+	}
+
+
+	ANecroSyntexPlayerController* PC = Cast<ANecroSyntexPlayerController>(NewPlayer);
+	if (PC)
+	{
+		if (ANecroSyntexGameState* GS = GetGameState<ANecroSyntexGameState>())
+		{
+			GS->TotalPlayer++;
+			GS->SurvivingPlayer = GS->TotalPlayer;
+		}
+
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("HandleStartingNewPlayer 작동 2"));
+	}
+}
+
 void ANecroSyntexGameMode::PostLogin(APlayerController* NewPlayer)
 {
 	Super::PostLogin(NewPlayer);

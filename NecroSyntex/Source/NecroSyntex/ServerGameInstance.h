@@ -13,5 +13,15 @@ UCLASS()
 class NECROSYNTEX_API UServerGameInstance : public UAdvancedFriendsGameInstance
 {
 	GENERATED_BODY()
+
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TSubclassOf<class APlayerCharacter> SelectedCharacterClass_Instance;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	int32 FirstDopingCode_Instance;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	int32 SecondDopingCode_Instance;
 	
 };

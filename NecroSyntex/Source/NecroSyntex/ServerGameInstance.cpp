@@ -2,4 +2,4 @@
 
 
 #include "ServerGameInstance.h"
-
+#include "NecroSyntex\Character\PlayerCharacter.h"

@@ -467,6 +467,7 @@ void ANecroSyntexPlayerController::ReceivedPlayer()
 	if (IsLocalController())
 	{
 		ServerRequestServerTime(GetWorld()->GetTimeSeconds());
+		GetInstanceAndSetSelectedCharacter();
 	}
 }
 
