@@ -26,4 +26,15 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void PlayScreamAnimation();
 	
+protected:
+	UPROPERTY(ReplicatedUsing = OnRep_PlayScream)
+	bool bIsScream = false;
+
+	UFUNCTION()
+	void OnRep_PlayScream();
+
+	UFUNCTION(Server, Reliable)
+	void Server_MonsterScream();
+
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 };
