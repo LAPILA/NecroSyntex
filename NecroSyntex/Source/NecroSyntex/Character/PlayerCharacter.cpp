@@ -166,13 +166,6 @@ void APlayerCharacter::BeginPlay()
 	UpdateHUDShield();
 	UpdateHUDHealth();
 
-	if (Combat && Combat->EquippedWeapon)
-	{
-		InitialCarriedAmmo = Combat->CarriedAmmo;
-		InitialWeaponAmmo = Combat->EquippedWeapon->GetAmmo();
-		bInitializeAmmo = true;
-	}
-
 	if (HasAuthority())
 	{
 		OnTakeAnyDamage.AddDynamic(this, &APlayerCharacter::ReceiveDamage);
@@ -264,22 +257,9 @@ void APlayerCharacter::Tick(float DeltaTime)
 		HandleHeadBob(DeltaTime);
 	}
 
-	if (IsLocallyControlled() && FlashDroneComponent)
-	{
-		if (ADR_FlashDrone* Drone = FlashDroneComponent->GetFlashDrone())
-		{
-			const FVector AimTarget = (Combat && Combat->bAiming) ? Combat->HitTarget
-				: FVector::ZeroVector;
-			Drone->SetAimTarget(AimTarget);
-		}
-	}
+	UpdateMaxWalkSpeed();
 
 	PollInit();
-
-	//Player speed update code.
-	if (HasAuthority()) {
-		UpdateMaxWalkSpeed();
-	}
 }
 #pragma endregion
 
@@ -339,13 +319,10 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 
 void APlayerCharacter::Move(const FInputActionValue& Value)
 {
-	UE_LOG(LogTemp, Warning, TEXT("bdisalbeGameplay is false 송태환 망할"));
 	if (bDisableGameplay) {
 		return;
 	}
-	else {
-		UE_LOG(LogTemp, Warning, TEXT("bdisalbeGameplay is false 송태환 이놈아 만들꺼면 제대로 만들지"));
-	}
+
 	FVector2D MovementVector = Value.Get<FVector2D>();
 
 	if (ReservedMoving)
@@ -417,8 +394,6 @@ void APlayerCharacter::SprintStart()
 	if (!bIsSprinting && GetVelocity().Size() > 0.f)
 	{
 		bIsSprinting = true;
-		//action state setting.
-		MoveActionState = 1;
 		GetCharacterMovement()->MaxWalkSpeed = RunningSpeed;
 	}
 }
@@ -439,8 +414,6 @@ void APlayerCharacter::SprintStop()
 	if (bIsSprinting)
 	{
 		bIsSprinting = false;
-		//action state setting.
-		MoveActionState = 0;
 		GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
 	}
 }
@@ -479,8 +452,6 @@ void APlayerCharacter::CrouchButtonPressed()
 	else
 	{
 		Crouch();
-		//action state setting.
-		MoveActionState = 2;
 		GetCharacterMovement()->MaxWalkSpeed = CrouchSpeed;
 	}
 }
@@ -490,6 +461,32 @@ void APlayerCharacter::ServerCrouchButtonPressed_Implementation()
 	CrouchButtonPressed();
 }
 bool APlayerCharacter::ServerCrouchButtonPressed_Validate() { return true; }
+
+void APlayerCharacter::UpdateMaxWalkSpeed()
+{
+	if (bIsCrouched) {
+		GetCharacterMovement()->MaxWalkSpeed = CrouchSpeed;
+	}
+	else if (bWantsToSprint) {
+		GetCharacterMovement()->MaxWalkSpeed = RunningSpeed;
+	}
+	else {
+		GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
+	}
+}
+
+void APlayerCharacter::Server_UpdateMaxWalkSpeed_Implementation()
+{
+	if (bIsCrouched) {
+		GetCharacterMovement()->MaxWalkSpeed = CrouchSpeed;
+	}
+	else if (bWantsToSprint) {
+		GetCharacterMovement()->MaxWalkSpeed = RunningSpeed;
+	}
+	else {
+		GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
+	}
+}
 
 #pragma endregion
 
@@ -559,7 +556,7 @@ void APlayerCharacter::ResetGrenadeState()
 bool APlayerCharacter::IsLocallyReloading()
 {
 	if (Combat == nullptr) return false;
-	return Combat->bLocallyReloading;
+	return GetCombatState() == ECombatState::ECS_Reloading;
 }
 
 void APlayerCharacter::ReloadTimerFinished()
@@ -699,11 +696,7 @@ void APlayerCharacter::FlashButtonPressed()
 {
 	if (!FlashDroneComponent) return;
 
-	if (ADR_FlashDrone* Drone = FlashDroneComponent->GetFlashDrone())
-	{
-		bFlashLightOn = !bFlashLightOn;          // 토글
-		Drone->ToggleFlash(bFlashLightOn);       // 앞서 만든 RPC 호출
-	}
+	// To Do: 필요 시 제작
 }
 #pragma endregion
 
@@ -799,6 +792,12 @@ void APlayerCharacter::PlayDopingMontage()
 		AnimInstance->Montage_Play(DopingMontage);
 	}
 }
+
+void APlayerCharacter::MulticastPlayDopingMontage_Implementation()
+{
+	PlayDopingMontage();
+}
+
 
 void APlayerCharacter::PlayerHitReactMontage()
 {
@@ -906,18 +905,17 @@ void APlayerCharacter::ResetMontageState()
 			Combat->AttachActorToRightHand(Combat->EquippedWeapon);
 		}
 
-		// 모든 상태 초기화
-		bIsSprinting = false;
-		bWantsToSprint = false;
-		if (bIsCrouched)
-		{
-			UnCrouch();
-			GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
-		}
-		else
-		{
-			GetCharacterMovement()->MaxWalkSpeed = Combat->BaseWalkSpeed;
-		}
+		//// 모든 상태 초기화
+		//bIsSprinting = false;
+		//bWantsToSprint = false;
+		//if (bIsCrouched)
+		//{
+		//	UnCrouch();
+		//}
+
+		//GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
+		// 아래에 서버도 업데이트 함수 넣어야함
+
 	}
 }
 
@@ -1162,28 +1160,6 @@ void APlayerCharacter::ClientUpdateHUDShield_Implementation()
 	UpdateHUDShield();
 }
 
-void APlayerCharacter::UpdateHUDAmmo()
-{
-	if (!Combat || !Combat->EquippedWeapon) return;
-
-	if (NecroSyntexPlayerController == nullptr)
-	{
-		NecroSyntexPlayerController = Cast<ANecroSyntexPlayerController>(Controller);
-	}
-
-	if (NecroSyntexPlayerController)
-	{
-		NecroSyntexPlayerController->SetHUDCarriedAmmo(Combat->CarriedAmmo);
-		NecroSyntexPlayerController->SetHUDWeaponAmmo(Combat->EquippedWeapon->GetAmmo());
-		bInitializeAmmo = false;
-	}
-	else
-	{
-		InitialCarriedAmmo = Combat->CarriedAmmo;
-		InitialWeaponAmmo = Combat->EquippedWeapon->GetAmmo();
-		bInitializeAmmo = true;
-	}
-}
 #pragma endregion
 
 #pragma region Aim Offset & Rotation
@@ -1478,13 +1454,13 @@ void APlayerCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 
 	DOREPLIFETIME(APlayerCharacter, WalkSpeed);
 	DOREPLIFETIME(APlayerCharacter, RunningSpeed);
+	DOREPLIFETIME(APlayerCharacter, CrouchSpeed);
 	DOREPLIFETIME(APlayerCharacter, MLAtaackPoint);
 	DOREPLIFETIME(APlayerCharacter, Defense);
 	DOREPLIFETIME(APlayerCharacter, Blurred);
 	DOREPLIFETIME(APlayerCharacter, ROF);
 	DOREPLIFETIME(APlayerCharacter, DopingDamageBuff);
 	DOREPLIFETIME(APlayerCharacter, ReservedMoving);
-	DOREPLIFETIME(APlayerCharacter, MoveActionState);
 }
 
 void APlayerCharacter::OnRep_ReplicatedMovement()
@@ -1533,6 +1509,18 @@ void APlayerCharacter::OnRep_Shield(float LastShield)
 void APlayerCharacter::OnRep_MaxShield()
 {
 	UpdateHUDShield();
+}
+
+void APlayerCharacter::OnRep_WalkSpeed()
+{
+	Server_UpdateMaxWalkSpeed();
+	UpdateMaxWalkSpeed();
+}
+
+void APlayerCharacter::OnRep_RunningSpeed()
+{
+	Server_UpdateMaxWalkSpeed();
+	UpdateMaxWalkSpeed();
 }
 #pragma endregion
 
@@ -1649,28 +1637,6 @@ void APlayerCharacter::ServerRequestHealing_Implementation()
 	if (HealingStationActor)
 	{
 		HealingStationActor->Interact(this);
-	}
-}
-
-void APlayerCharacter::UpdateMaxWalkSpeed()
-{
-	switch (MoveActionState)
-	{
-	case 0:
-		GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
-		break;
-
-	case 1:
-		GetCharacterMovement()->MaxWalkSpeed = RunningSpeed;
-		break;
-
-	case 2:
-		GetCharacterMovement()->MaxWalkSpeed = CrouchSpeed;
-		break;
-
-	default:
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("who???"));
-		break;
 	}
 }
 

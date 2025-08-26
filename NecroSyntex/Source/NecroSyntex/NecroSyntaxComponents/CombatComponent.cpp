@@ -94,9 +94,9 @@ void UCombatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 		SetHUDCrosshairs(DeltaTime);
 		InterpFOV(DeltaTime);
 
-		if (Character && Character->FlashDroneComponent && Character->FlashDroneComponent->GetFlashDrone())
+		if (ADR_FlashDrone* Drone = Character->GetFlashDrone())
 		{
-			Character->FlashDroneComponent->GetFlashDrone()->SetAimTarget(HitTarget);
+			Drone->SetAimTarget(HitTarget);
 		}
 	}
 }
@@ -187,27 +187,22 @@ bool UCombatComponent::CanFire()
 {
 	if (!EquippedWeapon) return false;
 
-	// 첫 발사 이후에는 일반 발사 조건 체크
-	if (bFirstFireAfterSwap) return true;
-
-	// 탄약 부족 시 음성 출력
-	if (EquippedWeapon->IsEmpty() && CarriedAmmo == 0 && Character && Character->GetVoiceComp())
+	if (EquippedWeapon->GetWeaponType() == EWeaponType::EWT_Shotgun && CombatState == ECombatState::ECS_Reloading)
 	{
-		TRY_PLAY_VOICE(EVoiceCue::NoAmmo);
+		return !EquippedWeapon->IsEmpty() && bCanFire;
 	}
 
-	// 샷건 예외 처리
-	if (!EquippedWeapon->IsEmpty() && bCanFire &&
-		CombatState == ECombatState::ECS_Reloading &&
-		EquippedWeapon->GetWeaponType() == EWeaponType::EWT_Shotgun)
+	if (!EquippedWeapon->IsEmpty() && bCanFire && CombatState == ECombatState::ECS_Unoccupied)
 	{
 		return true;
 	}
 
-	if (bLocallyReloading) return false;
+	if (EquippedWeapon->IsEmpty() && CarriedAmmo == 0)
+	{
+		TRY_PLAY_VOICE(EVoiceCue::NoAmmo);
+	}
 
-	// 일반 발사 조건 체크
-	return (!EquippedWeapon->IsEmpty() && bCanFire && CombatState == ECombatState::ECS_Unoccupied);
+	return false;
 }
 
 
@@ -263,6 +258,7 @@ void UCombatComponent::FireTimerFinished()
 	{
 		Fire();
 	}
+
 	ReloadEmptyWeapon();
 }
 
@@ -467,7 +463,6 @@ void UCombatComponent::ResetFireState()
 {
 	bCanFire = true;
 	bFireButtonPressed = false;
-	bFirstFireAfterSwap = true;
 
 	if (Character)
 	{
@@ -699,7 +694,6 @@ void UCombatComponent::MulticastCancelReload_Implementation()
 	if (CombatState == ECombatState::ECS_Reloading)
 	{
 		CombatState = ECombatState::ECS_Unoccupied;
-		bLocallyReloading = false;
 		if (Character)
 		{
 			UAnimInstance* AnimInstance = Character->GetMesh()->GetAnimInstance();
@@ -820,24 +814,15 @@ void UCombatComponent::MulticastNotifyWeaponChanged_Implementation(AWeapon* NewW
 
 void UCombatComponent::Reload()
 {
-	if (CarriedAmmo > 0 &&
-		CombatState == ECombatState::ECS_Unoccupied &&
-		EquippedWeapon &&
-		!EquippedWeapon->IsFull() &&
-		!bLocallyReloading)
+	if (CarriedAmmo > 0 && EquippedWeapon && !EquippedWeapon->IsFull())
 	{
 		ServerReload();
-		HandleReload();
-		bLocallyReloading = true;
-		TRY_PLAY_VOICE(EVoiceCue::Reload);
 	}
 }
 
 void UCombatComponent::FinishReloading()
 {
 	if (!Character) return;
-
-	bLocallyReloading = false;
 
 	if (Character->bIsCrouched)
 	{
@@ -968,9 +953,10 @@ void UCombatComponent::ServerReload_Implementation()
 {
 	if (!Character || !EquippedWeapon) return;
 
-	CombatState = ECombatState::ECS_Reloading;
-	if (!Character->IsLocallyControlled())
+	if (CombatState == ECombatState::ECS_Unoccupied && CarriedAmmo > 0 && !EquippedWeapon->IsFull())
 	{
+		CombatState = ECombatState::ECS_Reloading;
+
 		HandleReload();
 	}
 }
@@ -980,7 +966,6 @@ void UCombatComponent::HandleReload()
 	if (Character && EquippedWeapon && !EquippedWeapon->IsFull())
 	{
 		Character->PlayReloadMontage();
-		bLocallyReloading = true;
 
 		Character->GetCharacterMovement()->MaxWalkSpeed = Character->WalkSpeed * Character->ReloadSpeedMultiplier;
 	}
@@ -1051,7 +1036,6 @@ void UCombatComponent::JumpToShotgunEnd()
 		AnimInstance->Montage_JumpToSection(FName("ShotgunEnd"), Character->GetReloadMontage());
 	}
 
-	bLocallyReloading = false;
 	if (Character->HasAuthority())
 	{
 		CombatState = ECombatState::ECS_Unoccupied;
@@ -1106,20 +1090,33 @@ void UCombatComponent::OnRep_CombatState()
 	switch (CombatState)
 	{
 	case ECombatState::ECS_Reloading:
-		if (Character && !Character->IsLocallyControlled())
+		if (Character)
 		{
 			HandleReload();
 		}
 		break;
+
 	case ECombatState::ECS_Unoccupied:
-		if (bFireButtonPressed)
+		if (Character && Character->GetCharacterMovement())
 		{
-			Fire();
+			if (bAiming)
+			{
+				Character->GetCharacterMovement()->MaxWalkSpeed = Character->AimWalkSpeed;
+			}
+			else
+			{
+				Character->GetCharacterMovement()->MaxWalkSpeed = Character->WalkSpeed;
+			}
 		}
 		break;
+
 	case ECombatState::ECS_ThrowingGrenade:
-		AttachActorToLeftHand(EquippedWeapon);
+		if (Character && EquippedWeapon)
+		{
+			AttachActorToLeftHand(EquippedWeapon);
+		}
 		break;
+
 	case ECombatState::ECS_SwappingWeapons:
 		if (Character && !Character->IsLocallyControlled())
 		{
@@ -1140,20 +1137,21 @@ bool UCombatComponent::ServerFire_Validate(const FVector_NetQuantize& TraceHitTa
 
 void UCombatComponent::ServerFire_Implementation(const FVector_NetQuantize& TraceHitTarget, float FireDelay)
 {
-	if (!EquippedWeapon || !Character) return;
+	if (!IsValid(EquippedWeapon) || !IsValid(Character))
+	{
+		return;
+	}
 
-	const float CurrentTime = GetWorld()->GetTimeSeconds();
+	UWorld* World = GetWorld();
+	if (!World)
+	{
+		return;
+	}
+
+	const float CurrentTime = World->GetTimeSeconds();
 	const float FireDelaySec = EquippedWeapon->FireDelay;
 	const float Tolerance = 0.02f;
 	const float ClientTimeDifference = FMath::Abs(CurrentTime - LastServerFireTime);
-
-	if (bFirstFireAfterSwap)
-	{
-		LastServerFireTime = CurrentTime;
-		bFirstFireAfterSwap = false;
-		MulticastFire(TraceHitTarget);
-		return;
-	}
 
 	if ((ClientTimeDifference + Tolerance) < FireDelaySec)
 	{
@@ -1166,6 +1164,8 @@ void UCombatComponent::ServerFire_Implementation(const FVector_NetQuantize& Trac
 	}
 
 	LastServerFireTime = CurrentTime;
+
+	EquippedWeapon->SpendRound();
 	MulticastFire(TraceHitTarget);
 }
 
@@ -1227,7 +1227,6 @@ void UCombatComponent::ShotgunLocalFire(const TArray<FVector_NetQuantize>& Trace
 
 	if (CombatState == ECombatState::ECS_Reloading || CombatState == ECombatState::ECS_Unoccupied)
 	{
-		bLocallyReloading = false;
 		Character->PlayFireMontage(bAiming);
 		Shotgun->FireShotgun(TraceHitTargets);
 		CombatState = ECombatState::ECS_Unoccupied;
@@ -1385,14 +1384,29 @@ void UCombatComponent::InterpFOV(float DeltaTime)
 void UCombatComponent::SetAiming(bool bIsAiming)
 {
 	if (!Character || !EquippedWeapon) return;
-	if (bAiming == bIsAiming) return;
 
 	bAiming = bIsAiming;
 	ServerSetAiming(bIsAiming);
 
-	if (bAiming) Character->GetCharacterMovement()->MaxWalkSpeed = Character->AimWalkSpeed;
-	else if (Character->bIsCrouched) Character->GetCharacterMovement()->MaxWalkSpeed = Character->CrouchSpeed;
-	else Character->GetCharacterMovement()->MaxWalkSpeed = Character->WalkSpeed;
+	if (bAiming)
+	{
+		Character->GetCharacterMovement()->MaxWalkSpeed = Character->AimWalkSpeed;
+	}
+	else
+	{
+		if (Character->bIsCrouched)
+		{
+			Character->GetCharacterMovement()->MaxWalkSpeed = Character->CrouchSpeed;
+		}
+		else if (Character->bWantsToSprint)
+		{
+			Character->GetCharacterMovement()->MaxWalkSpeed = Character->RunningSpeed;
+		}
+		else
+		{
+			Character->GetCharacterMovement()->MaxWalkSpeed = Character->WalkSpeed;
+		}
+	}
 }
 
 void UCombatComponent::ServerSetAiming_Implementation(bool bIsAiming)

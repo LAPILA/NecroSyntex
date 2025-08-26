@@ -1,4 +1,5 @@
-﻿// DR_FlashDrone.h
+﻿// Copyright NecroSyntex. All Rights Reserved.
+
 #pragma once
 
 #include "CoreMinimal.h"
@@ -7,83 +8,83 @@
 #include "DR_FlashDrone.generated.h"
 
 class USpotLightComponent;
+class USphereComponent;
+class UStaticMeshComponent;
 
 UCLASS()
 class NECROSYNTEX_API ADR_FlashDrone : public AActor
 {
-    GENERATED_BODY()
+	GENERATED_BODY()
 
 public:
-    ADR_FlashDrone();
-
-    virtual void Tick(float DeltaTime) override;
-
-    /** 서버‑측 추적 시작 */
-    void InitFollowing(AActor* InTarget, float InMaxDist);
-
-    /** 주변이 어두울 때만 가시화 */
-    void SetLightActive(bool bActive);
-
-    /** 강제 텔레포트 (플레이어 리스폰 등) */
-    UFUNCTION(BlueprintCallable) void ForceTeleportToTarget();
-
-    /** 로컬 → 서버 : 조준 점 갱신 */
-    void SetAimTarget(const FVector& NewTarget);
-    UFUNCTION(Server, Unreliable) void ServerSetAimTarget(const FVector_NetQuantize& NewTarget);
-
-    UFUNCTION(BlueprintCallable)
-    void ToggleFlash(bool bOn);
-
-
-    UFUNCTION(Server, Reliable)
-    void ServerToggleFlash(bool bOn);
+	ADR_FlashDrone();
+	virtual void Tick(float DeltaTime) override;
+	void InitFollowing(AActor* InTarget, float InMaxDist);
+	void SetAimTarget(const FVector& NewTarget);
 
 protected:
-    virtual void BeginPlay() override;
+	virtual void BeginPlay() override;
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
-    /* ───────── Components ───────── */
-    UPROPERTY(VisibleAnywhere) USceneComponent* RootComp;
-    UPROPERTY(VisibleAnywhere) UStaticMeshComponent* DroneMesh;
-    UPROPERTY(VisibleAnywhere) USpotLightComponent* SpotLight;
+	/* ───────── Components ───────── */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+	TObjectPtr<USphereComponent> CollisionComp;
 
-    /* ───────── Movement params ──────── */
-    UPROPERTY(EditDefaultsOnly) float FollowInterpSpeed = 8.f;
-    UPROPERTY(EditDefaultsOnly) float CheckInterval = 0.2f;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+	TObjectPtr<UStaticMeshComponent> DroneMesh;
 
-    UPROPERTY(EditAnywhere, Category = "Drone") float OrbitRadius = 60.f;   // 좌·우 반경
-    UPROPERTY(EditAnywhere, Category = "Drone") float OrbitHeight = 90.f;   // 머리 위 높이
-    UPROPERTY(EditAnywhere, Category = "Drone") float OrbitSpeed = 60.f;   // deg/sec
-    UPROPERTY(EditAnywhere, Category = "Drone|Orbit")
-    float PivotRightOffset = 35.f;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+	TObjectPtr<USpotLightComponent> SpotLight;
 
-    /** 조준 시 오른쪽 어깨 위치 */
-    UPROPERTY(EditAnywhere, Category = "Drone")
-    FVector AimOffset = FVector(35.f, 55.f, 40.f);   // (앞, 오른쪽, 위)
+	/* ───────── Movement Parameters ───────── */
+	UPROPERTY(EditDefaultsOnly, Category = "Drone|Movement", meta = (ToolTip = "드론이 목표를 따라가는 속도입니다. 값을 높이면 더 빠릅니다."))
+	float FollowInterpSpeed = 15.f;
 
-    /* ───────── Replicated state ─────── */
-    /** 클라이언트가 보내는 HitTarget → 서버 복제 */
-    UPROPERTY(ReplicatedUsing = OnRep_AimTarget)
-    FVector_NetQuantize CurrentAimTarget;
+	UPROPERTY(EditDefaultsOnly, Category = "Drone|Movement")
+	float CheckInterval = 0.2f;
 
-    UFUNCTION() void OnRep_AimTarget();
+	UPROPERTY(EditAnywhere, Category = "Drone|Position")
+	float OrbitHeight = 90.f;
 
-    /* ───────── Internals ───────── */
-    void CheckDistanceAndTeleport();
-    void UpdateAutoLight();
-    void UpdateLightDirection();
+	UPROPERTY(EditAnywhere, Category = "Drone|Position")
+	float PivotRightOffset = 35.f;
 
-    UPROPERTY()  AActor* TargetActor = nullptr;
-    UPROPERTY()  float   MaxDistance = 700.f;
+	UPROPERTY(EditAnywhere, Category = "Drone|Aiming")
+	FVector AimOffset = FVector(35.f, 55.f, 40.f);
 
-    float OrbitYaw = 0.f;
-    bool  bIsAiming = false;
-    FTimerHandle TeleportCheckTimer;
+	/* ───────── Replicated State ───────── */
+	UPROPERTY(Replicated)
+	FVector_NetQuantize CurrentAimTarget;
 
-    UPROPERTY(ReplicatedUsing = OnRep_FlashOn)
-    bool bFlashOn = true;
+	UPROPERTY(ReplicatedUsing = OnRep_ServerState)
+	FVector_NetQuantize ReplicatedLocation;
 
-    UFUNCTION()
-    void OnRep_FlashOn();
+	UPROPERTY(ReplicatedUsing = OnRep_ServerState)
+	FRotator ReplicatedRotation;
 
-    void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+	UPROPERTY(Replicated)
+	TObjectPtr<AActor> TargetActor = nullptr;
+
+private:
+	/* ───────── RPCs (Remote Procedure Calls) ───────── */
+	UFUNCTION(Server, Unreliable)
+	void ServerSetAimTarget(const FVector_NetQuantize& NewTarget);
+
+	UFUNCTION(NetMulticast, Reliable)
+	void Multicast_ForceTeleport(const FVector& NewLocation, const FRotator& NewRotation);
+
+	/* ───────── OnRep Notifications ───────── */
+	UFUNCTION()
+	void OnRep_ServerState();
+
+	/* ───────── Internal Logic ───────── */
+	void ForceTeleportToTarget();
+	void CheckDistanceAndTeleport();
+
+	FTimerHandle TeleportCheckTimer;
+	float MaxDistance = 700.f;
+
+	// 클라이언트의 부드러운 이동(보간)을 위한 변수들
+	FVector InterpolationTargetLocation;
+	FRotator InterpolationTargetRotation;
 };

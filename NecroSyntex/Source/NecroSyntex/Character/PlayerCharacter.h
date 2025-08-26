@@ -11,6 +11,7 @@
 #include "NecroSyntex/Interfaces/InteractWithCrossHairsInterface.h"
 #include "NecroSyntex/NecroSyntexType/CombatState.h"
 #include "NecroSyntex/Voice/VoiceComponent.h"
+#include "NecroSyntex/NecroSyntaxComponents/DR_FlashDrone.h"
 #include "NecroSyntex/NecroSyntaxComponents/DR_FlashDroneComponent.h"
 #include "PlayerCharacter.generated.h"
 
@@ -104,6 +105,8 @@ public:
 	void OnThrowGrenadeMontageEnded(UAnimMontage* Montage, bool bInterrupted);
 	void PlaySwapMontage();
 	void PlayDopingMontage();
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastPlayDopingMontage();
 	virtual void OnRep_ReplicatedMovement() override;
 
 	void Elim();
@@ -131,13 +134,6 @@ public:
 
 	UFUNCTION(Client, Reliable, BlueprintCallable)
 	void ClientUpdateHUDShield();
-
-	bool bInitializeAmmo = false;
-	int32 InitialCarriedAmmo = 0;
-	int32 InitialWeaponAmmo = 0;
-
-
-	void UpdateHUDAmmo();
 
 	UFUNCTION(BlueprintCallable)
 	void SpawnDefaultWeapon();
@@ -293,7 +289,6 @@ protected:
 	UPROPERTY(ReplicatedUsing = OnRep_IsSprinting)
 	bool bIsSprinting;
 
-	bool bWantsToSprint = false;
 
 private:
 	UFUNCTION()
@@ -523,11 +518,17 @@ public:
 
 
 	//Speed
-	UPROPERTY(Replicated, EditDefaultsOnly, Category = "Movement")
+	UPROPERTY(ReplicatedUsing = OnRep_WalkSpeed, EditDefaultsOnly, Category = "Movement")
 	float WalkSpeed = 600.f;
 
-	UPROPERTY(Replicated, EditDefaultsOnly, Category = "Movement")
+	UFUNCTION()
+	void OnRep_WalkSpeed();
+
+	UPROPERTY(ReplicatedUsing = OnRep_RunningSpeed, EditDefaultsOnly, Category = "Movement")
 	float RunningSpeed = 1200.f;
+
+	UFUNCTION()
+	void OnRep_RunningSpeed();
 
 	UPROPERTY(Replicated, EditDefaultsOnly, Category = "Movement")
 	float AimWalkSpeed = 400.f;
@@ -543,6 +544,12 @@ public:
 
 	UPROPERTY(Replicated, EditDefaultsOnly, Category = "Movement")
 	float MaxCharacterSpeed = 10000.f;
+
+	UFUNCTION()
+	void UpdateMaxWalkSpeed();
+
+	UFUNCTION(Server, Reliable)
+	void Server_UpdateMaxWalkSpeed();
 
 
 
@@ -591,6 +598,8 @@ public:
 	void SetOverlappingWeapon(AWeapon* Weapon);
 	bool IsWeaponEquipped();
 	bool IsAiming();
+
+	bool bWantsToSprint = false;
 	FORCEINLINE float GetAO_Yaw() const { return AO_Yaw; }
 	FORCEINLINE float GetAO_Pitch() const { return AO_Pitch; }
 	AWeapon* GetEquippedWeapon();
@@ -614,11 +623,10 @@ public:
 	bool IsLocallyReloading();
 	FORCEINLINE ULagCompensationComponent* GetLagCompensation() const { return LagCompensation; }
 	FORCEINLINE UVoiceComponent* GetVoiceComp() const { return VoiceComp; }
-
-	//Player move action speed update by duream.
-	UPROPERTY(Replicated)
-	int MoveActionState;
-
-	UFUNCTION()
-	void UpdateMaxWalkSpeed();
+	FORCEINLINE ADR_FlashDrone* GetFlashDrone() const {
+		if (FlashDroneComponent) {
+			return FlashDroneComponent->GetFlashDrone();
+		}
+		return nullptr;
+	}
 };
