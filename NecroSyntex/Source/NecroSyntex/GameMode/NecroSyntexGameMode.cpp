@@ -259,6 +259,7 @@ void ANecroSyntexGameMode::CallMissionEndEvent()
 
 void ANecroSyntexGameMode::SpawnNecroSyntexPlayerCharacter(APlayerController* NewPlayer)
 {
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("신버젼 캐릭터 생성 작동!"));
 
 	ANecroSyntexPlayerController* NSPC = Cast<ANecroSyntexPlayerController>(NewPlayer);
 	if (!NSPC) {
@@ -311,8 +312,6 @@ void ANecroSyntexGameMode::SpawnNecroSyntexPlayerCharacter(APlayerController* Ne
 			GS->TotalPlayer++;
 			GS->SurvivingPlayer = GS->TotalPlayer;
 		}
-
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("HandleStartingNewPlayer 작동 2"));
 	}
 }
 
@@ -320,15 +319,14 @@ void ANecroSyntexGameMode::PostLogin(APlayerController* NewPlayer)
 {
 	Super::PostLogin(NewPlayer);
 
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Post Login 작동 1"));
-
+	//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Post Login 작동 1"));
 }
 
 void ANecroSyntexGameMode::HandleStartingNewPlayer_Implementation(APlayerController* NewPlayer)
 {
 	Super::HandleStartingNewPlayer_Implementation(NewPlayer);
 
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("HandleStartingNewPlayer 작동 1"));
+	/*GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("HandleStartingNewPlayer 작동 1"));
 
 	ANecroSyntexPlayerController* NSPC = Cast<ANecroSyntexPlayerController>(NewPlayer);
 	if (!NSPC) {
@@ -385,7 +383,7 @@ void ANecroSyntexGameMode::HandleStartingNewPlayer_Implementation(APlayerControl
 		}
 
 		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("HandleStartingNewPlayer 작동 2"));
-	}
+	}*/
 }
 
 void ANecroSyntexGameMode::SelectAndReadyComplete_Implementation()

@@ -13,6 +13,7 @@
 #include "NecroSyntex\Weapon\Weapon.h"
 #include "NecroSyntex\NecroSyntaxComponents\CombatComponent.h"
 #include "NecroSyntex\NecroSyntexGameState.h"
+#include "NecroSyntex/ServerGameInstance.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "Kismet/GameplayStatics.h"
@@ -467,7 +468,10 @@ void ANecroSyntexPlayerController::ReceivedPlayer()
 	if (IsLocalController())
 	{
 		ServerRequestServerTime(GetWorld()->GetTimeSeconds());
-		GetInstanceAndSetSelectedCharacter();
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Received Player 작동"));
+		GetWorld()->GetTimerManager().SetTimerForNextTick(
+			FTimerDelegate::CreateUObject(this, &ANecroSyntexPlayerController::GetSelectedInformation)
+		);
 	}
 }
 
@@ -597,10 +601,11 @@ void ANecroSyntexPlayerController::Server_SetCharacter_Implementation(TSubclassO
 	ANecroSyntexPlayerState* PS = GetPlayerState<ANecroSyntexPlayerState>();
 	if (PS)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("aaaaaa"));
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("NecroSyntex Character set"));
 		PS->SelectedCharacterClass = SelectCharacter;
 	}
 
+	return;
 }
 
 void ANecroSyntexPlayerController::Server_SetDoping_Implementation(int32 SelectFirstDoping, int32 SelectSecondDoping)
@@ -608,39 +613,36 @@ void ANecroSyntexPlayerController::Server_SetDoping_Implementation(int32 SelectF
 	ANecroSyntexPlayerState* PS = GetPlayerState<ANecroSyntexPlayerState>();
 	if (PS)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("bbbbbb"));
 		PS->FirstDopingCode = SelectFirstDoping;
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("First doping set"));
 		PS->SecondDopingCode = SelectSecondDoping;
+		UE_LOG(LogTemp, Warning, TEXT("두번째 도핑 설정: %d"), SelectSecondDoping);
 		PS->bHasCompletedSelection = true;
-
-
 	}
 
 	ANecroSyntexGameMode* GM = GetWorld()->GetAuthGameMode<ANecroSyntexGameMode>();
 	if (GM)
 	{
-		GM->SelectAndReadyComplete();
+		GM->SpawnNecroSyntexPlayerCharacter(this);
 	}
-}
 
-void ANecroSyntexPlayerController::ShowCharacterSelectUI_Implementation()
-{
-	if (SelectionWidgetClass) // 위젯 블루프린트 클래스가 설정되었는지 확인
-	{
-		SelectionWidget = CreateWidget<UUserWidget>(this, SelectionWidgetClass);
-		if (SelectionWidget)
-		{
-			SelectionWidget->AddToViewport(5);
-			SetInputMode(FInputModeUIOnly()); // UI 조작 모드로 변경
-			bShowMouseCursor = true; // 마우스 커서 활성화
-		}
-	}
+	return;
 }
-
 
 void ANecroSyntexPlayerController::ServerReportPingStatus_Implementation(bool bHighPing)
 {
 	HighPingDelegate.Broadcast(bHighPing);
+}
+
+void ANecroSyntexPlayerController::GetSelectedInformation()
+{
+	if (UServerGameInstance* ServerGameInstance = Cast<UServerGameInstance>(GetGameInstance())) {
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("GetSelected Call"));
+		Server_SetCharacter(ServerGameInstance->SelectedCharacterClass_Instance);
+		Server_SetDoping(ServerGameInstance->FirstDopingCode_Instance, ServerGameInstance->SecondDopingCode_Instance);
+	}
+
+	return;
 }
 
 void ANecroSyntexPlayerController::CheckPlayerState()

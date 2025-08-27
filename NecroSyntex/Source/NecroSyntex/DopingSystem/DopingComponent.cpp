@@ -229,6 +229,7 @@ void UDopingComponent::InitDopingSkillSet()
 		}
 		else {
 			//임시로 도핑키 셋팅
+			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Init Doping PS 없다~~~~~~~"));
 			OneKeyDoping = HPconversion;
 			One_DopingItemNum = OneKeyDoping->DopingItemNum;
 			One_DopingCoolTime = OneKeyDoping->DopingCoolTime;

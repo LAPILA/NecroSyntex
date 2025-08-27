@@ -125,11 +125,8 @@ public:
 	UFUNCTION(Server, Reliable, BlueprintCallable)
 	void Server_SetDoping(int32 SelectFirstDoping, int32 SelectSecondDoping);
 
-	UFUNCTION(Client, Reliable)
-	void ShowCharacterSelectUI();
-
-	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
-	void GetInstanceAndSetSelectedCharacter();
+	UFUNCTION()
+	void GetSelectedInformation();
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UI")
 	TSubclassOf<UUserWidget> SelectionWidgetClass;

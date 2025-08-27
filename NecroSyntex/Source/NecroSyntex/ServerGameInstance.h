@@ -16,7 +16,7 @@ class NECROSYNTEX_API UServerGameInstance : public UAdvancedFriendsGameInstance
 
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	TSubclassOf<class APlayerCharacter> SelectedCharacterClass_Instance;
+	TSubclassOf<APlayerCharacter> SelectedCharacterClass_Instance;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	int32 FirstDopingCode_Instance;
@@ -24,4 +24,10 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	int32 SecondDopingCode_Instance;
 	
+
+	UFUNCTION(BlueprintCallable)
+	void SaveCharacterSelected(TSubclassOf<APlayerCharacter> InCharacterClass);
+
+	UFUNCTION(BlueprintCallable)
+	void SaveDopingCode(int32 FirstDC, int32 SecondDC);
 };
