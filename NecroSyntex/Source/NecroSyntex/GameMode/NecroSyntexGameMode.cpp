@@ -267,8 +267,6 @@ void ANecroSyntexGameMode::SpawnNecroSyntexPlayerCharacter(APlayerController* Ne
 		return;
 	}
 
-	NSPC->GetInstanceAndSetSelectedCharacter();
-
 	ANecroSyntexPlayerState* NSPS = NSPC->GetPlayerState<ANecroSyntexPlayerState>();
 	if (APawn* OldPawn = NSPC->GetPawn()) {
 		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("oldpawn destroy 작동"));
