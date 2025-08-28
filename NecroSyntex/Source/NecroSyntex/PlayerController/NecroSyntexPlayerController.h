@@ -128,12 +128,6 @@ public:
 	UFUNCTION()
 	void GetSelectedInformation();
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UI")
-	TSubclassOf<UUserWidget> SelectionWidgetClass;
-
-	UPROPERTY()
-	UUserWidget* SelectionWidget;
-
 	FTimerHandle CheckPlayerStateTimer;
 
 	void CheckPlayerState();
