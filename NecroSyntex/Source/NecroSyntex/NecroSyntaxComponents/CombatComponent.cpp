@@ -1164,8 +1164,6 @@ void UCombatComponent::ServerFire_Implementation(const FVector_NetQuantize& Trac
 	}
 
 	LastServerFireTime = CurrentTime;
-
-	EquippedWeapon->SpendRound();
 	MulticastFire(TraceHitTarget);
 }
 
