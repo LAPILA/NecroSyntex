@@ -60,7 +60,7 @@
   </thead>
   <tbody>
     <tr>
-      <td align="center"><strong>송태환</strong> (You)</td>
+      <td align="center"><strong>송태환</strong></td>
       <td align="center">💻<br><strong>Lead C++ Gameplay Programmer</strong></td>
       <td>
         <ul>
