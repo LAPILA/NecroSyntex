@@ -43,18 +43,6 @@ void AProjectileRocket::BeginPlay()
 {
     Super::BeginPlay();
 
-    if (!HasAuthority())
-    {
-        UE_LOG(LogTemp, Warning, TEXT("Hit Self"));
-        CollisionBox->OnComponentHit.AddDynamic(this, &AProjectileRocket::OnHit);
-    }
-    //duream code add start.
-    else if (HasAuthority()) {
-        //CollisionBox->SetCollisionResponseToChannel(ECC_Pawn, ECR_Block);
-        CollisionBox->OnComponentHit.AddDynamic(this, &AProjectileRocket::OnHit);
-    }
-    //duream code add end.
-
     SpawnTrailSystem();
 
     if (ProjectileLoop && LoopingSoundAttenuation)
