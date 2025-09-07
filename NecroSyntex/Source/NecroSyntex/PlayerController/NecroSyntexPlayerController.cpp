@@ -501,6 +501,10 @@ void ANecroSyntexPlayerController::OnRep_MatchState()
 
 void ANecroSyntexPlayerController::HandleMatchHasStarted()
 {
+	if (!HasAuthority()) {
+		GEngine->AddOnScreenDebugMessage(-1, 50.f, FColor::Red, TEXT("client HandleMatchHasStarted start"));
+	}
+	//GEngine->AddOnScreenDebugMessage(-1, 50.f, FColor::Red, TEXT("HandleMatchHasStarted ¿€µø"));
 	NecroSyntexHUD = NecroSyntexHUD == nullptr ? Cast<ANecroSyntexHud>(GetHUD()) : NecroSyntexHUD;
 	if (NecroSyntexHUD)
 	{

@@ -77,6 +77,14 @@ void UDopingComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 
 }
 
+void UDopingComponent::OnRep_FirstDopingCode()
+{
+	APlayerCharacter* OwnerCharacter = Cast<APlayerCharacter>(GetOwner());
+	if (!OwnerCharacter) return;
+
+	OwnerCharacter->SetDopingIconHUD();
+}
+
 void UDopingComponent::OnRep_OneAble()
 {
 	APlayerCharacter* OwnerCharacter = Cast<APlayerCharacter>(GetOwner());
@@ -185,6 +193,14 @@ void UDopingComponent::SetSecondDopingKey_Implementation(int32 Num)
 UDopingComponent* UDopingComponent::GetDopingComponent()
 {
 	return this;
+}
+
+void UDopingComponent::OnRep_SecondDopingCode()
+{
+	APlayerCharacter* OwnerCharacter = Cast<APlayerCharacter>(GetOwner());
+	if (!OwnerCharacter) return;
+
+	OwnerCharacter->SetDopingIconHUD();
 }
 
 void UDopingComponent::InitDopingSkillSet()
