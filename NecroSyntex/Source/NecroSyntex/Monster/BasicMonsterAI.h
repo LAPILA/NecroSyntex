@@ -31,6 +31,9 @@ public:
 	UPROPERTY(EditAnywhere, Category = "AI")
 	float SlowChaseSpeed;
 
+	UPROPERTY(Replicated)
+	float stopSpeed = 0.0f;
+
 	FTimerHandle SpeedRestoreTimerHandle;
 
 	FTimerHandle AttackRestoreTimerHandle;
@@ -152,19 +155,52 @@ protected:
 	FTimerHandle DeathDelayTimerHandle;
 
 	UFUNCTION()
+	void PlayHitHighDamageAnimation();
+
+	//OnRep setting.
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
+	//<---Hit
+	UFUNCTION()
 	void PlayHitAnimation();
 
 	UFUNCTION(NetMulticast, Reliable)
 	void Multicast_PlayHitAnimation();
 
-	UFUNCTION()
-	void PlayHitHighDamageAnimation();
+	UPROPERTY(ReplicatedUsing = OnRep_IsDead)
+	bool bIsHit = false;
 
+	UFUNCTION()
+	void OnRep_IsHit();
+	//--->
+	
+	
+	//<---Death
 	UFUNCTION()
 	void PlayDeathAnimation();
 
 	UFUNCTION(NetMulticast, Reliable)
 	void Multicast_PlayDeathAnimation();
+
+	UPROPERTY(ReplicatedUsing = OnRep_IsDead)
+	bool bIsDead = false;
+
+	UPROPERTY()
+	bool bAlreadyDead = false;
+
+	UFUNCTION()
+	void OnRep_IsDead();
+	//--->
+
+	//After death, move stop
+	UPROPERTY(ReplicatedUsing = OnRep_StopMove)
+	bool bIsStopMove = false;
+
+	UFUNCTION()
+	void OnRep_StopMove();
+
+	UFUNCTION(Server,Reliable)
+	void MoveStop();
 
 	UFUNCTION()
 	void PlayAttackAnimation();

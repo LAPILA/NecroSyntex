@@ -35,7 +35,7 @@ void ANecroSyntexGameMode::BeginPlay()
 	UE_LOG(LogTemp, Warning, TEXT("WarmUpTime: %f"), WarmUpTime);
 
 
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("BeginPlay 1111111111"));
+	//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("GameMode BeginPlay"));
 }
 
 void ANecroSyntexGameMode::OnMatchStateSet()
@@ -257,19 +257,74 @@ void ANecroSyntexGameMode::CallMissionEndEvent()
 	MissionEndEvent.Broadcast();
 }
 
+void ANecroSyntexGameMode::SpawnNecroSyntexPlayerCharacter(APlayerController* NewPlayer)
+{
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("신버젼 캐릭터 생성 작동!"));
+
+	ANecroSyntexPlayerController* NSPC = Cast<ANecroSyntexPlayerController>(NewPlayer);
+	if (!NSPC) {
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("none NSPC"));
+		return;
+	}
+
+	ANecroSyntexPlayerState* NSPS = NSPC->GetPlayerState<ANecroSyntexPlayerState>();
+	if (APawn* OldPawn = NSPC->GetPawn()) {
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("oldpawn destroy 작동"));
+		OldPawn->Destroy();
+	}
+
+	if (NSPS && NSPS->SelectedCharacterClass) {
+
+		TSubclassOf<APawn> OldDefault = DefaultPawnClass;
+		DefaultPawnClass = NSPS->SelectedCharacterClass;
+
+		TArray<AActor*> PlayerStarts;
+		UGameplayStatics::GetAllActorsOfClass(this, APlayerStart::StaticClass(), PlayerStarts);
+
+		if (PlayerStarts.Num() > 0)
+		{
+			AActor* ChosenStart = PlayerStarts[FMath::RandRange(0, PlayerStarts.Num() - 1)];
+			RestartPlayerAtPlayerStart(NSPC, ChosenStart);
+		}
+		else {
+			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("PlayerStarts Zero"));
+			return;
+		}
+
+
+		if (APlayerCharacter* NewCharacter = Cast<APlayerCharacter>(NSPC->GetPawn())) {
+			NSPC->ClientRestart(NewCharacter);
+			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("NewVer ClientRestart"));
+		}
+	}
+	else {
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("NSPS selected character 없음"));
+	}
+
+
+	ANecroSyntexPlayerController* PC = Cast<ANecroSyntexPlayerController>(NewPlayer);
+	if (PC)
+	{
+		if (ANecroSyntexGameState* GS = GetGameState<ANecroSyntexGameState>())
+		{
+			GS->TotalPlayer++;
+			GS->SurvivingPlayer = GS->TotalPlayer;
+		}
+	}
+}
+
 void ANecroSyntexGameMode::PostLogin(APlayerController* NewPlayer)
 {
 	Super::PostLogin(NewPlayer);
 
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Post Login 작동 1"));
-
+	//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Post Login 작동 1"));
 }
 
 void ANecroSyntexGameMode::HandleStartingNewPlayer_Implementation(APlayerController* NewPlayer)
 {
 	Super::HandleStartingNewPlayer_Implementation(NewPlayer);
 
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("HandleStartingNewPlayer 작동 1"));
+	/*GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("HandleStartingNewPlayer 작동 1"));
 
 	ANecroSyntexPlayerController* NSPC = Cast<ANecroSyntexPlayerController>(NewPlayer);
 	if (!NSPC) {
@@ -326,7 +381,7 @@ void ANecroSyntexGameMode::HandleStartingNewPlayer_Implementation(APlayerControl
 		}
 
 		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("HandleStartingNewPlayer 작동 2"));
-	}
+	}*/
 }
 
 void ANecroSyntexGameMode::SelectAndReadyComplete_Implementation()

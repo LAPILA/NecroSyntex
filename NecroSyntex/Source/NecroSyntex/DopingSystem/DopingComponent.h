@@ -46,15 +46,19 @@ public:
 
 	UPROPERTY()
 	UDopingParent* OneKeyDoping; // 키보드 1번키 도핑
-	UPROPERTY(Replicated)
+	UPROPERTY(ReplicatedUsing = OnRep_FirstDopingCode)
 	int FirstDopingCode;
+	UFUNCTION()
+	void OnRep_FirstDopingCode();
 	UPROPERTY(Replicated)
 	bool OneKeyBool;
 
 	UPROPERTY()
 	UDopingParent* TwoKeyDoping; // 키보드 2번키 도핑
-	UPROPERTY(Replicated)
+	UPROPERTY(ReplicatedUsing = OnRep_SecondDopingCode)
 	int SecondDopingCode;
+	UFUNCTION()
+	void OnRep_SecondDopingCode();
 	UPROPERTY(Replicated)
 	bool TwoKeyBool;
 

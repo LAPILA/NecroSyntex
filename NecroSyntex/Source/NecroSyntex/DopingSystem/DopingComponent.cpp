@@ -77,6 +77,14 @@ void UDopingComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 
 }
 
+void UDopingComponent::OnRep_FirstDopingCode()
+{
+	APlayerCharacter* OwnerCharacter = Cast<APlayerCharacter>(GetOwner());
+	if (!OwnerCharacter) return;
+
+	OwnerCharacter->SetDopingIconHUD();
+}
+
 void UDopingComponent::OnRep_OneAble()
 {
 	APlayerCharacter* OwnerCharacter = Cast<APlayerCharacter>(GetOwner());
@@ -187,6 +195,14 @@ UDopingComponent* UDopingComponent::GetDopingComponent()
 	return this;
 }
 
+void UDopingComponent::OnRep_SecondDopingCode()
+{
+	APlayerCharacter* OwnerCharacter = Cast<APlayerCharacter>(GetOwner());
+	if (!OwnerCharacter) return;
+
+	OwnerCharacter->SetDopingIconHUD();
+}
+
 void UDopingComponent::InitDopingSkillSet()
 {
 	if (GetOwner()->HasAuthority()) {
@@ -229,6 +245,7 @@ void UDopingComponent::InitDopingSkillSet()
 		}
 		else {
 			//임시로 도핑키 셋팅
+			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Init Doping PS 없다~~~~~~~"));
 			OneKeyDoping = HPconversion;
 			One_DopingItemNum = OneKeyDoping->DopingItemNum;
 			One_DopingCoolTime = OneKeyDoping->DopingCoolTime;

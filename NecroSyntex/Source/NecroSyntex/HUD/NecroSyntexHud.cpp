@@ -13,14 +13,26 @@
 void ANecroSyntexHud::BeginPlay()
 {
 	Super::BeginPlay();
-}
-
-void ANecroSyntexHud::AddCharacterOverlay()
-{
+	GEngine->AddOnScreenDebugMessage(-1, 50.f, FColor::Red, TEXT("HUDBeginPlay action"));
 	APlayerController* PlayerController = GetOwningPlayerController();
 	if (PlayerController && CharacterOverlayClass)
 	{
 		CharacterOverlay = CreateWidget<UCharacterOverlay>(PlayerController, CharacterOverlayClass);
+		GEngine->AddOnScreenDebugMessage(-1, 50.f, FColor::Red, TEXT("CharacterOverlay create"));
+	}
+}
+
+void ANecroSyntexHud::AddCharacterOverlay()
+{
+
+	//GEngine->AddOnScreenDebugMessage(-1, 50.f, FColor::Red, TEXT("AddCharacterOverlay ÀÛµ¿"));
+	APlayerController* PlayerController = GetOwningPlayerController();
+	if (PlayerController->IsLocalController()) {
+		GEngine->AddOnScreenDebugMessage(-1, 50.f, FColor::Red, TEXT("client AddCharacterOverlay start"));
+	}
+	if (PlayerController && CharacterOverlayClass)
+	{
+		//CharacterOverlay = CreateWidget<UCharacterOverlay>(PlayerController, CharacterOverlayClass);
 		if (CharacterOverlay)
 		{
 			CharacterOverlay->AddToViewport(-1);
