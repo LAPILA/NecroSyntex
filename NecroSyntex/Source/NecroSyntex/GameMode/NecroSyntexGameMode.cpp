@@ -35,7 +35,7 @@ void ANecroSyntexGameMode::BeginPlay()
 	UE_LOG(LogTemp, Warning, TEXT("WarmUpTime: %f"), WarmUpTime);
 
 
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("BeginPlay 1111111111"));
+	//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("GameMode BeginPlay"));
 }
 
 void ANecroSyntexGameMode::OnMatchStateSet()

@@ -211,6 +211,7 @@ void APlayerCharacter::PossessedBy(AController* NewController)
 
 	if (UDC) {
 		UDC->InitDopingSkillSet();
+		SetDopingIconHUD();
 	}
 	else {
 		UE_LOG(LogTemp, Error, TEXT("UDC 인식 안됨"));
