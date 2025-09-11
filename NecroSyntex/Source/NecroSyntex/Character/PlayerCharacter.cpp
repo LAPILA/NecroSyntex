@@ -1012,10 +1012,6 @@ void APlayerCharacter::Elim()
 
 void APlayerCharacter::MulticastElim_Implementation()
 {
-	if (NecroSyntexPlayerController)
-	{
-		NecroSyntexPlayerController->SetHUDWeaponAmmo(0);
-	}
 	bElimed = true;
 
 	TRY_PLAY_VOICE(EVoiceCue::Death);
@@ -1032,10 +1028,9 @@ void APlayerCharacter::MulticastElim_Implementation()
 	{
 		Combat->FireButtonPressed(false);
 	}
-	// Disable collision
-	GetMesh()->SetSimulatePhysics(true);
-	GetMesh()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	GetMesh()->SetCollisionProfileName(TEXT("Ragdoll"));
+	GetMesh()->SetSimulatePhysics(true);
 
 	bool bHideSniperScope =
 		IsLocallyControlled() &&

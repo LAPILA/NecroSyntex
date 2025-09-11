@@ -213,13 +213,14 @@ void ANecroSyntexPlayerController::OnPossess(APawn* InPawn)
 	Super::OnPossess(InPawn);
 
 	APlayerCharacter* PlayerCharacter = Cast<APlayerCharacter>(InPawn);
+	if (!PlayerCharacter) return;
 
 	if (IsLocalController())
 	{
 		if (UEnhancedInputLocalPlayerSubsystem* SubSystem =
 			ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(GetLocalPlayer()))
 		{
-			if (PlayerCharacter && PlayerCharacter->DefaultMappingContext)
+			if (PlayerCharacter->DefaultMappingContext)
 			{
 				SubSystem->ClearAllMappings();
 				SubSystem->AddMappingContext(PlayerCharacter->DefaultMappingContext, 0);
@@ -227,11 +228,23 @@ void ANecroSyntexPlayerController::OnPossess(APawn* InPawn)
 		}
 	}
 
-	// 캐릭터 HUD 초기화
-	if (PlayerCharacter)
+	SetHUDHealth(PlayerCharacter->GetHealth(), PlayerCharacter->GetMaxHealth());
+	SetHUDShield(PlayerCharacter->GetShield(), PlayerCharacter->GetMaxShield());
+
+	UCombatComponent* Combat = PlayerCharacter->GetCombat();
+	if (Combat)
 	{
-		SetHUDHealth(PlayerCharacter->GetHealth(), PlayerCharacter->GetMaxHealth());
-		SetHUDShield(PlayerCharacter->GetShield(), PlayerCharacter->GetMaxShield());
+		SetHUDCarriedAmmo(Combat->CarriedAmmo);
+
+		AWeapon* EquippedWeapon = Combat->GetEquippedWeapon();
+		if (EquippedWeapon)
+		{
+			SetHUDWeaponAmmo(EquippedWeapon->GetAmmo());
+		}
+		else
+		{
+			SetHUDWeaponAmmo(0);
+		}
 	}
 }
 

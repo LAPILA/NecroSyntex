@@ -175,69 +175,81 @@ FServerSideRewindResult ULagCompensationComponent::ProjectileConfirmHit(const FF
 
 FShotgunServerSideRewindResult ULagCompensationComponent::ShotgunConfirmHit(const TArray<FFramePackage>& FramePackages, const FVector_NetQuantize& TraceStart, const TArray<FVector_NetQuantize>& HitLocations)
 {
-	FShotgunServerSideRewindResult Result;
+	FShotgunServerSideRewindResult RewindResult;
+	if (FramePackages.IsEmpty())
+	{
+		return RewindResult;
+	}
 
 	TArray<FFramePackage> CachedFrames;
-	for (const FFramePackage& Src : FramePackages)
+	for (const FFramePackage& Pkg : FramePackages)
 	{
-		if (!Src.Character) continue;
-
-		FFramePackage Cached;
-		Cached.Character = Src.Character;
-		CacheBoxPositions(Src.Character, Cached);
-		MoveBoxes(Src.Character, Src);
-		EnableCharacterMeshCollision(Src.Character, ECollisionEnabled::NoCollision);
-		CachedFrames.Add(Cached);
+		if (Pkg.Character)
+		{
+			FFramePackage CurrentFrame;
+			CurrentFrame.Character = Pkg.Character;
+			CacheBoxPositions(Pkg.Character, CurrentFrame);
+			CachedFrames.Add(CurrentFrame);
+		}
 	}
 
-	auto TracePellets =
-		[&](const TSet<FName>& ActiveBoxes, TMap<APlayerCharacter*, uint32>& Counter)
-		{
-			for (const FFramePackage& Pkg : FramePackages)
-			{
-				for (auto& Pair : Pkg.Character->HitCollisionBoxes)
-				{
-					const bool bEnable = ActiveBoxes.Contains(Pair.Key);
-					Pair.Value->SetCollisionEnabled(bEnable ? ECollisionEnabled::QueryAndPhysics
-						: ECollisionEnabled::NoCollision);
-				}
-			}
-
-			UWorld* World = GetWorld();
-			for (const FVector& PelletEnd : HitLocations)
-			{
-				FHitResult Hit;
-				if (World && World->LineTraceSingleByChannel(
-					Hit, TraceStart, TraceStart + (PelletEnd - TraceStart) * 1.25f, ECC_HitBox))
-				{
-					if (APlayerCharacter* PC = Cast<APlayerCharacter>(Hit.GetActor()))
-					{
-						Counter.FindOrAdd(PC)++;
-					}
-				}
-			}
-		};
-
-	TracePellets(HeadBoxNames, Result.HeadShots);
-	TracePellets(BodyBoxNames, Result.BodyShots);
+	for (const FFramePackage& PkgToRewind : FramePackages)
 	{
-		TSet<FName> SubBoxes;
-		for (const auto& Pair : FramePackages[0].Character->HitCollisionBoxes)
+		if (PkgToRewind.Character)
 		{
-			if (!HeadBoxNames.Contains(Pair.Key) && !BodyBoxNames.Contains(Pair.Key))
+			MoveBoxes(PkgToRewind.Character, PkgToRewind);
+			EnableCharacterMeshCollision(PkgToRewind.Character, ECollisionEnabled::NoCollision);
+
+			for (auto& HitBoxPair : PkgToRewind.Character->HitCollisionBoxes)
 			{
-				SubBoxes.Add(Pair.Key);
+				if (HitBoxPair.Value)
+				{
+					HitBoxPair.Value->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+					HitBoxPair.Value->SetCollisionResponseToChannel(ECC_HitBox, ECR_Block);
+				}
 			}
 		}
-		TracePellets(SubBoxes, Result.SubShots);
 	}
 
-	for (const FFramePackage& Cached : CachedFrames)
+	UWorld* World = GetWorld();
+	if (World)
 	{
-		ResetHitBoxes(Cached.Character, Cached);
-		EnableCharacterMeshCollision(Cached.Character, ECollisionEnabled::QueryAndPhysics);
+		for (const FVector& HitLocation : HitLocations)
+		{
+			FHitResult ConfirmHitResult;
+			const FVector TraceEnd = TraceStart + (HitLocation - TraceStart) * 1.25f;
+
+			World->LineTraceSingleByChannel(ConfirmHitResult, TraceStart, TraceEnd, ECC_HitBox);
+
+			if (APlayerCharacter* HitCharacter = Cast<APlayerCharacter>(ConfirmHitResult.GetActor()))
+			{
+				if (HeadBoxNames.Contains(ConfirmHitResult.BoneName))
+				{
+					RewindResult.HeadShots.FindOrAdd(HitCharacter)++;
+				}
+				else if (BodyBoxNames.Contains(ConfirmHitResult.BoneName))
+				{
+					RewindResult.BodyShots.FindOrAdd(HitCharacter)++;
+				}
+				else
+				{
+					RewindResult.SubShots.FindOrAdd(HitCharacter)++;
+				}
+			}
+		}
 	}
-	return Result;
+
+	// 4. 모든 캐릭터의 히트박스와 메인 메시를 원래 상태로 되돌립니다.
+	for (const FFramePackage& CachedFrame : CachedFrames)
+	{
+		if (CachedFrame.Character)
+		{
+			ResetHitBoxes(CachedFrame.Character, CachedFrame);
+			EnableCharacterMeshCollision(CachedFrame.Character, ECollisionEnabled::QueryAndPhysics);
+		}
+	}
+
+	return RewindResult;
 }
 
 void ULagCompensationComponent::CacheBoxPositions(APlayerCharacter* HitCharacter, FFramePackage& OutFramePackage)
@@ -427,30 +439,35 @@ void ULagCompensationComponent::ProjectileServerScoreRequest_Implementation(APla
 
 void ULagCompensationComponent::ShotgunServerScoreRequest_Implementation(const TArray<APlayerCharacter*>& HitCharacters, const FVector_NetQuantize& TraceStart, const TArray<FVector_NetQuantize>& HitLocations, float HitTime)
 {
-	FShotgunServerSideRewindResult Confirm =
-		ShotgunServerSideRewind(HitCharacters, TraceStart, HitLocations, HitTime);
+	FShotgunServerSideRewindResult Confirm = ShotgunServerSideRewind(HitCharacters, TraceStart, HitLocations, HitTime);
 
-	for (APlayerCharacter* Victim : HitCharacters)
+	if (!Character || !Character->GetEquippedWeapon()) return;
+
+	for (auto const& [Victim, HitCount] : Confirm.HeadShots)
 	{
-		if (!Victim || !Victim->GetEquippedWeapon() || !Character) continue;
+		if (Victim)
+		{
+			const float DamageToApply = HitCount * Character->GetEquippedWeapon()->GetHeadShotDamage();
+			UGameplayStatics::ApplyDamage(Victim, DamageToApply, Character->Controller, Character->GetEquippedWeapon(), UDamageType::StaticClass());
+		}
+	}
 
-		float DamageTotal = 0.f;
-		const float BodyDmg = Victim->GetEquippedWeapon()->GetDamage();
-		const float HeadDmg = Victim->GetEquippedWeapon()->GetHeadShotDamage();
-		const float SubDmg = Victim->GetEquippedWeapon()->GetSubDamage();
+	for (auto const& [Victim, HitCount] : Confirm.BodyShots)
+	{
+		if (Victim)
+		{
+			const float DamageToApply = HitCount * Character->GetEquippedWeapon()->GetDamage();
+			UGameplayStatics::ApplyDamage(Victim, DamageToApply, Character->Controller, Character->GetEquippedWeapon(), UDamageType::StaticClass());
+		}
+	}
 
-		if (Confirm.HeadShots.Contains(Victim))
-			DamageTotal += Confirm.HeadShots[Victim] * HeadDmg;
-		if (Confirm.BodyShots.Contains(Victim))
-			DamageTotal += Confirm.BodyShots[Victim] * BodyDmg;
-		if (Confirm.SubShots.Contains(Victim))
-			DamageTotal += Confirm.SubShots[Victim] * SubDmg;
-
-		UGameplayStatics::ApplyDamage(
-			Victim, DamageTotal,
-			Character->Controller,
-			Victim->GetEquippedWeapon(),
-			UDamageType::StaticClass());
+	for (auto const& [Victim, HitCount] : Confirm.SubShots)
+	{
+		if (Victim)
+		{
+			const float DamageToApply = HitCount * Character->GetEquippedWeapon()->GetSubDamage();
+			UGameplayStatics::ApplyDamage(Victim, DamageToApply, Character->Controller, Character->GetEquippedWeapon(), UDamageType::StaticClass());
+		}
 	}
 }
 
