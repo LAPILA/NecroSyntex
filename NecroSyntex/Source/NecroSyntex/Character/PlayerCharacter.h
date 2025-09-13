@@ -551,7 +551,8 @@ public:
 	UFUNCTION(Server, Reliable)
 	void Server_UpdateMaxWalkSpeed();
 
-
+	UFUNCTION(Server, Reliable)
+	void Server_InteractWithCrate(ASupplyCrate* CrateToInteract);
 
 	float Rebound; // ¹Ýµ¿
 

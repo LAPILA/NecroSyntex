@@ -476,6 +476,14 @@ void APlayerCharacter::UpdateMaxWalkSpeed()
 	}
 }
 
+void APlayerCharacter::Server_InteractWithCrate_Implementation(ASupplyCrate* CrateToInteract)
+{
+	if (CrateToInteract)
+	{
+		CrateToInteract->Interact(this);
+	}
+}
+
 void APlayerCharacter::Server_UpdateMaxWalkSpeed_Implementation()
 {
 	if (bIsCrouched) {
@@ -571,15 +579,16 @@ void APlayerCharacter::ReloadTimerFinished()
 void APlayerCharacter::EquipButtonPressed()
 {
 	if (bDisableGameplay) return;
-	if (OverlappingSupplyCrate)
-	{
-		OverlappingSupplyCrate->Interact(this);
-	}
-	if (Combat)
+
+	if (Combat && OverlappingWeapon)
 	{
 		ServerEquipButtonPressed();
 	}
-	if (HealingStationActor)
+	else if (OverlappingSupplyCrate)
+	{
+		Server_InteractWithCrate(OverlappingSupplyCrate);
+	}
+	else if (HealingStationActor)
 	{
 		ServerRequestHealing();
 	}
