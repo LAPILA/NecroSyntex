@@ -41,9 +41,10 @@ ABasicMonsterAI::ABasicMonsterAI()
 	CanAttack = true;
 	MeleeAttack = false;
 	//CanSkill = true;
-	valueStopAnimationSound = false;
+	hitCool = false;
 	isAttackArea = false;
 	isCanAttack = false;
+	ensureAni = false;
 }
 
 // Called when the game starts or when spawned
@@ -102,11 +103,15 @@ float ABasicMonsterAI::TakeDamage_Implementation(float DamageAmount, FDamageEven
 	
 	MonsterHP -= DamageAmount + DPA->DopingDamageBuff;
 	
-	if (!valueStopAnimationSound) {
-		valueStopAnimationSound = true;
-		if (DamageAmount > 0) {//Refactoring Need..
-			PlayHitAnimation();
-			DelayedAnimationSound(0.6f);
+	if (!hitCool) {
+		UAnimInstance* MonsterAnim = GetMesh()->GetAnimInstance();
+		UMonsterAnimInstance* MonsterAnimInstance = Cast<UMonsterAnimInstance>(MonsterAnim);
+		if (!MonsterAnimInstance->isScreamSkillTime) {
+			hitCool = true;
+			if (DamageAmount > 0) {
+				PlayHitAnimation();
+				DelayedAnimation(0.6f);
+			}
 		}
 	}
 	// 사망 처리
@@ -194,16 +199,14 @@ void ABasicMonsterAI::Multicast_PlayHitAnimation_Implementation()
 	/*if (HitReactionMontage && GetMesh() && GetMesh()->GetAnimInstance()) {
 		GetMesh()->GetAnimInstance()->Montage_Play(HitReactionMontage);
 	}*/
+	if (ensureAni) {
+		return;
+	}
+
+	bIsHit = true;
 	OnRep_IsHit();
 	ForceNetUpdate();
 	FlushNetDormancy();
-}
-
-void ABasicMonsterAI::PlayHitHighDamageAnimation()//강한 데미지인 경우 hit 애니메이션 재생
-{
-	if (HitReactionMontage && GetMesh() && GetMesh()->GetAnimInstance()) {
-		GetMesh()->GetAnimInstance()->Montage_Play(HitHighDamageReactionMontage);
-	}
 }
 
 void ABasicMonsterAI::OnRep_IsHit()
@@ -235,15 +238,7 @@ void ABasicMonsterAI::PlayDeathAnimation()//죽음 애니메이션 재생
 
 void ABasicMonsterAI::Multicast_PlayDeathAnimation_Implementation()
 {
-	//bIsDead = true;
-	//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("Multicast_PlayDeathAnimation_Implementation Start"));
-	/*if (DeathReactionMontage && GetMesh() && GetMesh()->GetAnimInstance()) {
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("Multicast_PlayDeathAnimation_Implementation Start"));
-		GetMesh()->GetAnimInstance()->Montage_Play(DeathReactionMontage);
-	}*/
-	//OnRep_IsDead();
-	//ForceNetUpdate();
-	//FlushNetDormancy();
+	//none
 }
 
 void ABasicMonsterAI::OnRep_IsDead()
@@ -281,6 +276,7 @@ void ABasicMonsterAI::OnRep_IsDead()
 void ABasicMonsterAI::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	DOREPLIFETIME(ABasicMonsterAI, ensureAni);
 	DOREPLIFETIME_CONDITION_NOTIFY(ABasicMonsterAI, bIsDead, COND_None, REPNOTIFY_OnChanged);
 	DOREPLIFETIME_CONDITION_NOTIFY(ABasicMonsterAI, bIsStopMove, COND_None, REPNOTIFY_OnChanged);
 	DOREPLIFETIME_CONDITION_NOTIFY(ABasicMonsterAI, bIsHit, COND_None, REPNOTIFY_OnChanged);
@@ -303,6 +299,7 @@ void ABasicMonsterAI::OnRep_StopMove()
 void ABasicMonsterAI::MoveStop_Implementation()
 {
 	bIsStopMove = true;
+	ensureAni = true;
 
 	OnRep_StopMove();
 	ForceNetUpdate();
@@ -323,14 +320,14 @@ void ABasicMonsterAI::DelayedFunction(float DelayTime)//일정 시간 동안 비동기적�
 	GetWorld()->GetTimerManager().SetTimer(handle, this, &ABasicMonsterAI::DestroyMonster, DelayTime, false);
 }
 
-void ABasicMonsterAI::DelayedAnimationSound(float DelayTime)
+void ABasicMonsterAI::DelayedAnimation(float DelayTime)
 {
-	GetWorld()->GetTimerManager().SetTimer(SetAnimationSound, this, &ABasicMonsterAI::StopAnimationSound, DelayTime, false);
+	GetWorld()->GetTimerManager().SetTimer(StopAnimationHandle, this, &ABasicMonsterAI::StopAnimation, DelayTime, false);
 }
 
-void ABasicMonsterAI::StopAnimationSound()
+void ABasicMonsterAI::StopAnimation()
 {
-	valueStopAnimationSound = false;
+	hitCool = false;
 	bIsHit = false;
 }
 

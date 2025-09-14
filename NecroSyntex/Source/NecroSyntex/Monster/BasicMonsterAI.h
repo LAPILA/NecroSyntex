@@ -22,6 +22,8 @@ public:
 	// Sets default values for this character's properties
 	ABasicMonsterAI();
 
+
+	//Monster Speed.
 	UPROPERTY(EditAnywhere, Category = "AI")
 	float ChaseSpeed;
 
@@ -34,6 +36,8 @@ public:
 	UPROPERTY(Replicated)
 	float stopSpeed = 0.0f;
 
+
+	//Timer
 	FTimerHandle SpeedRestoreTimerHandle;
 
 	FTimerHandle AttackRestoreTimerHandle;
@@ -44,47 +48,37 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	class USkeletalMeshComponent* HandMesh;
 
+	//Monster Health
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float MonsterHP;
 
+	//Monster attack damage
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float MonsterAD; //attack damage
+	float MonsterAD; 
 
+	//근접 공격하는 몬스터인 경우.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI")
 	bool MeleeAttack;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI")
-	USoundBase* HitSound;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI")
-	USoundBase* DeathSound;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI")
-	USoundBase* AttackSound;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effects")
-	UNiagaraSystem* GasBombEffect;
-
+	//공격 가능한지 묻는 변수.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI")
 	bool CanAttack;
 
+	//미션마다 몬스터 이동 시 목표 오브젝트와의 거리 조절을 위한 변수.
 	UPROPERTY()
 	float MonsterDistance;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Value")
-	FName KeyName;
-
+	//기본 이동속도로 업데이트
 	UFUNCTION(BlueprintCallable)
 	void UpdateWalkSpeed(); //float NewWalkSpeed in parameter
 
+	//매개변수값으로 이동속도 업데이트
 	UFUNCTION(BlueprintCallable)
 	void UpdateSpeed(float speed);
 
+	//공격 쿨타임
 	UFUNCTION(BlueprintCallable)
 	void AttackCoolTime();
-
-	//UFUNCTION(BlueprintCallable)
-	//void Attack_Player();
 
 	UFUNCTION(BlueprintCallable)
 	void TakeDopingDamage(float DopingDamageAmount);
@@ -100,9 +94,11 @@ public:
 	UFUNCTION(BlueprintImplementableEvent, Category = "Combat")
 	void OnWeaponHitEvent(const FHitResult& HitResult);
 
+	//몬스터 이동속도 0으로 업데이트
 	UFUNCTION()
 	void MonsterStopMove();
 
+	//Scream 브로드캐스트
 	UPROPERTY(BlueprintAssignable)
 	FScreamStartEvent ScreamStart;
 
@@ -110,23 +106,24 @@ public:
 	UFUNCTION()
 	void FuncScream();
 
-	//플레이어 발견 시 FuncScream()호출을 위한 함수.
+	//플레이어 발견 시 FuncScream()호출을 위한 함수. AC_Monster에서 사용.
 	UFUNCTION(BlueprintCallable)
 	void FindPlayer();
 
 	//포효 스킬 시 즉시 사용이 아닌 일정 시간 이후에 사용하도록 하기 위한 함수.
 	UFUNCTION(BlueprintCallable)
 	void StartScreamTime(float delayTime);
-
 	FTimerHandle ScreamStartPoint;
 
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
+	//공격 가능한 영역인지 묻는 변수.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Area")
 	bool isAttackArea;
 
+	//Player 캐릭터일 시 공격 가능함을 알려주는 변수.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Area")
 	bool isCanAttack;
 
@@ -134,28 +131,22 @@ protected:
 	UAnimMontage* HitReactionMontage;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
-	UAnimMontage* HitHighDamageReactionMontage;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
 	UAnimMontage* DeathReactionMontage;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
 	UAnimMontage* AttackMontage;
 
-	/*UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
-	class UAnimMontage* AttackMontage;*/
+	UPROPERTY()
+	bool hitCool;
+
+	UPROPERTY(Replicated, BlueprintReadWrite, EditAnywhere)
+	bool ensureAni;
 
 	UPROPERTY()
-	bool valueStopAnimationSound;
-
-	UPROPERTY()
-	FTimerHandle SetAnimationSound;
+	FTimerHandle StopAnimationHandle;
 
 	UPROPERTY()
 	FTimerHandle DeathDelayTimerHandle;
-
-	UFUNCTION()
-	void PlayHitHighDamageAnimation();
 
 	//OnRep setting.
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
@@ -167,7 +158,7 @@ protected:
 	UFUNCTION(NetMulticast, Reliable)
 	void Multicast_PlayHitAnimation();
 
-	UPROPERTY(ReplicatedUsing = OnRep_IsDead)
+	UPROPERTY(ReplicatedUsing = OnRep_IsHit)
 	bool bIsHit = false;
 
 	UFUNCTION()
@@ -213,10 +204,10 @@ protected:
 	void DelayedFunction(float DelayTime);
 
 	UFUNCTION()
-	void DelayedAnimationSound(float DelayTime);
+	void DelayedAnimation(float DelayTime);
 
 	UFUNCTION()
-	void StopAnimationSound();
+	void StopAnimation();
 
 	UFUNCTION(BlueprintImplementableEvent)
 	void AttackPlayer();
