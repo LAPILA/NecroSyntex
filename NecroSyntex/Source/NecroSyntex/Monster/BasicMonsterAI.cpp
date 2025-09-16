@@ -413,3 +413,4 @@ void ABasicMonsterAI::StartScreamTime(float delayTime)
 {
 	GetWorld()->GetTimerManager().SetTimer(ScreamStartPoint, this, &ABasicMonsterAI::FuncScream, delayTime, false);
 }
+
