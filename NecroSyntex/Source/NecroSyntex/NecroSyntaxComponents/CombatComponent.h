@@ -105,6 +105,9 @@ protected:
 	UFUNCTION(Server, Reliable)
 	void ServerReload();
 
+	UFUNCTION(Server, Reliable)
+	void ServerResetFireTimer();
+
 	UFUNCTION(NetMulticast, Reliable)
 	void MulticastNotifyWeaponChanged(AWeapon* NewWeapon);
 

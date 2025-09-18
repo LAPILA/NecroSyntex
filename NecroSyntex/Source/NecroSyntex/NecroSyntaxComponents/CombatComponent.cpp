@@ -452,6 +452,9 @@ void UCombatComponent::SwapWeaponByNumber(int32 WeaponNumber)
 
 void UCombatComponent::ServerSwapWeaponByNumber_Implementation(int32 WeaponNumber)
 {
+	LastServerFireTime = 0.f;
+	LastServerShotgunFireTime = 0.f;
+	bCanFire = true;
 	SwapWeaponByNumber(WeaponNumber);
 }
 
@@ -820,6 +823,11 @@ void UCombatComponent::Reload()
 {
 	if (CarriedAmmo > 0 && EquippedWeapon && !EquippedWeapon->IsFull())
 	{
+		if (!Character->HasAuthority())
+		{
+			ServerResetFireTimer();
+		}
+
 		ServerReload();
 	}
 }
@@ -1362,6 +1370,13 @@ void UCombatComponent::SetHUDCrosshairs(float DeltaTime)
 			HUD->SetHUDPackage(HUDPackage);
 		}
 	}
+}
+
+void UCombatComponent::ServerResetFireTimer_Implementation()
+{
+	LastServerFireTime = 0.f;
+	LastServerShotgunFireTime = 0.f;
+	bCanFire = true;
 }
 
 void UCombatComponent::InterpFOV(float DeltaTime)
