@@ -83,33 +83,6 @@ void ADR_FlashDrone::InitFollowing(AActor* InTarget, float InMaxDist)
 	TargetActor = InTarget;
 	MaxDistance = InMaxDist;
 
-	// 이 함수는 서버에서 스폰 직후 즉시 호출됩니다.
-	// 클라이언트로 정보가 복제되기 전에 여기서 올바른 초기 위치와 각도를 설정하면,
-	// 클라이언트는 처음부터 정확한 위치를 목표로 보간을 시작하여 위치/각도 오류가 사라집니다.
-	if (HasAuthority() && IsValid(TargetActor))
-	{
-		const APawn* OwningPawn = Cast<APawn>(TargetActor);
-
-		// 1. 초기 각도 계산: 플레이어의 카메라 방향을 기준으로 하되, 수평을 유지합니다.
-		FRotator InitialRotation = TargetActor->GetActorRotation(); // 기본값
-		if (OwningPawn && OwningPawn->GetController())
-		{
-			InitialRotation = OwningPawn->GetController()->GetControlRotation();
-			InitialRotation.Pitch = 0.f; // 드론이 위/아래로 기울지 않도록 고정
-			InitialRotation.Roll = 0.f;
-		}
-
-		// 2. 초기 위치 계산: Tick 함수의 고정 위치 계산 로직을 그대로 사용합니다.
-		const FRotator YawRotation(0.f, InitialRotation.Yaw, 0.f);
-		const FVector RightVector = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
-		const FVector InitialLocation = TargetActor->GetActorLocation() + RightVector * PivotRightOffset + FVector(0, 0, OrbitHeight);
-
-		// 3. 계산된 위치와 각도로 즉시 이동합니다.
-		SetActorLocationAndRotation(InitialLocation, InitialRotation);
-	}
-
-	// 4. 클라이언트 보간을 위한 초기 목표 지점을 설정합니다.
-	//    (이때 GetActorLocation/Rotation은 이미 위에서 계산된 최종 위치/각도입니다.)
 	InterpolationTargetLocation = GetActorLocation();
 	InterpolationTargetRotation = GetActorRotation();
 }
@@ -122,46 +95,36 @@ void ADR_FlashDrone::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 	if (!IsValid(TargetActor)) return;
 
-	// 서버는 모든 계산을 직접 수행하고, 클라이언트는 서버가 보내준 값으로 보간만 수행합니다.
 	if (HasAuthority())
 	{
 		// --- 1. 목표 위치 계산 ---
 		const APawn* OwningPawn = Cast<APawn>(TargetActor);
-
-		// 플레이어의 몸 방향(ActorRotation) 대신 카메라 방향(ControlRotation)을 사용해야 클라이언트와 오차가 없습니다.
 		FRotator ViewRotation = TargetActor->GetActorRotation();
 		if (OwningPawn && OwningPawn->GetController())
 		{
 			ViewRotation = OwningPawn->GetController()->GetControlRotation();
 		}
-
-		// Pitch, Roll을 제외한 순수 Yaw 회전값으로 안정적인 '오른쪽 벡터'를 추출합니다.
 		const FRotator YawRotation(0.f, ViewRotation.Yaw, 0.f);
 		const FVector RightVector = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
-
-		// 드론이 머무를 기준 위치(Base)를 계산합니다.
 		FVector Base = TargetActor->GetActorLocation() + RightVector * PivotRightOffset + FVector(0, 0, OrbitHeight);
 
 		const bool bNowAiming = CurrentAimTarget.SizeSquared() > 1.f;
 		FVector DesiredLoc;
-		if (bNowAiming) // 조준 중일 때: 플레이어의 조준점을 향해 특정 오프셋 위치로 이동
+		if (bNowAiming)
 		{
 			const FVector AimDir = (CurrentAimTarget - Base).GetSafeNormal();
 			const FVector Right = FVector::CrossProduct(FVector::UpVector, AimDir).GetSafeNormal();
 			const FVector Up = FVector::CrossProduct(AimDir, Right);
 			DesiredLoc = Base + AimDir * AimOffset.X + Right * AimOffset.Y + Up * AimOffset.Z;
 		}
-		else // 평상시: 계산된 기준(Base) 위치에 머무름
+		else
 		{
 			DesiredLoc = Base;
 		}
 
-		// --- 2. 서버 드론 위치 보간 ---
-		// 계산된 목표 위치로 부드럽게 이동시킵니다.
-		FVector NewLocation = FMath::VInterpTo(GetActorLocation(), DesiredLoc, DeltaTime, FollowInterpSpeed);
-		FHitResult HitResult;
-		SetActorLocation(NewLocation, true, &HitResult);
-		if (HitResult.bBlockingHit) { SetActorLocation(HitResult.Location); }
+		// --- 2. 서버 드론 위치 보간 (상수 속도로 변경) ---
+		FVector NewLocation = FMath::VInterpConstantTo(GetActorLocation(), DesiredLoc, DeltaTime, FollowSpeed);
+		SetActorLocation(NewLocation);
 
 		// --- 3. 목표 각도 계산 ---
 		FVector Dir;
@@ -169,23 +132,22 @@ void ADR_FlashDrone::Tick(float DeltaTime)
 			Dir = (CurrentAimTarget - GetActorLocation()).GetSafeNormal();
 		}
 		else {
-			Dir = ViewRotation.Vector(); // 평상시에는 플레이어의 카메라 방향을 바라봄
+			Dir = ViewRotation.Vector();
 		}
-		const float TurnSpd = bNowAiming ? 20.f : 10.f;
 		FRotator TargetRotation = Dir.Rotation();
 
-		// --- 4. 서버 드론 각도 보간 ---
-		SetActorRotation(FMath::RInterpTo(GetActorRotation(), TargetRotation, DeltaTime, TurnSpd));
+		// --- 4. 서버 드론 각도 보간 (RInterpTo 유지 또는 RInterpConstantTo 사용) ---
+		SetActorRotation(FMath::RInterpTo(GetActorRotation(), TargetRotation, DeltaTime, RotationInterpSpeed));
 
 		// --- 5. 클라이언트에 보낼 데이터 업데이트 ---
 		ReplicatedLocation = GetActorLocation();
 		ReplicatedRotation = GetActorRotation();
 	}
-	else // 클라이언트에서 실행되는 로직
+	else // 클라이언트 로직
 	{
-		// 서버로부터 받은 ReplicatedLocation/Rotation 값으로 부드럽게 시각적 보간만 수행합니다.
-		SetActorLocation(FMath::VInterpTo(GetActorLocation(), InterpolationTargetLocation, DeltaTime, FollowInterpSpeed));
-		SetActorRotation(FMath::RInterpTo(GetActorRotation(), InterpolationTargetRotation, DeltaTime, FollowInterpSpeed));
+		// --- 클라이언트 보간 (상수 속도로 변경) ---
+		SetActorLocation(FMath::VInterpConstantTo(GetActorLocation(), InterpolationTargetLocation, DeltaTime, FollowSpeed));
+		SetActorRotation(FMath::RInterpTo(GetActorRotation(), InterpolationTargetRotation, DeltaTime, RotationInterpSpeed));
 	}
 }
 

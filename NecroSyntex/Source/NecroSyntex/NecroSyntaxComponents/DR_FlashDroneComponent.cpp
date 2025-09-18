@@ -40,12 +40,20 @@ void UDR_FlashDroneComponent::SpawnDrone_Internal()
     ACharacter* OwnerChar = Cast<ACharacter>(GetOwner());
     if (!OwnerChar) return;
 
+	const ADR_FlashDrone* DroneCDO = GetDefault<ADR_FlashDrone>(FlashDroneClass);
+    if (!DroneCDO) return;
+
+	const FRotator YawRotation(0.f, OwnerChar->GetActorRotation().Yaw, 0.f);
+    const FVector RightVector = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
+    const FVector Base = OwnerChar->GetActorLocation() + RightVector * DroneCDO->PivotRightOffset + FVector(0, 0, DroneCDO->OrbitHeight);
+
+	const FVector SpawnLoc = Base;
+	FRotator SpawnRot = YawRotation;
+
     FActorSpawnParameters Params;
     Params.Owner = OwnerChar;
     Params.Instigator = OwnerChar;
     Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-
-    const FVector SpawnLoc = OwnerChar->GetActorLocation() + FVector(0, 0, 150.f);
 
     FlashDrone = GetWorld()->SpawnActor<ADR_FlashDrone>(
         FlashDroneClass, SpawnLoc, FRotator::ZeroRotator, Params);
