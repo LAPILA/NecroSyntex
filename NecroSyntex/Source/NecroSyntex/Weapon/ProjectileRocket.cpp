@@ -66,39 +66,24 @@ void AProjectileRocket::BeginPlay()
 
 void AProjectileRocket::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
 {
-    if (OtherActor == GetOwner())
+    if (OtherActor == GetOwner() || OtherActor == GetInstigator())
     {
         return;
     }
 
-    ExplodeDamage();
-    APawn* FiringPawn = GetInstigator();
-    if (FiringPawn && HasAuthority())
+    if (HasAuthority())
     {
-        AController* FiringController = FiringPawn->GetController();
-        if (FiringController)
-        {
-            TArray<AActor*> IgnoredActors;
-            IgnoredActors.Add(this);
-
-            UGameplayStatics::ApplyRadialDamageWithFalloff(
-                this, // World context object
-                Damage, // BaseDamage
-                10.f, // MinimumDamage
-                GetActorLocation(), // Origin
-                200.f, // DamageInnerRadius
-                500.f, // DamageOuterRadius
-                1.f, // DamageFalloff
-                UDamageType::StaticClass(), // DamageTypeClass
-                IgnoredActors, // IgnoreActors
-                this, // DamageCauser
-                FiringController // InstigatorController
-            );
-        }
+        ExplodeDamage();
+        Destroy();
     }
+    else if (bUseServerSideRewind)
+    {
+        Destroy();
+    }
+}
 
-    StartDestroyTimer();
-
+void AProjectileRocket::Destroyed()
+{
     if (ImpactParticles)
     {
         UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ImpactParticles, GetActorTransform());
@@ -107,25 +92,11 @@ void AProjectileRocket::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, 
     {
         UGameplayStatics::PlaySoundAtLocation(this, ImpactSound, GetActorLocation());
     }
-    if (ProjectileMesh)
-    {
-        ProjectileMesh->SetVisibility(false);
-    }
-    if (CollisionBox)
-    {
-        CollisionBox->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-    }
-    if (TrailSystemComponent && TrailSystemComponent->GetSystemInstance())
-    {
-        TrailSystemComponent->GetSystemInstance()->Deactivate();
-    }
+
     if (ProjectileLoopComponent && ProjectileLoopComponent->IsPlaying())
     {
         ProjectileLoopComponent->Stop();
     }
-}
 
-void AProjectileRocket::Destroyed()
-{
-
+    AActor::Destroyed();
 }
