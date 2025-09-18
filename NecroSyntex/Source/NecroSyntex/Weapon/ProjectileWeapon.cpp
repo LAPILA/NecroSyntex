@@ -9,95 +9,46 @@
 
 void AProjectileWeapon::Fire(const FVector& HitTarget)
 {
+	// 1. 모든 클라이언트와 서버에서 발사 효과(애니메이션, 사운드, 화면 흔들림, 탄환 소모)를 먼저 실행합니다.
+	//    클라이언트에서는 이 부분이 '예측'으로 즉시 실행됩니다.
 	Super::Fire(HitTarget);
 
+	// 2. 실제 투사체 스폰 로직은 오직 서버에서만 실행되도록 막습니다.
+	if (!HasAuthority())
+	{
+		return;
+	}
 
+	// 3. 이하 로직은 서버에서만 실행됩니다.
 	APawn* InstigatorPawn = Cast<APawn>(GetOwner());
-	const USkeletalMeshSocket* MuzzleFlashSocket = GetWeaponMesh()->GetSocketByName(FName("MuzzleFlash"));
+	if (!InstigatorPawn) return;
 
+	const USkeletalMeshSocket* MuzzleFlashSocket = GetWeaponMesh()->GetSocketByName(FName("MuzzleFlash"));
 	UWorld* World = GetWorld();
 	if (MuzzleFlashSocket && World)
 	{
 		FTransform SocketTransform = MuzzleFlashSocket->GetSocketTransform(GetWeaponMesh());
-		// From muzzle flash socket to hit location from TraceUnderCrosshairs
 		FVector ToTarget = HitTarget - SocketTransform.GetLocation();
 		FRotator TargetRotation = ToTarget.Rotation();
-
-		FVector TraceStart = SocketTransform.GetLocation();
-		FVector TraceDirection = (HitTarget - TraceStart).GetSafeNormal();
-		FVector TraceEnd = TraceStart + TraceDirection * 8000.f;
-		FHitResult FireHit;
-		FCollisionQueryParams Params;
-		Params.AddIgnoredActor(this);
-		if (InstigatorPawn)
-		{
-			Params.AddIgnoredActor(InstigatorPawn);
-		}
-		World->LineTraceSingleByChannel(FireHit, TraceStart, TraceEnd, ECC_Visibility, Params);
-
-		if (FireHit.bBlockingHit && FireHit.GetActor())
-		{
-			APlayerCharacter* HitCharacter = Cast<APlayerCharacter>(FireHit.GetActor());
-			if (HitCharacter)
-			{
-				HitCharacter->OnWeaponHitEvent(FireHit);
-			}
-			else if (ABasicMonsterAI* HitMonster = Cast<ABasicMonsterAI>(FireHit.GetActor()))
-			{
-				HitMonster->OnWeaponHitEvent(FireHit);
-			}
-		}
 
 		FActorSpawnParameters SpawnParams;
 		SpawnParams.Owner = GetOwner();
 		SpawnParams.Instigator = InstigatorPawn;
+		SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
-		AProjectile* SpawnedProjectile = nullptr;
+		// 서버가 '진짜' 복제되는 투사체를 스폰합니다.
+		AProjectile* SpawnedProjectile = World->SpawnActor<AProjectile>(
+			ProjectileClass,
+			SocketTransform.GetLocation(),
+			TargetRotation,
+			SpawnParams
+		);
 
-		if (bUseServerSideRewind)
+		if (SpawnedProjectile)
 		{
-			if (InstigatorPawn->HasAuthority()) // server
-			{
-				if (InstigatorPawn->IsLocallyControlled()) // server, host - use replicated projectile
-				{
-					SpawnedProjectile = World->SpawnActor<AProjectile>(ProjectileClass, SocketTransform.GetLocation(), TargetRotation, SpawnParams);
-					SpawnedProjectile->bUseServerSideRewind = false;
-					SpawnedProjectile->Damage = Damage;
-					SpawnedProjectile->HeadShotDamage = HeadShotDamage;
-					SpawnedProjectile->SubDamage = SubDamage;
-				}
-				else // server, not locally controlled - spawn non-replicated projectile, SSR
-				{
-					SpawnedProjectile = World->SpawnActor<AProjectile>(ServerSideRewindProjectileClass, SocketTransform.GetLocation(), TargetRotation, SpawnParams);
-					SpawnedProjectile->bUseServerSideRewind = true;
-				}
-			}
-			else // client, using SSR
-			{
-				if (InstigatorPawn->IsLocallyControlled()) // client, locally controlled - spawn non-replicated projectile, use SSR
-				{
-					SpawnedProjectile = World->SpawnActor<AProjectile>(ServerSideRewindProjectileClass, SocketTransform.GetLocation(), TargetRotation, SpawnParams);
-					SpawnedProjectile->bUseServerSideRewind = true;
-					SpawnedProjectile->TraceStart = SocketTransform.GetLocation();
-					SpawnedProjectile->InitialVelocity = SpawnedProjectile->GetActorForwardVector() * SpawnedProjectile->InitialSpeed;
-				}
-				else // client, not locally controlled - spawn non-replicated projectile, no SSR
-				{
-					SpawnedProjectile = World->SpawnActor<AProjectile>(ServerSideRewindProjectileClass, SocketTransform.GetLocation(), TargetRotation, SpawnParams);
-					SpawnedProjectile->bUseServerSideRewind = false;
-				}
-			}
-		}
-		else // weapon not using SSR
-		{
-			if (InstigatorPawn->HasAuthority())
-			{
-				SpawnedProjectile = World->SpawnActor<AProjectile>(ProjectileClass, SocketTransform.GetLocation(), TargetRotation, SpawnParams);
-				SpawnedProjectile->bUseServerSideRewind = false;
-				SpawnedProjectile->Damage = Damage;
-				SpawnedProjectile->HeadShotDamage = HeadShotDamage;
-				SpawnedProjectile->SubDamage = SubDamage;
-			}
+			SpawnedProjectile->Damage = Damage;
+			SpawnedProjectile->HeadShotDamage = HeadShotDamage;
+			SpawnedProjectile->SubDamage = SubDamage;
 		}
 	}
 }

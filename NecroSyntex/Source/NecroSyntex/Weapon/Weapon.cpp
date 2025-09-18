@@ -392,7 +392,6 @@ void AWeapon::Fire(const FVector& HitTarget)
 {
 	if (FireAnimation)
 	{
-		PlayFireSound();
 		WeaponMesh->PlayAnimation(FireAnimation, false);
 	}
 	if (CasingClass)
@@ -413,6 +412,8 @@ void AWeapon::Fire(const FVector& HitTarget)
 		}
 	}
 	SpendRound();
+
+	PlayFireSound();
 }
 
 void AWeapon::Dropped()
