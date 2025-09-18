@@ -1,65 +1,41 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
-
 #include "BuffDebuffEntryWidget.h"
 #include "Components/Image.h"
 #include "Components/ProgressBar.h"
 
-
-void UBuffDebuffEntryWidget::InitializeEntry(const FBuffDebuffInfo& Info)
+void UBuffDebuffEntryWidget::InitializeEntry(UTexture2D* InIcon, float InTotalDuration, float InElapsedTime)
 {
-	if (IconImage && Info.Icon)
+	if (IconImage && InIcon)
 	{
-		IconImage->SetBrushFromTexture(Info.Icon);
+		IconImage->SetBrushFromTexture(InIcon);
 	}
 
+	TotalDuration = InTotalDuration;
+	ElapsedTime = InElapsedTime;
+
+	// 지속시간이 0보다 큰 버프(시간제 버프)일 경우에만 ProgressBar를 보이게 합니다.
 	if (DurationBar)
 	{
-		DurationBar->SetPercent(1.f);
-		StartDurationUpdate(Info.Duration);
+		DurationBar->SetVisibility(TotalDuration > 0 ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
 	}
 }
 
-void UBuffDebuffEntryWidget::StartDurationUpdate(float InDuration)
+void UBuffDebuffEntryWidget::NativeConstruct()
 {
-	if (!DurationBar) return;
-
-	TotalDuration = InDuration;
-	ElapsedTime = 0.f;
-
-	UWorld* World = GetWorld();
-	if (World)
-	{
-		World->GetTimerManager().SetTimer(
-			ProgressUpdateTimer,
-			this,
-			&UBuffDebuffEntryWidget::UpdateDurationProgress,
-			0.1f,
-			true
-		);
-	}
-	else
-	{
-		UE_LOG(LogTemp, Error, TEXT("StartDurationUpdate: GetWorld() is null"));
-	}
+	Super::NativeConstruct();
+	bIsVolatile = true;
 }
 
-
-void UBuffDebuffEntryWidget::UpdateDurationProgress()
+void UBuffDebuffEntryWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 {
-	ElapsedTime += 0.1f;
+	Super::NativeTick(MyGeometry, InDeltaTime);
 
-	if (DurationBar && TotalDuration > 0.f)
-	{
-		float RemainingRatio = 1.f - (ElapsedTime / TotalDuration);
-		DurationBar->SetPercent(FMath::Clamp(RemainingRatio, 0.f, 1.f));
-	}
+	// 시간제 버프가 아니거나 ProgressBar가 없으면 실행하지 않습니다.
+	if (TotalDuration <= 0.f || !DurationBar) return;
 
-	if (ElapsedTime >= TotalDuration)
-	{
-		GetWorld()->GetTimerManager().ClearTimer(ProgressUpdateTimer);
-		UE_LOG(LogTemp, Warning, TEXT("BuffDebuff expired, removing from UI"));
-	}
+	// 경과 시간을 매 틱 업데이트합니다.
+	ElapsedTime += InDeltaTime;
+
+	// 남은 시간 비율을 계산하여 ProgressBar에 반영합니다.
+	const float RemainingRatio = 1.f - FMath::Clamp(ElapsedTime / TotalDuration, 0.f, 1.f);
+	DurationBar->SetPercent(RemainingRatio);
 }
-
-

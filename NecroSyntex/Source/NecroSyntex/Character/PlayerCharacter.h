@@ -18,6 +18,7 @@
 class UInputMappingContext;
 class UInputAction;
 struct FInputActionValue;
+class UBuffComponent;
 
 UCLASS()
 class NECROSYNTEX_API APlayerCharacter : public ACharacter, public IInteractWithCrossHairsInterface
@@ -360,6 +361,9 @@ private:
 	UPROPERTY(EditAnywhere, Category = Combat)
 	UAnimMontage* DopingMontage;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	class UBuffComponent* BuffComp;
+
 	bool bRotateRootBone;
 	float TurnThreshold = 0.5f;
 	FRotator ProxyRotationLastFrame;
@@ -622,6 +626,7 @@ public:
 	FORCEINLINE USubComponent* GetSubComp() const { return SubComp; }
 	FORCEINLINE bool GetDisableGameplay() const { return bDisableGameplay; }
 	bool IsLocallyReloading();
+	FORCEINLINE UBuffComponent* GetBuffComp() const { return BuffComp; }
 	FORCEINLINE ULagCompensationComponent* GetLagCompensation() const { return LagCompensation; }
 	FORCEINLINE UVoiceComponent* GetVoiceComp() const { return VoiceComp; }
 	FORCEINLINE ADR_FlashDrone* GetFlashDrone() const {

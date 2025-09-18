@@ -35,6 +35,7 @@
 #include "NecroSyntex\PickUps\SupplyCrate.h"
 #include "NecroSyntex/NecroSyntaxComponents/DR_FlashDroneComponent.h"
 #include "NecroSyntex/NecroSyntaxComponents/DR_FlashDrone.h"
+#include "NecroSyntex/NecroSyntaxComponents/BuffComponent.h"
 
 // Animation
 #include "PlayerAnimInstance.h"
@@ -89,6 +90,8 @@ APlayerCharacter::APlayerCharacter()
 	AttachedGrenade = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Attached Grenade"));
 	AttachedGrenade->SetupAttachment(GetMesh(), FName("GrenadeSocket"));
 	AttachedGrenade->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+	BuffComp = CreateDefaultSubobject<UBuffComponent>(TEXT("BuffComp"));
 
 	//================= Hit Boxes for SSR ================
 	TMap<FName, FName> BoneNames = {
