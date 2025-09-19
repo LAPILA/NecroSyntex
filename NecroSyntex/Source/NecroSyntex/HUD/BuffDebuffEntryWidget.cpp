@@ -2,7 +2,7 @@
 #include "Components/Image.h"
 #include "Components/ProgressBar.h"
 
-void UBuffDebuffEntryWidget::InitializeEntry(UTexture2D* InIcon, float InTotalDuration, float InElapsedTime)
+void UBuffDebuffEntryWidget::InitializeEntry(UTexture2D* InIcon, float InTotalDuration, float InStartTime)
 {
 	if (IconImage && InIcon)
 	{
@@ -10,12 +10,17 @@ void UBuffDebuffEntryWidget::InitializeEntry(UTexture2D* InIcon, float InTotalDu
 	}
 
 	TotalDuration = InTotalDuration;
-	ElapsedTime = InElapsedTime;
+	StartTime = InStartTime;
 
-	// 지속시간이 0보다 큰 버프(시간제 버프)일 경우에만 ProgressBar를 보이게 합니다.
 	if (DurationBar)
 	{
 		DurationBar->SetVisibility(TotalDuration > 0 ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
+	}
+
+	if (GEngine)
+	{
+		FString DebugMsg = FString::Printf(TEXT("[Entry] Initialized -> Duration: %.1f, StartTime: %.1f"), TotalDuration, StartTime);
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, DebugMsg);
 	}
 }
 
@@ -29,13 +34,21 @@ void UBuffDebuffEntryWidget::NativeTick(const FGeometry& MyGeometry, float InDel
 {
 	Super::NativeTick(MyGeometry, InDeltaTime);
 
-	// 시간제 버프가 아니거나 ProgressBar가 없으면 실행하지 않습니다.
+	if (GEngine)
+	{
+		const float CurrentTime = GetWorld()->GetTimeSeconds();
+		const float CalculatedElapsedTime = CurrentTime - StartTime;
+		const float Ratio = 1.f - FMath::Clamp(CalculatedElapsedTime / TotalDuration, 0.f, 1.f);
+		FString DebugMsg = FString::Printf(TEXT("[Entry Tick] Total: %.1f, Start: %.1f, Elapsed: %.1f, Ratio: %.2f"), TotalDuration, StartTime, CalculatedElapsedTime, Ratio);
+		// 키 값을 12345로 고정하여 매 프레임 같은 줄에 덮어쓰도록 합니다.
+		GEngine->AddOnScreenDebugMessage(12345, 0.f, FColor::Yellow, DebugMsg);
+	}
+
 	if (TotalDuration <= 0.f || !DurationBar) return;
 
-	// 경과 시간을 매 틱 업데이트합니다.
-	ElapsedTime += InDeltaTime;
+	const float CurrentTime = GetWorld()->GetTimeSeconds();
+	const float ElapsedTime = CurrentTime - StartTime;
 
-	// 남은 시간 비율을 계산하여 ProgressBar에 반영합니다.
 	const float RemainingRatio = 1.f - FMath::Clamp(ElapsedTime / TotalDuration, 0.f, 1.f);
 	DurationBar->SetPercent(RemainingRatio);
 }

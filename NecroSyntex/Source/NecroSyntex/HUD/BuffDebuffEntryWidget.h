@@ -15,7 +15,7 @@ class NECROSYNTEX_API UBuffDebuffEntryWidget : public UUserWidget
 
 public:
 	// 컨테이너 위젯으로부터 호출되어 아이콘과 시간 정보를 설정하는 함수
-	void InitializeEntry(UTexture2D* InIcon, float InTotalDuration, float InElapsedTime);
+	void InitializeEntry(UTexture2D* InIcon, float InTotalDuration, float InStartTime);
 
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UImage> IconImage;
@@ -30,5 +30,5 @@ protected:
 
 private:
 	float TotalDuration = 0.f;
-	float ElapsedTime = 0.f;
+	float StartTime = 0.f;
 };

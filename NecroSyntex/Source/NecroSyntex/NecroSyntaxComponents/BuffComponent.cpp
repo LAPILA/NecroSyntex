@@ -24,9 +24,9 @@ void UBuffComponent::BeginPlay()
         GetWorld()->GetTimerManager().SetTimer(TestTimer, [this]()
             {
                 // "무통증" 스킬은 3개의 버프/디버프 효과를 동시에 적용
-                AddBuff(FName("Damage_Up"), 10.f);
-                AddBuff(FName("Speed_Up"), 10.f);
-                AddBuff(FName("14_heal"), 10.f);
+                AddBuff(FName("Damage_Up"), 8.f);
+                AddBuff(FName("Speed_Up"), 12.f);
+                AddBuff(FName("14_heal"), 5.f);
             }, 2.f, false);
     }
 }
@@ -73,26 +73,23 @@ void UBuffComponent::RemoveBuff(FName BuffID)
 
 void UBuffComponent::Server_AddBuff_Implementation(FName BuffID, float Duration)
 {
-    if (!BuffDataTable) return;
+    if (!BuffDataTable || Duration <= 0.f) return;
 
     const FBuffData* BuffData = BuffDataTable->FindRow<FBuffData>(BuffID, "");
     if (!BuffData) return;
-
-    // 기획에 따라 스킬에서 직접 지속시간을 받도록 수정
-    const float FinalDuration = (Duration > 0) ? Duration : BuffData->Duration;
 
     FActiveBuff* ExistingBuff = ActiveBuffs.FindByPredicate([&](const FActiveBuff& Buff) { return Buff.BuffID == BuffID; });
     if (ExistingBuff)
     {
         ExistingBuff->StartTime = GetWorld()->GetTimeSeconds();
-        ExistingBuff->Duration = FinalDuration;
+        ExistingBuff->Duration = Duration;
     }
     else
     {
         FActiveBuff NewBuff;
         NewBuff.BuffID = BuffID;
         NewBuff.StartTime = GetWorld()->GetTimeSeconds();
-        NewBuff.Duration = FinalDuration;
+        NewBuff.Duration = Duration;
         ActiveBuffs.Add(NewBuff);
     }
     OnRep_ActiveBuffs();

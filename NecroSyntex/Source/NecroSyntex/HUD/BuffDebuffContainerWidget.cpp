@@ -20,11 +20,12 @@ void UBuffDebuffContainerWidget::UpdateBuffs(const TArray<FActiveBuff>& ActiveBu
 		UBuffDebuffEntryWidget* NewEntry = CreateWidget<UBuffDebuffEntryWidget>(this, EntryWidgetClass);
 		if (NewEntry)
 		{
-			// 버프가 시작된 후 이미 경과된 시간을 계산하여 전달합니다.
-			const float ElapsedTime = GetWorld()->GetTimeSeconds() - Buff.StartTime;
-			NewEntry->InitializeEntry(BuffData->Icon, Buff.Duration, ElapsedTime);
-
-
+			NewEntry->InitializeEntry(BuffData->Icon, Buff.Duration, Buff.StartTime);
+			if (GEngine)
+			{
+				FString DebugMsg = FString::Printf(TEXT("[Container] Sending to Entry -> BuffID: %s, Duration: %.1f, StartTime: %.1f"), *Buff.BuffID.ToString(), Buff.Duration, Buff.StartTime);
+				GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Cyan, DebugMsg);
+			}
 			// 버프/디버프 종류에 따라 알맞은 박스에 추가합니다.
 			if (BuffData->bIsBuff)
 			{

@@ -16,10 +16,6 @@ struct FBuffData : public FTableRowBase
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	TObjectPtr<UTexture2D> Icon;
 
-	// ▼▼▼ 이 버프/디버프의 기본 지속시간 (데이터 테이블에서 관리) ▼▼▼
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	float Duration = 10.f;
-
 	// 버프인지 디버프인지 (UI 정렬에 사용)
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	bool bIsBuff = true;
