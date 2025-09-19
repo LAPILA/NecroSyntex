@@ -38,7 +38,7 @@ private:
 
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
-
+	void ApplyBuffsForSkill(int32 SkillCode, AActor* TargetCharacter);
 
 public:
 	// Called every frame

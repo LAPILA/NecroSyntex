@@ -7,6 +7,7 @@
 #include "NecroSyntex/Character/PlayerCharacter.h"
 #include "Net/UnrealNetwork.h"
 #include "NecroSyntex/Voice/VoiceComponent.h"
+#include "NecroSyntex\NecroSyntaxComponents\BuffComponent.h"
 
 #define TRY_PLAY_VOICE(Cue)  Cast<APlayerCharacter>(GetOwner())->GetVoiceComp()->PlayVoice(Cue)
 
@@ -55,6 +56,94 @@ void UDopingComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 	DOREPLIFETIME(UDopingComponent, DopingforAllyMode);
 
 
+}
+
+void UDopingComponent::ApplyBuffsForSkill(int32 SkillCode, AActor* TargetCharacter)
+{
+	if (!TargetCharacter) return;
+
+	APlayerCharacter* TargetPlayer = Cast<APlayerCharacter>(TargetCharacter);
+	if (!TargetPlayer || !TargetPlayer->GetBuffComp()) return;
+
+	UBuffComponent* BuffComp = TargetPlayer->GetBuffComp();
+
+	switch (SkillCode)
+	{
+		// --- 공격형 ---
+	case 1: // 초월적인 힘
+		BuffComp->AddBuff(FName("Damage_Up"), 6.f);
+		break;
+	case 2: // 불타는 용광로
+		BuffComp->AddBuff(FName("Burning_Furnace"), 10.f);
+		break;
+	case 3: // 무통증
+		BuffComp->AddBuff(FName("Damage_Up"), 10.f);
+		BuffComp->AddBuff(FName("Speed_Up"), 10.f);
+		BuffComp->AddBuff(FName("Heal_Reduction"), 10.f); // 데이터 테이블 ID: Heal_Reduction (14_heal 대체)
+		break;
+	case 4: // 마지막 불꽃
+		BuffComp->AddBuff(FName("Damage_Up"), 15.f);
+		BuffComp->AddBuff(FName("Speed_Up"), 15.f);
+		BuffComp->AddBuff(FName("MaxHealth_Up"), 15.f); // 데이터 테이블 ID: MaxHealth_Up (13_heart 대체)
+		break;
+
+		// --- 방어형 ---
+	case 5: // 고통 경감
+		BuffComp->AddBuff(FName("Defense_Up"), 2.f); // 데이터 테이블 ID: Defense_Up (17_shield 대체)
+		break;
+	case 6: // 단단한 요새
+		BuffComp->AddBuff(FName("MaxHealth_Up"), 10.f);
+		BuffComp->AddBuff(FName("Damage_Down"), 10.f);
+		BuffComp->AddBuff(FName("Speed_Down"), 10.f);
+		break;
+	case 7: // 수호의 역설
+		if (TargetPlayer->GetShield() > 0)
+		{
+			BuffComp->AddBuff(FName("Defense_Up"), 10.f);
+			BuffComp->AddBuff(FName("Speed_Down"), 10.f);
+		}
+		else
+		{
+			BuffComp->AddBuff(FName("Defense_Down"), 10.f); // 데이터 테이블 ID: Defense_Down (18_shield 대체)
+			BuffComp->AddBuff(FName("Speed_Up"), 10.f);
+		}
+		break;
+
+		// --- 유틸형 ---
+	case 9: // 다리 강화
+		BuffComp->AddBuff(FName("Speed_Up"), 5.f);
+		// 5초 후에 Speed_Down 디버프를 2초간 적용
+		{
+			FTimerHandle DebuffTimer;
+			// 람다 캡처를 통해 TargetBuffComp를 안전하게 전달
+			GetWorld()->GetTimerManager().SetTimer(DebuffTimer, [BuffComp]()
+				{
+					if (BuffComp)
+					{
+						BuffComp->AddBuff(FName("Speed_Down"), 2.f);
+					}
+				}, 5.f, false);
+		}
+		break;
+	case 10: // 강제 회복
+		BuffComp->AddBuff(FName("MaxHealth_Down"), 6.f); // 데이터 테이블 ID: MaxHealth_Down (12_heart 대체)
+		break;
+	case 12: // 혼돈의 저주
+		BuffComp->AddBuff(FName("Speed_Up"), 10.f);
+		// 2초 후에 방향키 반전 디버프를 적용 (지속시간은 혼돈의 저주 남은 시간과 동일하게)
+		{
+			float ReverseDebuffDuration = 10.f - 2.f;
+			FTimerHandle DebuffTimer;
+			GetWorld()->GetTimerManager().SetTimer(DebuffTimer, [BuffComp, ReverseDebuffDuration]()
+				{
+					if (BuffComp)
+					{
+						BuffComp->AddBuff(FName("Reverse_Movement"), ReverseDebuffDuration); // 데이터 테이블 ID: Reverse_Movement (3_power 대체)
+					}
+				}, 2.f, false);
+		}
+		break;
+	}
 }
 
 
@@ -378,7 +467,7 @@ void UDopingComponent::FirstDopingUse() {
 		passive_call = true;
 		ClientPlayDopingEffect();
 		FirstDopingCoolStart();
-
+		ApplyBuffsForSkill(FirstDopingCode, OwnerCharacter);
 		if (GEngine) {
 			FString DopingCode = FString::Printf(TEXT("%d 사용"), FirstDopingCode);
 			GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, DopingCode);
@@ -410,7 +499,7 @@ void UDopingComponent::SecondDopingUse() {
 		passive_call = true;
 		ClientPlayDopingEffect();
 		SecondDopingCoolStart();
-
+		ApplyBuffsForSkill(SecondDopingCode, OwnerCharacter);
 		if (GEngine) {
 			FString DopingCode = FString::Printf(TEXT("%d 사용"), SecondDopingCode);
 			GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, DopingCode);
@@ -506,6 +595,7 @@ void UDopingComponent::FirstDopingForAlly()
 				FirstDopingCoolStart();
 				One_DopingItemNum--;
 				OwnerCharacter->SetHUDRemainFirstDoping();
+				ApplyBuffsForSkill(FirstDopingCode, HitCharacter);
 			}
 			else {
 
@@ -574,6 +664,7 @@ void UDopingComponent::SecondDopingForAlly()
 				SecondDopingCoolStart();
 				Two_DopingItemNum--;
 				OwnerCharacter->SetHUDRemainSecondDoping();
+				ApplyBuffsForSkill(SecondDopingCode, HitCharacter);
 			}
 
 			DopingforAllyMode = false;
