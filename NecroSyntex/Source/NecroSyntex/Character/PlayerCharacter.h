@@ -508,6 +508,9 @@ public:
 	UFUNCTION()
 	void HSDeBuffON();
 
+	UFUNCTION(BlueprintCallable)
+	void TransLevelDopingStop();
+
 
 	//PID(Player Inform Data)
 	UPROPERTY(ReplicatedUsing = OnRep_MaxHealth, EditAnywhere, Category = "Player Stats")

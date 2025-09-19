@@ -13,7 +13,7 @@
 #include "NecroSyntex\Weapon\Weapon.h"
 #include "NecroSyntex\NecroSyntaxComponents\CombatComponent.h"
 #include "NecroSyntex\NecroSyntexGameState.h"
-#include "NecroSyntex/ServerGameInstance.h"
+#include "NecroSyntex/Server/ServerGameInstance.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "Kismet/GameplayStatics.h"
