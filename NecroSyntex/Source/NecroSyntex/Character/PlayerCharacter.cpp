@@ -1335,6 +1335,15 @@ void APlayerCharacter::DopingModeChange()
 	}
 }
 
+void APlayerCharacter::TransLevelDopingStop()
+{
+	if (UDC)
+	{
+		UDC->EndGameDopingFinish();
+		GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, TEXT("TransLevelDopingStop"));
+	}
+}
+
 
 UDopingComponent* APlayerCharacter::GetDopingComponent()
 {
