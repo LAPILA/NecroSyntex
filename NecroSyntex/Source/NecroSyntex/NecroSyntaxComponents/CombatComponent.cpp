@@ -156,7 +156,11 @@ void UCombatComponent::FireProjectileWeapon()
 	if (EquippedWeapon && Character)
 	{
 		HitTarget = EquippedWeapon->bUseScatter ? EquippedWeapon->TraceEndWithScatter(HitTarget) : HitTarget;
-		if (!Character->HasAuthority()) LocalFire(HitTarget);
+
+		if (!Character->HasAuthority())
+		{
+			LocalFire(HitTarget);
+		}
 		ServerFire(HitTarget, EquippedWeapon->FireDelay);
 	}
 }
@@ -448,6 +452,9 @@ void UCombatComponent::SwapWeaponByNumber(int32 WeaponNumber)
 
 void UCombatComponent::ServerSwapWeaponByNumber_Implementation(int32 WeaponNumber)
 {
+	LastServerFireTime = 0.f;
+	LastServerShotgunFireTime = 0.f;
+	bCanFire = true;
 	SwapWeaponByNumber(WeaponNumber);
 }
 
@@ -816,6 +823,11 @@ void UCombatComponent::Reload()
 {
 	if (CarriedAmmo > 0 && EquippedWeapon && !EquippedWeapon->IsFull())
 	{
+		if (!Character->HasAuthority())
+		{
+			ServerResetFireTimer();
+		}
+
 		ServerReload();
 	}
 }
@@ -1293,10 +1305,16 @@ void UCombatComponent::SetHUDCrosshairs(float DeltaTime)
 {
 	if (!Character || !Character->Controller) return;
 
-	Controller = (!Controller) ? Cast<ANecroSyntexPlayerController>(Character->Controller) : Controller;
+	if (!Controller)
+	{
+		Controller = Cast<ANecroSyntexPlayerController>(Character->Controller);
+	}
 	if (Controller)
 	{
-		HUD = (!HUD) ? Cast<ANecroSyntexHud>(Controller->GetHUD()) : HUD;
+		if (!HUD)
+		{
+			HUD = Cast<ANecroSyntexHud>(Controller->GetHUD());
+		}
 		if (HUD)
 		{
 			if (EquippedWeapon)
@@ -1320,9 +1338,7 @@ void UCombatComponent::SetHUDCrosshairs(float DeltaTime)
 			FVector2D VelocityMultiplierRange(0.f, 1.f);
 			FVector Velocity = Character->GetVelocity();
 			Velocity.Z = 0.f;
-
 			CrosshairVelocityFactor = FMath::GetMappedRangeValueClamped(WalkSpeedRange, VelocityMultiplierRange, Velocity.Size());
-
 			if (Character->GetCharacterMovement()->IsFalling())
 			{
 				CrosshairInAirFactor = FMath::FInterpTo(CrosshairInAirFactor, 2.25f, DeltaTime, 2.25f);
@@ -1331,7 +1347,6 @@ void UCombatComponent::SetHUDCrosshairs(float DeltaTime)
 			{
 				CrosshairInAirFactor = FMath::FInterpTo(CrosshairInAirFactor, 0.f, DeltaTime, 30.f);
 			}
-
 			if (bAiming)
 			{
 				CrosshairAimFactor = FMath::FInterpTo(CrosshairAimFactor, 0.58f, DeltaTime, 30.f);
@@ -1340,19 +1355,28 @@ void UCombatComponent::SetHUDCrosshairs(float DeltaTime)
 			{
 				CrosshairAimFactor = FMath::FInterpTo(CrosshairAimFactor, 0.f, DeltaTime, 30.f);
 			}
-
 			CrosshairShootingFactor = FMath::FInterpTo(CrosshairShootingFactor, 0.f, DeltaTime, 40.f);
+			HUDPackage.CrosshairSpread = 0.5f + CrosshairVelocityFactor + CrosshairInAirFactor - CrosshairAimFactor + CrosshairShootingFactor;
 
-			HUDPackage.CrosshairSpread =
-				0.5f +
-				CrosshairVelocityFactor +
-				CrosshairInAirFactor -
-				CrosshairAimFactor +
-				CrosshairShootingFactor;
+			if (bAiming && EquippedWeapon && EquippedWeapon->GetWeaponType() == EWeaponType::EWT_SniperRifle)
+			{
+				HUDPackage.CrosshairsCenter = nullptr;
+				HUDPackage.CrosshairsLeft = nullptr;
+				HUDPackage.CrosshairsRight = nullptr;
+				HUDPackage.CrosshairsTop = nullptr;
+				HUDPackage.CrosshairsBottom = nullptr;
+			}
 
 			HUD->SetHUDPackage(HUDPackage);
 		}
 	}
+}
+
+void UCombatComponent::ServerResetFireTimer_Implementation()
+{
+	LastServerFireTime = 0.f;
+	LastServerShotgunFireTime = 0.f;
+	bCanFire = true;
 }
 
 void UCombatComponent::InterpFOV(float DeltaTime)
@@ -1385,6 +1409,11 @@ void UCombatComponent::SetAiming(bool bIsAiming)
 
 	bAiming = bIsAiming;
 	ServerSetAiming(bIsAiming);
+
+	if(Character->IsLocallyControlled() && EquippedWeapon->GetWeaponType() == EWeaponType::EWT_SniperRifle)
+	{
+		Character->ShowSniperScopeWidget(bIsAiming);
+	}
 
 	if (bAiming)
 	{

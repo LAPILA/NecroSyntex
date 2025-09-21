@@ -35,6 +35,7 @@
 #include "NecroSyntex\PickUps\SupplyCrate.h"
 #include "NecroSyntex/NecroSyntaxComponents/DR_FlashDroneComponent.h"
 #include "NecroSyntex/NecroSyntaxComponents/DR_FlashDrone.h"
+#include "NecroSyntex/NecroSyntaxComponents/BuffComponent.h"
 
 // Animation
 #include "PlayerAnimInstance.h"
@@ -89,6 +90,8 @@ APlayerCharacter::APlayerCharacter()
 	AttachedGrenade = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Attached Grenade"));
 	AttachedGrenade->SetupAttachment(GetMesh(), FName("GrenadeSocket"));
 	AttachedGrenade->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+	BuffComp = CreateDefaultSubobject<UBuffComponent>(TEXT("BuffComp"));
 
 	//================= Hit Boxes for SSR ================
 	TMap<FName, FName> BoneNames = {
@@ -476,6 +479,14 @@ void APlayerCharacter::UpdateMaxWalkSpeed()
 	}
 }
 
+void APlayerCharacter::Server_InteractWithCrate_Implementation(ASupplyCrate* CrateToInteract)
+{
+	if (CrateToInteract)
+	{
+		CrateToInteract->Interact(this);
+	}
+}
+
 void APlayerCharacter::Server_UpdateMaxWalkSpeed_Implementation()
 {
 	if (bIsCrouched) {
@@ -571,15 +582,16 @@ void APlayerCharacter::ReloadTimerFinished()
 void APlayerCharacter::EquipButtonPressed()
 {
 	if (bDisableGameplay) return;
-	if (OverlappingSupplyCrate)
-	{
-		OverlappingSupplyCrate->Interact(this);
-	}
-	if (Combat)
+
+	if (Combat && OverlappingWeapon)
 	{
 		ServerEquipButtonPressed();
 	}
-	if (HealingStationActor)
+	else if (OverlappingSupplyCrate)
+	{
+		Server_InteractWithCrate(OverlappingSupplyCrate);
+	}
+	else if (HealingStationActor)
 	{
 		ServerRequestHealing();
 	}
@@ -1012,10 +1024,6 @@ void APlayerCharacter::Elim()
 
 void APlayerCharacter::MulticastElim_Implementation()
 {
-	if (NecroSyntexPlayerController)
-	{
-		NecroSyntexPlayerController->SetHUDWeaponAmmo(0);
-	}
 	bElimed = true;
 
 	TRY_PLAY_VOICE(EVoiceCue::Death);
@@ -1032,10 +1040,9 @@ void APlayerCharacter::MulticastElim_Implementation()
 	{
 		Combat->FireButtonPressed(false);
 	}
-	// Disable collision
-	GetMesh()->SetSimulatePhysics(true);
-	GetMesh()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	GetMesh()->SetCollisionProfileName(TEXT("Ragdoll"));
+	GetMesh()->SetSimulatePhysics(true);
 
 	bool bHideSniperScope =
 		IsLocallyControlled() &&
@@ -1332,6 +1339,15 @@ void APlayerCharacter::DopingModeChange()
 	if (UDC)
 	{
 		UDC->DopingModeChange();
+	}
+}
+
+void APlayerCharacter::TransLevelDopingStop()
+{
+	if (UDC)
+	{
+		UDC->EndGameDopingFinish();
+		GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, TEXT("TransLevelDopingStop"));
 	}
 }
 

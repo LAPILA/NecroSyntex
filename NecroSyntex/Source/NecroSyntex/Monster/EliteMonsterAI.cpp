@@ -46,7 +46,7 @@ AEliteMonsterAI::AEliteMonsterAI()
 	CanAttack = true;
 	MeleeAttack = false;
 	CanSkill = true;
-	valueStopAnimationSound = false;
+	hitCool = false;
 	isAttackArea = false;
 	isCanAttack = false;
 }
@@ -99,6 +99,7 @@ void AEliteMonsterAI::PlayScreamSkillAnimation()
 	}
 	//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("skillscream"));
 	bIsScreamSkill = true;
+	//ensureAni = true;
 
 	MoveStop_Implementation();
 	OnRep_IsScreamSkill();
@@ -164,6 +165,7 @@ void AEliteMonsterAI::OnRep_IsScreamSkill()
 		//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, TEXT("play scream"));
 		GetMesh()->GetAnimInstance()->Montage_Play(ScreamMontage);
 	}
+	
 	bIsScreamSkill = false;
 }
 

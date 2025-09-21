@@ -1,65 +1,54 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
-
 #include "BuffDebuffEntryWidget.h"
 #include "Components/Image.h"
 #include "Components/ProgressBar.h"
 
-
-void UBuffDebuffEntryWidget::InitializeEntry(const FBuffDebuffInfo& Info)
+void UBuffDebuffEntryWidget::InitializeEntry(UTexture2D* InIcon, float InTotalDuration, float InStartTime)
 {
-	if (IconImage && Info.Icon)
+	if (IconImage && InIcon)
 	{
-		IconImage->SetBrushFromTexture(Info.Icon);
+		IconImage->SetBrushFromTexture(InIcon);
 	}
+
+	TotalDuration = InTotalDuration;
+	StartTime = InStartTime;
 
 	if (DurationBar)
 	{
-		DurationBar->SetPercent(1.f);
-		StartDurationUpdate(Info.Duration);
+		DurationBar->SetVisibility(TotalDuration > 0 ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
+	}
+
+	if (GEngine)
+	{
+		FString DebugMsg = FString::Printf(TEXT("[Entry] Initialized -> Duration: %.1f, StartTime: %.1f"), TotalDuration, StartTime);
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, DebugMsg);
 	}
 }
 
-void UBuffDebuffEntryWidget::StartDurationUpdate(float InDuration)
+void UBuffDebuffEntryWidget::NativeConstruct()
 {
-	if (!DurationBar) return;
-
-	TotalDuration = InDuration;
-	ElapsedTime = 0.f;
-
-	UWorld* World = GetWorld();
-	if (World)
-	{
-		World->GetTimerManager().SetTimer(
-			ProgressUpdateTimer,
-			this,
-			&UBuffDebuffEntryWidget::UpdateDurationProgress,
-			0.1f,
-			true
-		);
-	}
-	else
-	{
-		UE_LOG(LogTemp, Error, TEXT("StartDurationUpdate: GetWorld() is null"));
-	}
+	Super::NativeConstruct();
+	bIsVolatile = true;
 }
 
-
-void UBuffDebuffEntryWidget::UpdateDurationProgress()
+void UBuffDebuffEntryWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 {
-	ElapsedTime += 0.1f;
+	Super::NativeTick(MyGeometry, InDeltaTime);
 
-	if (DurationBar && TotalDuration > 0.f)
+	if (GEngine)
 	{
-		float RemainingRatio = 1.f - (ElapsedTime / TotalDuration);
-		DurationBar->SetPercent(FMath::Clamp(RemainingRatio, 0.f, 1.f));
+		const float CurrentTime = GetWorld()->GetTimeSeconds();
+		const float CalculatedElapsedTime = CurrentTime - StartTime;
+		const float Ratio = 1.f - FMath::Clamp(CalculatedElapsedTime / TotalDuration, 0.f, 1.f);
+		FString DebugMsg = FString::Printf(TEXT("[Entry Tick] Total: %.1f, Start: %.1f, Elapsed: %.1f, Ratio: %.2f"), TotalDuration, StartTime, CalculatedElapsedTime, Ratio);
+		// 키 값을 12345로 고정하여 매 프레임 같은 줄에 덮어쓰도록 합니다.
+		GEngine->AddOnScreenDebugMessage(12345, 0.f, FColor::Yellow, DebugMsg);
 	}
 
-	if (ElapsedTime >= TotalDuration)
-	{
-		GetWorld()->GetTimerManager().ClearTimer(ProgressUpdateTimer);
-		UE_LOG(LogTemp, Warning, TEXT("BuffDebuff expired, removing from UI"));
-	}
+	if (TotalDuration <= 0.f || !DurationBar) return;
+
+	const float CurrentTime = GetWorld()->GetTimeSeconds();
+	const float ElapsedTime = CurrentTime - StartTime;
+
+	const float RemainingRatio = 1.f - FMath::Clamp(ElapsedTime / TotalDuration, 0.f, 1.f);
+	DurationBar->SetPercent(RemainingRatio);
 }
-
-
