@@ -90,6 +90,9 @@ float ABasicMonsterAI::TakeDamage_Implementation(float DamageAmount, FDamageEven
 		return 0.0f;
 	}
 
+	FString DebugMsg1 = FString::Printf(TEXT("DamageAmount = %.2f"), DamageAmount);
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, DebugMsg1);
+
 	// 데미지를 입힌 플레이어의 컨트롤러
 	ANecroSyntexPlayerController* DPC = Cast<ANecroSyntexPlayerController>(EventInstigator);
 	APlayerCharacter* DPA = Cast<APlayerCharacter>(DPC->GetPawn());

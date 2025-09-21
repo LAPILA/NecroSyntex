@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "BasicMonsterAI.h"
 #include "GameFramework/Actor.h"
 #include "MonsterSpawner.generated.h"
 
@@ -15,33 +16,23 @@ public:
 	// Sets default values for this actor's properties
 	AMonsterSpawner();
 
-    UFUNCTION(BlueprintCallable, Category = "Spawning")
-    void StartSpawning();
+	// 소환할 몬스터의 종류 (블루프린트에서 선택 가능)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spawner")
+	TSubclassOf<ABasicMonsterAI> monsterClass;
 
-    UFUNCTION(BlueprintCallable, Category = "Spawning")
-    void StopSpawning();
+	// 몬스터 HP
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Monster Stats")
+	float spawnHealth = 100.0f;
 
-    UFUNCTION()
-    void SpawnMonster();
+	// 몬스터 공격력
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Monster Stats")
+	float spawnAttackPower = 10.0f;
 
-    UPROPERTY(EditDefaultsOnly, Category = "Spawning")
-    TSubclassOf<AActor> MonsterClass;
+	/*UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spawner Stats")
+	TArray<float> monsterSpawnRates;*/
 
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spawning")
-    float SpawnInterval;
-
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spawning")
-    int MaxMonstersPerSpawn;
-
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spawning")
-    float SpawnRadius;
-
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spawning")
-    float MonsterSpawnRate;
-
-private:
-    FTimerHandle SpawnWaveTimer;
-    FTimerHandle MonsterSpawnTimer;
-    int CurrentMonsterCount;
+	// 실제 스폰 함수
+	UFUNCTION(BlueprintCallable, Category = "Spawner")
+	void SpawnMonster();
 
 };

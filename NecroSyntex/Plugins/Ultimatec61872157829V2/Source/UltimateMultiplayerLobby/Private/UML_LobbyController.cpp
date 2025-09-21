@@ -332,6 +332,12 @@ void AUML_LobbyController::BeginPlay()
 		{
 			TArray<AActor*> FoundActors;
 			UGameplayStatics::GetAllActorsOfClassWithTag(GetWorld(), APlayerStart::StaticClass(), TEXT("LobbyStart"), FoundActors);
+			const int32 Count = FoundActors.Num();
+			UE_LOG(LogTemp, Log, TEXT("[Lobby] FoundActors (LobbyStart) count = %d"), Count);
+			if (GEngine)
+			{
+				GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Yellow, FString::Printf(TEXT("FoundActors (LobbyStart): %d"), Count));
+			}
 			if(FoundActors.Num() > 0)
 			{
 				APlayerStart* PlayerStart = Cast<APlayerStart>(FoundActors[0]);

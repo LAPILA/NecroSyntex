@@ -33,23 +33,24 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Monster")
 	class UBoxComponent* Spawner;
 
-	//UPROPERTY(EditAnywhere, Category = "Monster")
-	//TSubclassOf<AActor>ActorToSpawn;
-
 	UPROPERTY(EditAnywhere, Category = "Monster")
-	TArray<TSubclassOf<ABasicMonsterAI>>MyMonsters;
+	TArray<TSubclassOf<ABasicMonsterAI>>Monsters;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Monster")
 	TArray<float> MonsterSpawnRates;
-
-	/*UPROPERTY(EditAnywhere, Category = "Monster")
-	TArray<ABasicMonsterAI*> SpawnMonster;*/
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float WaveIntervalTime;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	bool isSpawn;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Monster Stats")
+	TArray<float> spawnHealth;
+
+	// 몬스터 공격력
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Monster Stats")
+	TArray<float> spawnAttackPower;
 
 	UFUNCTION(BluePrintCallable)
 	void StartSpawnMonster(float SpawnSpeed);

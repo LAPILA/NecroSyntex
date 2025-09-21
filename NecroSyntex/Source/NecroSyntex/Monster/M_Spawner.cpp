@@ -52,6 +52,10 @@ void AM_Spawner::Tick(float DeltaTime)
 		return;
 	}
 
+	if (!HasAuthority()) {
+		return;
+	}
+
 	if (MaxMonster == CurrentMonsterCount) {
 		StopSpawnMonster();
 		if (isWave) { //if Wave is true. Wait WaveIntervalTime and Monster count reset. 
@@ -84,7 +88,7 @@ void AM_Spawner::Tick(float DeltaTime)
 
 ABasicMonsterAI* AM_Spawner::SpawnRandomMonster(UWorld* World, FVector Location, FRotator Rotation)
 {
-	if (MyMonsters.Num() != MonsterSpawnRates.Num()) {
+	if (Monsters.Num() != MonsterSpawnRates.Num()) {
 		return nullptr;  // 몬스터 종류와 비율 배열의 길이가 맞지 않으면 nullptr 반환
 	}
 
@@ -99,12 +103,17 @@ ABasicMonsterAI* AM_Spawner::SpawnRandomMonster(UWorld* World, FVector Location,
 
 	// 몬스터를 랜덤 확률에 따라 선택
 	float CumulativeWeight = 0.0f;
-	for (int32 i = 0; i < MyMonsters.Num(); i++) {
+	for (int32 i = 0; i < Monsters.Num(); i++) {
 		CumulativeWeight += MonsterSpawnRates[i];
 
 		if (RandomValue <= CumulativeWeight) {
 			// 해당 몬스터를 생성합니다
-			return World->SpawnActor<ABasicMonsterAI>(MyMonsters[i], Location, Rotation);
+			ABasicMonsterAI* SpawnedMonster = World->SpawnActor<ABasicMonsterAI>(Monsters[i], Location, Rotation);
+			SpawnedMonster->MonsterHP = spawnHealth[i];
+			FString DebugMsg1 = FString::Printf(TEXT("Spawn complete. SpawnHealth = %.2f"), SpawnedMonster->MonsterHP);
+			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, DebugMsg1);
+			SpawnedMonster->MonsterAD = spawnAttackPower[i];
+			return SpawnedMonster;
 		}
 	}
 
