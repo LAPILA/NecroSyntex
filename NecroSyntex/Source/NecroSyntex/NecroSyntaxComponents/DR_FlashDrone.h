@@ -22,6 +22,11 @@ public:
 	void InitFollowing(AActor* InTarget, float InMaxDist);
 	void SetAimTarget(const FVector& NewTarget);
 
+	UPROPERTY(EditAnywhere, Category = "Drone|Position")
+	float OrbitHeight = 90.f;
+
+	UPROPERTY(EditAnywhere, Category = "Drone|Position")
+	float PivotRightOffset = 35.f;
 protected:
 	virtual void BeginPlay() override;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
@@ -43,14 +48,14 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Drone|Movement")
 	float CheckInterval = 0.2f;
 
-	UPROPERTY(EditAnywhere, Category = "Drone|Position")
-	float OrbitHeight = 90.f;
-
-	UPROPERTY(EditAnywhere, Category = "Drone|Position")
-	float PivotRightOffset = 35.f;
-
 	UPROPERTY(EditAnywhere, Category = "Drone|Aiming")
 	FVector AimOffset = FVector(35.f, 55.f, 40.f);
+
+	UPROPERTY(EditDefaultsOnly, Category = "Drone|Movement", meta = (ToolTip = "드론이 주인을 따라가는 속도입니다. (cm/s)"))
+	float FollowSpeed = 800.f;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Drone|Movement", meta = (ToolTip = "드론이 회전하는 속도입니다."))
+	float RotationInterpSpeed = 7.f;
 
 	/* ───────── Replicated State ───────── */
 	UPROPERTY(Replicated)
