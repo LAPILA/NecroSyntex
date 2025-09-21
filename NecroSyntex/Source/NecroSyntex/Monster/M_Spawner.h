@@ -52,6 +52,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Monster Stats")
 	TArray<float> spawnAttackPower;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Monster Stats")
+	TArray<float> chaseSpeed;
+
 	UFUNCTION(BluePrintCallable)
 	void StartSpawnMonster(float SpawnSpeed);
 

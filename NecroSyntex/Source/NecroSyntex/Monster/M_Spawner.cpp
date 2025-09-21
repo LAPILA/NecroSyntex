@@ -110,9 +110,11 @@ ABasicMonsterAI* AM_Spawner::SpawnRandomMonster(UWorld* World, FVector Location,
 			// 해당 몬스터를 생성합니다
 			ABasicMonsterAI* SpawnedMonster = World->SpawnActor<ABasicMonsterAI>(Monsters[i], Location, Rotation);
 			SpawnedMonster->MonsterHP = spawnHealth[i];
-			FString DebugMsg1 = FString::Printf(TEXT("Spawn complete. SpawnHealth = %.2f"), SpawnedMonster->MonsterHP);
-			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, DebugMsg1);
+			
 			SpawnedMonster->MonsterAD = spawnAttackPower[i];
+			SpawnedMonster->ChaseSpeed = chaseSpeed[i]; //BT에서 Speed가 조절돼서 사실 그닥 중요하지 않음.
+			//FString DebugMsg1 = FString::Printf(TEXT("Spawn complete. ChaseSpeed = %.2f"), SpawnedMonster->ChaseSpeed);
+			//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, DebugMsg1);
 			return SpawnedMonster;
 		}
 	}
