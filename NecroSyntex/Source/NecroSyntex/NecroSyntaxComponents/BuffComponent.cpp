@@ -16,19 +16,6 @@ void UBuffComponent::BeginPlay()
 {
     Super::BeginPlay();
     CharacterOwner = Cast<APlayerCharacter>(GetOwner());
-
-    // ▼▼▼▼▼ 테스트용 코드: 게임 시작 후 2초 뒤에 '무통증' 스킬 버프들을 적용합니다. ▼▼▼▼▼
-    if (GetOwner()->HasAuthority())
-    {
-        FTimerHandle TestTimer;
-        GetWorld()->GetTimerManager().SetTimer(TestTimer, [this]()
-            {
-                // "무통증" 스킬은 3개의 버프/디버프 효과를 동시에 적용
-                AddBuff(FName("Damage_Up"), 8.f);
-                AddBuff(FName("Speed_Up"), 12.f);
-                AddBuff(FName("14_heal"), 5.f);
-            }, 2.f, false);
-    }
 }
 
 void UBuffComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const

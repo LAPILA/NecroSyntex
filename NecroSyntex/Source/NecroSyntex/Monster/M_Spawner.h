@@ -18,6 +18,9 @@ public:
 
 	ABasicMonsterAI* SpawnRandomMonster(UWorld* World, FVector Location, FRotator Rotation);
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Components")
+	class USphereComponent* spawnArea;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	int MaxMonster;
 
@@ -55,14 +58,29 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Monster Stats")
 	TArray<float> chaseSpeed;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Delete Option")
+	bool isDelete;
+
 	UFUNCTION(BluePrintCallable)
 	void StartSpawnMonster(float SpawnSpeed);
 
+	UFUNCTION(BluePrintCallable)
 	void StopSpawnMonster();
 
+	UFUNCTION(BluePrintCallable)
 	void ResetMonsterCount();
 
+	UFUNCTION(BluePrintCallable)
 	void DelayedFunction(float DelayTime);
+
+	UFUNCTION(BluePrintCallable)
+	void DeleteSpawner();
+
+	UFUNCTION()
+	void OnSpawnAreaOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+
+	UFUNCTION()
+	void OnSpawnAreaOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 
 	//Pahu Mission
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Mission")

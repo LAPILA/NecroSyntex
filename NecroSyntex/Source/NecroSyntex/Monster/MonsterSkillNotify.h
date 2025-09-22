@@ -39,25 +39,25 @@ public:
 	void Doping_CurseofChaos(APlayerCharacter* player);
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Doping Figure")
-	float legNumber = 0.0f;
+	float legNumber = 300.0f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Doping Figure")
-	float painLessNumber = 0.0f;
+	float painLessNumber = 300.0f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Doping Figure")
-	float finalEmberNumber = 0.0f;
+	float finalEmberNumber = 300.0f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Doping Figure")
-	float paradoxNumber = 0.0f;
+	float paradoxNumber = 300.0f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Doping Figure")
-	float solidFortressNumber = 0.0f;
+	float solidFortressNumber = 300.0f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Doping Figure")
-	float curseofChaosNumber = 0.0f;
+	float curseofChaosNumber = 300.0f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Doping Figure")
-	float normalNumber = 0.0f;
+	float normalNumber = 300.0f;
 
 	UPROPERTY(EditAnywhere)
 	bool isScreamSkill = false;
