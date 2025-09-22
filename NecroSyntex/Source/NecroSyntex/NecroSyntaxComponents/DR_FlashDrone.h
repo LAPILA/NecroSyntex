@@ -22,6 +22,9 @@ public:
 	void InitFollowing(AActor* InTarget, float InMaxDist);
 	void SetAimTarget(const FVector& NewTarget);
 
+	UFUNCTION()
+	void OnTargetDestroyed(AActor* DestroyedActor);
+
 	UPROPERTY(EditAnywhere, Category = "Drone|Position")
 	float OrbitHeight = 90.f;
 
@@ -80,7 +83,7 @@ protected:
 	FVector ReplicatedVelocity;
 
 	UPROPERTY(Replicated)
-	TObjectPtr<AActor> TargetActor = nullptr;
+	TWeakObjectPtr<AActor> TargetActor = nullptr;
 
 private:
 	/* ───────── RPCs (Remote Procedure Calls) ───────── */
