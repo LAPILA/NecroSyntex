@@ -144,7 +144,7 @@ void ADR_FlashDrone::Tick(float DeltaTime)
 			TargetActor->GetActorLocation(),
 			IdealLocation,
 			CollisionComp->GetScaledSphereRadius(),
-			UEngineTypes::ConvertToTraceType(ECC_Visibility),
+			UEngineTypes::ConvertToTraceType(ECollisionChannel::ECC_WorldStatic),
 			false,
 			ActorsToIgnore,
 			EDrawDebugTrace::None,
