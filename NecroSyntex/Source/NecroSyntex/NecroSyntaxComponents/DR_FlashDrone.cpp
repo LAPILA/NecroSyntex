@@ -7,7 +7,11 @@
 #include "Components/SphereComponent.h"
 #include "TimerManager.h"
 #include "Net/UnrealNetwork.h"
-#include "Kismet/KismetMathLibrary.h" // FRotationMatrix 사용을 위해 추가
+#include "Kismet/KismetMathLibrary.h"
+#include "Kismet/KismetSystemLibrary.h"
+#include "NecroSyntex/Character/PlayerCharacter.h"
+#include "NecroSyntex/Weapon/Weapon.h"
+#include "Camera/CameraComponent.h"
 
 // =================================================================================================
 // 생성자: 드론의 기본 컴포넌트와 프로퍼티를 초기화합니다.
@@ -73,6 +77,7 @@ void ADR_FlashDrone::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLi
 	DOREPLIFETIME(ADR_FlashDrone, CurrentAimTarget);  // 플레이어의 현재 조준점 위치
 	DOREPLIFETIME(ADR_FlashDrone, ReplicatedLocation); // 서버가 계산한 드론의 최종 위치
 	DOREPLIFETIME(ADR_FlashDrone, ReplicatedRotation); // 서버가 계산한 드론의 최종 각도
+	DOREPLIFETIME(ADR_FlashDrone, ReplicatedVelocity);
 }
 
 // =================================================================================================
@@ -83,9 +88,22 @@ void ADR_FlashDrone::InitFollowing(AActor* InTarget, float InMaxDist)
 	TargetActor = InTarget;
 	MaxDistance = InMaxDist;
 
-	InterpolationTargetLocation = GetActorLocation();
-	InterpolationTargetRotation = GetActorRotation();
+	if (TargetActor.IsValid())
+	{
+		TargetActor->OnDestroyed.AddDynamic(this, &ADR_FlashDrone::OnTargetDestroyed);
+
+		InterpolationTargetLocation = TargetActor->GetActorLocation();
+		InterpolationTargetRotation = TargetActor->GetActorRotation();
+	}
 }
+
+void ADR_FlashDrone::OnTargetDestroyed(AActor* DestroyedActor)
+{
+	// 주인이 사라졌으므로, TargetActor 포인터를 안전하게 nullptr로 만들고 Tick을 멈춥니다.
+	TargetActor = nullptr;
+	SetActorTickEnabled(false);
+}
+
 
 // =================================================================================================
 // 매 프레임 호출되는 함수로, 드론의 모든 움직임 로직을 처리합니다.
@@ -93,40 +111,96 @@ void ADR_FlashDrone::InitFollowing(AActor* InTarget, float InMaxDist)
 void ADR_FlashDrone::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-	if (!IsValid(TargetActor)) return;
+
+	if (!TargetActor.IsValid())
+	{
+		SetActorTickEnabled(false);
+		return;
+	}
+
+	AActor* SafeTargetActor = TargetActor.Get();
 
 	if (HasAuthority())
 	{
-		// --- 1. 목표 위치 계산 ---
-		const APawn* OwningPawn = Cast<APawn>(TargetActor);
-		FRotator ViewRotation = TargetActor->GetActorRotation();
+		// --- 1. 이상적인 목표 위치 계산 (기존과 동일) ---
+		const APawn* OwningPawn = Cast<APawn>(SafeTargetActor);
+		FRotator ViewRotation = SafeTargetActor->GetActorRotation();
 		if (OwningPawn && OwningPawn->GetController())
 		{
 			ViewRotation = OwningPawn->GetController()->GetControlRotation();
 		}
 		const FRotator YawRotation(0.f, ViewRotation.Yaw, 0.f);
 		const FVector RightVector = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
-		FVector Base = TargetActor->GetActorLocation() + RightVector * PivotRightOffset + FVector(0, 0, OrbitHeight);
+		FVector Base = SafeTargetActor->GetActorLocation() + RightVector * PivotRightOffset + FVector(0, 0, OrbitHeight);
 
 		const bool bNowAiming = CurrentAimTarget.SizeSquared() > 1.f;
-		FVector DesiredLoc;
+		FVector IdealLocation;
 		if (bNowAiming)
 		{
 			const FVector AimDir = (CurrentAimTarget - Base).GetSafeNormal();
 			const FVector Right = FVector::CrossProduct(FVector::UpVector, AimDir).GetSafeNormal();
 			const FVector Up = FVector::CrossProduct(AimDir, Right);
-			DesiredLoc = Base + AimDir * AimOffset.X + Right * AimOffset.Y + Up * AimOffset.Z;
+			IdealLocation = Base + AimDir * AimOffset.X + Right * AimOffset.Y + Up * AimOffset.Z;
 		}
 		else
 		{
-			DesiredLoc = Base;
+			IdealLocation = Base;
 		}
 
-		// --- 2. 서버 드론 위치 보간 (상수 속도로 변경) ---
-		FVector NewLocation = FMath::VInterpConstantTo(GetActorLocation(), DesiredLoc, DeltaTime, FollowSpeed);
+		// --- 2. 장애물 회피 로직 (역방향 스프링 암 방식으로 변경) ---
+		FVector DesiredLoc = IdealLocation;
+		FHitResult ObstacleHit;
+
+		TArray<AActor*> ActorsToIgnore;
+		ActorsToIgnore.Add(this);
+		ActorsToIgnore.Add(SafeTargetActor);
+		if (APlayerCharacter* OwnerCharacter = Cast<APlayerCharacter>(SafeTargetActor))
+		{
+			if (OwnerCharacter->GetEquippedWeapon())
+			{
+				ActorsToIgnore.Add(OwnerCharacter->GetEquippedWeapon());
+			}
+		}
+
+		FVector TraceStartLocation = SafeTargetActor->GetActorLocation(); // 기본값
+		if (const APlayerCharacter* PlayerChar = Cast<APlayerCharacter>(SafeTargetActor))
+		{
+			if (PlayerChar->GetFollowCamera())
+			{
+				TraceStartLocation = PlayerChar->GetFollowCamera()->GetComponentLocation();
+			}
+		}
+
+		const bool bHitObstacle = UKismetSystemLibrary::SphereTraceSingle(
+			this,
+			TraceStartLocation, // 시작점: 카메라 위치
+			IdealLocation,      // 끝점: 드론의 이상적인 위치
+			CollisionComp->GetScaledSphereRadius(),
+			UEngineTypes::ConvertToTraceType(ECollisionChannel::ECC_WorldStatic),
+			false,
+			ActorsToIgnore,
+			EDrawDebugTrace::None,
+			ObstacleHit,
+			true
+		);
+
+		// 장애물이 감지되었다면, 드론의 최종 목표 위치를 장애물 바로 앞으로 수정합니다.
+		if (bHitObstacle)
+		{
+			// ImpactPoint는 트레이스 경로와 장애물이 처음 만나는 정확한 지점입니다.
+			DesiredLoc = ObstacleHit.ImpactPoint + ObstacleHit.ImpactNormal * CollisionComp->GetScaledSphereRadius();
+		}
+
+		// --- 3. 동적 속도 조절 및 위치 업데이트 ---
+		const float DistanceToTarget = FVector::Dist(GetActorLocation(), DesiredLoc);
+		const float BoostAlpha = FMath::Clamp(DistanceToTarget / MaxDistanceForSpeedBoost, 0.f, 1.f);
+		const float DynamicFollowSpeed = FollowSpeed + (FollowSpeed * SpeedBoostMultiplier * BoostAlpha);
+
+		const FVector OldLocation = GetActorLocation();
+		FVector NewLocation = FMath::VInterpConstantTo(OldLocation, DesiredLoc, DeltaTime, DynamicFollowSpeed);
 		SetActorLocation(NewLocation);
 
-		// --- 3. 목표 각도 계산 ---
+		// --- 4. 각도 계산 ---
 		FVector Dir;
 		if (bNowAiming) {
 			Dir = (CurrentAimTarget - GetActorLocation()).GetSafeNormal();
@@ -135,22 +209,39 @@ void ADR_FlashDrone::Tick(float DeltaTime)
 			Dir = ViewRotation.Vector();
 		}
 		FRotator TargetRotation = Dir.Rotation();
-
-		// --- 4. 서버 드론 각도 보간 (RInterpTo 유지 또는 RInterpConstantTo 사용) ---
 		SetActorRotation(FMath::RInterpTo(GetActorRotation(), TargetRotation, DeltaTime, RotationInterpSpeed));
 
-		// --- 5. 클라이언트에 보낼 데이터 업데이트 ---
-		ReplicatedLocation = GetActorLocation();
-		ReplicatedRotation = GetActorRotation();
+		// --- 5. 데이터 복제 (클라이언트로 전송) ---
+		// 일정 주기마다 클라이언트로 위치, 각도, 그리고 '속도' 정보를 전송
+		NetUpdateTimer += DeltaTime;
+		if (NetUpdateTimer >= NetUpdateInterval)
+		{
+			NetUpdateTimer = 0.f;
+			ReplicatedLocation = GetActorLocation();
+			ReplicatedRotation = GetActorRotation();
+			ReplicatedVelocity = (NewLocation - OldLocation) / DeltaTime;
+		}
 	}
-	else // 클라이언트 로직
+	else // ===================================================================
+		 // 클라이언트 보간 로직 (Client-Side Interpolation)
+		 // ===================================================================
 	{
-		// --- 클라이언트 보간 (상수 속도로 변경) ---
-		SetActorLocation(FMath::VInterpConstantTo(GetActorLocation(), InterpolationTargetLocation, DeltaTime, FollowSpeed));
-		SetActorRotation(FMath::RInterpTo(GetActorRotation(), InterpolationTargetRotation, DeltaTime, RotationInterpSpeed));
+		// 서버 위치와의 오차를 계산
+		Client_PositionError = ReplicatedLocation - GetActorLocation();
+
+		// 목표 속도 = (서버가 보내준 속도) + (서버와의 위치 오차를 줄이려는 보정 속도)
+		const FVector TargetVelocity = ReplicatedVelocity + (Client_PositionError * 2.f);
+
+		// 현재 속도를 목표 속도를 향해 부드럽게 변경
+		Client_CurrentVelocity = FMath::VInterpTo(Client_CurrentVelocity, TargetVelocity, DeltaTime, 10.f);
+
+		// 최종 계산된 속도로 클라이언트의 드론을 이동
+		SetActorLocation(GetActorLocation() + Client_CurrentVelocity * DeltaTime);
+
+		// 각도는 기존처럼 부드럽게 보간
+		SetActorRotation(FMath::RInterpTo(GetActorRotation(), ReplicatedRotation, DeltaTime, RotationInterpSpeed * 2.f));
 	}
 }
-
 // =================================================================================================
 // ReplicatedLocation, ReplicatedRotation 변수가 서버로부터 업데이트될 때 클라이언트에서 호출됩니다.
 // =================================================================================================
@@ -182,7 +273,7 @@ void ADR_FlashDrone::ServerSetAimTarget_Implementation(const FVector_NetQuantize
 // =================================================================================================
 void ADR_FlashDrone::CheckDistanceAndTeleport()
 {
-	if (TargetActor && FVector::DistSquared(GetActorLocation(), TargetActor->GetActorLocation()) > FMath::Square(MaxDistance))
+	if (TargetActor.IsValid() && FVector::DistSquared(GetActorLocation(), TargetActor->GetActorLocation()) > FMath::Square(MaxDistance))
 	{
 		ForceTeleportToTarget();
 	}
@@ -193,7 +284,7 @@ void ADR_FlashDrone::CheckDistanceAndTeleport()
 // =================================================================================================
 void ADR_FlashDrone::ForceTeleportToTarget()
 {
-	if (HasAuthority() && IsValid(TargetActor))
+	if (HasAuthority() && TargetActor.IsValid())
 	{
 		// --- 각도 수정: 플레이어 카메라의 Yaw를 사용하고, Pitch/Roll은 0으로 하여 수평을 유지합니다. ---
 		FRotator TeleportRotation = TargetActor->GetActorForwardVector().Rotation();
