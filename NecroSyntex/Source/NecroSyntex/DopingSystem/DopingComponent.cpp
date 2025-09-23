@@ -130,18 +130,19 @@ void UDopingComponent::ApplyBuffsForSkill(int32 SkillCode, AActor* TargetCharact
 		break;
 	case 12: // 혼돈의 저주
 		BuffComp->AddBuff(FName("Speed_Up"), 10.f);
-		// 2초 후에 방향키 반전 디버프를 적용 (지속시간은 혼돈의 저주 남은 시간과 동일하게)
-		{
-			float ReverseDebuffDuration = 10.f - 2.f;
-			FTimerHandle DebuffTimer;
-			GetWorld()->GetTimerManager().SetTimer(DebuffTimer, [BuffComp, ReverseDebuffDuration]()
-				{
-					if (BuffComp)
-					{
-						BuffComp->AddBuff(FName("Reverse_Movement"), ReverseDebuffDuration); // 데이터 테이블 ID: Reverse_Movement (3_power 대체)
-					}
-				}, 2.f, false);
-		}
+		BuffComp->AddBuff(FName("Reverse_Movement"), 2.f);
+		//// 2초 후에 방향키 반전 디버프를 적용 (지속시간은 혼돈의 저주 남은 시간과 동일하게)
+		//{
+		//	float ReverseDebuffDuration = 10.f - 2.f;
+		//	FTimerHandle DebuffTimer;
+		//	GetWorld()->GetTimerManager().SetTimer(DebuffTimer, [BuffComp, ReverseDebuffDuration]()
+		//		{
+		//			if (BuffComp)
+		//			{
+		//				BuffComp->AddBuff(FName("Reverse_Movement"), ReverseDebuffDuration); // 데이터 테이블 ID: Reverse_Movement (3_power 대체)
+		//			}
+		//		}, 2.f, false);
+		//}
 		break;
 	}
 }
