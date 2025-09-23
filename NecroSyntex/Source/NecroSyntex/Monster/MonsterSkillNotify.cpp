@@ -61,21 +61,6 @@ void UMonsterSkillNotify::Notify(USkeletalMeshComponent* MeshComp, UAnimSequence
 					);
 					continue;
 				}
-				if (!IsValid(player->UDC->Painless)) {
-					return;
-				}
-				if (!IsValid(player->UDC->FinalEmber)) {
-					return;
-				}
-				if (!IsValid(player->UDC->SolidFortress)) {
-					return;
-				}
-				if (!IsValid(player->UDC->ParadoxofGuardianship)) {
-					return;
-				}
-				if (!IsValid(player->UDC->CurseofChaos)) {
-					return;
-				}
 
 				//다리강화 도핑
 				if (player->UDC->LegEnforce->GetBuff() || player->UDC->LegEnforce->GetDeBuff()) {
