@@ -38,6 +38,18 @@ public:
 	UFUNCTION()
 	void Doping_CurseofChaos(APlayerCharacter* player);
 
+	//UFUNCTION()
+	//void CallScreamSkill();
+
+	//UFUNCTION(NetMulticast, Reliable)
+	//void Multicast_CallScreamSkill();
+
+	//UPROPERTY(ReplicatedUsing = OnRep_IsScream)
+	//bool bIsScream = false;
+
+	//UFUNCTION()
+	//void OnRep_IsScream();
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Doping Figure")
 	float legNumber = 300.0f;
 
