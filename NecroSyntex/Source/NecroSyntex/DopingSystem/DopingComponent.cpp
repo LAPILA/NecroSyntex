@@ -79,7 +79,7 @@ void UDopingComponent::ApplyBuffsForSkill(int32 SkillCode, AActor* TargetCharact
 	case 3: // 무통증
 		BuffComp->AddBuff(FName("Damage_Up"), 10.f);
 		BuffComp->AddBuff(FName("Speed_Up"), 10.f);
-		BuffComp->AddBuff(FName("Heal_Reduction"), 10.f); // 데이터 테이블 ID: Heal_Reduction (14_heal 대체)
+		//BuffComp->AddBuff(FName("Heal_Reduction"), 10.f); // 데이터 테이블 ID: Heal_Reduction (14_heal 대체)
 		break;
 	case 4: // 마지막 불꽃
 		BuffComp->AddBuff(FName("Damage_Up"), 15.f);
