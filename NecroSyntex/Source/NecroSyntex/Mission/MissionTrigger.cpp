@@ -59,12 +59,6 @@ void AMissionTrigger::BeginPlay()
 	else {
 		UE_LOG(LogTemp, Warning, TEXT("SkillAttackArea is nullptr"));
 	}
-
-	if (!HasAuthority()) {
-		if (IsValid(this)) {
-			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("Client sees the Actor!"));
-		}
-	}
 	
 }
 
@@ -87,13 +81,9 @@ void AMissionTrigger::OnBoxTriggerOverlapBegin(UPrimitiveComponent* OverlappedCo
 	{
 		PlayerInTrigger++;
 
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Mission Trigger 1"));
-
 		ANecroSyntexGameState* GS = Cast<ANecroSyntexGameState>(GetWorld()->GetGameState());
 		if (GS && !GS->OngoingMission)
 		{
-
-			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Mission Trigger 2"));
 
 			if (GS->TotalPlayer == PlayerInTrigger)
 			{

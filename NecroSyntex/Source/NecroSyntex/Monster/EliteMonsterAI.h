@@ -108,4 +108,8 @@ public:
 	virtual float TakeDamage_Implementation(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
 	
 	FTimerHandle skillDelayTime;
+
+	//boss mission (by Teahyuck[pahu])
+	UFUNCTION(Server, Reliable)
+	void BossKill_MissionSuccess();
 };

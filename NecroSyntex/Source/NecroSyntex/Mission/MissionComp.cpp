@@ -248,6 +248,7 @@ void UMissionComp::EndDefenseMission()
     GameStateAndUIUpdate(false);
 }
 
+//boss mission
 void UMissionComp::StartBossMission()
 {
     ActiveMonsterSpawner();

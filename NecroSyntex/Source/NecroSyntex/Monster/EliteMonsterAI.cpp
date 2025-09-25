@@ -9,6 +9,8 @@
 #include "Components/SphereComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "NecroSyntex/PlayerController/NecroSyntexPlayerController.h"
+#include "NecroSyntex/GameMode/NecroSyntexGameMode.h"
+#include "NecroSyntex/NecroSyntexGameState.h"
 #include "NecroSyntex/Character/PlayerCharacter.h"
 #include <Net/UnrealNetwork.h>
 
@@ -260,6 +262,14 @@ void AEliteMonsterAI::AttackSkillStart(float delayTime)
 	GetWorld()->GetTimerManager().SetTimer(skillDelayTime, this, &AEliteMonsterAI::CallAttackSkill, delayTime, false);
 }
 
+void AEliteMonsterAI::BossKill_MissionSuccess_Implementation()
+{
+	ANecroSyntexGameMode* NecroSyntexGameMode = GetWorld()->GetAuthGameMode<ANecroSyntexGameMode>();
+
+	NecroSyntexGameMode->MissionManager->BossMissionSuccess();
+
+}
+
 float AEliteMonsterAI::TakeDamage_Implementation(float DamageAmount, struct FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
 {
 	CanAttack = false;
@@ -297,6 +307,8 @@ float AEliteMonsterAI::TakeDamage_Implementation(float DamageAmount, struct FDam
 	}
 	// »ç¸Á Ã³¸®
 	if (MonsterHP <= 0.0f) {
+		BossKill_MissionSuccess();
+
 		UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
 		UMonsterAnimInstance* MonsterAnim = Cast<UMonsterAnimInstance>(AnimInstance);
 

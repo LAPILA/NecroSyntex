@@ -80,8 +80,6 @@ void ADefenseTarget::TakedDamage_Implementation(AActor* DamagedActor, float Dama
 	Health -= Damage;
 	HealthBarUpdate();
 
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Damaged"));
-
 	if (Health <= 0)
 	{
 		DefenseObjectDestroy();
