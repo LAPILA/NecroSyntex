@@ -115,7 +115,7 @@ public:
 	void MulticastElim();
 	virtual void Destroyed() override;
 
-	UPROPERTY(Replicated)
+	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly,Category = "Gameplay")
 	bool bDisableGameplay = true;
 
 	UFUNCTION(BluePrintImplementableEvent)

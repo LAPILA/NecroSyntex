@@ -481,7 +481,7 @@ void ANecroSyntexPlayerController::ReceivedPlayer()
 	if (IsLocalController())
 	{
 		ServerRequestServerTime(GetWorld()->GetTimeSeconds());
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Received Player 작동"));
+		//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Received Player 작동"));
 		GetWorld()->GetTimerManager().SetTimerForNextTick(
 			FTimerDelegate::CreateUObject(this, &ANecroSyntexPlayerController::GetSelectedInformation)
 		);

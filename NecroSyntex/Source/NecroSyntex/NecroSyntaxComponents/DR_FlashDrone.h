@@ -22,6 +22,9 @@ public:
 	void InitFollowing(AActor* InTarget, float InMaxDist);
 	void SetAimTarget(const FVector& NewTarget);
 
+	UFUNCTION()
+	void OnTargetDestroyed(AActor* DestroyedActor);
+
 	UPROPERTY(EditAnywhere, Category = "Drone|Position")
 	float OrbitHeight = 90.f;
 
@@ -57,6 +60,15 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Drone|Movement", meta = (ToolTip = "드론이 회전하는 속도입니다."))
 	float RotationInterpSpeed = 7.f;
 
+	UPROPERTY(EditDefaultsOnly, Category = "Drone|Movement", meta = (ToolTip = "드론이 회전하는 속도입니다."))
+	float  SpeedBoostMultiplier = 4.f;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Drone|Movement", meta = (ToolTip = "드론이 회전하는 속도입니다."))
+	float  MaxDistanceForSpeedBoost = 500.f;
+
+	UPROPERTY(EditAnywhere, Category = "Drone|Movement", meta = (ToolTip = "장애물에 막혔을 때, 위쪽으로 얼마나 더 이동하여 회피할지 결정합니다."))
+	float ObstacleAvoidanceUpwardOffset = 100.f;
+
 	/* ───────── Replicated State ───────── */
 	UPROPERTY(Replicated)
 	FVector_NetQuantize CurrentAimTarget;
@@ -68,7 +80,10 @@ protected:
 	FRotator ReplicatedRotation;
 
 	UPROPERTY(Replicated)
-	TObjectPtr<AActor> TargetActor = nullptr;
+	FVector ReplicatedVelocity;
+
+	UPROPERTY(Replicated)
+	TWeakObjectPtr<AActor> TargetActor = nullptr;
 
 private:
 	/* ───────── RPCs (Remote Procedure Calls) ───────── */
@@ -87,9 +102,15 @@ private:
 	void CheckDistanceAndTeleport();
 
 	FTimerHandle TeleportCheckTimer;
-	float MaxDistance = 700.f;
+	float MaxDistance = 2000.f;
 
 	// 클라이언트의 부드러운 이동(보간)을 위한 변수들
 	FVector InterpolationTargetLocation;
 	FRotator InterpolationTargetRotation;
+
+	FVector Client_CurrentVelocity = FVector::ZeroVector;
+	FVector Client_PositionError = FVector::ZeroVector;
+
+	float NetUpdateInterval = 0.033f;
+	float NetUpdateTimer = 0.f;
 };

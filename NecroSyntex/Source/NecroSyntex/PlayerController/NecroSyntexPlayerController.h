@@ -125,6 +125,10 @@ public:
 	UFUNCTION(Server, Reliable, BlueprintCallable)
 	void Server_SetDoping(int32 SelectFirstDoping, int32 SelectSecondDoping);
 
+	UFUNCTION(BlueprintImplementableEvent)
+	void SetControllerNS();
+
+
 	UFUNCTION()
 	void GetSelectedInformation();
 

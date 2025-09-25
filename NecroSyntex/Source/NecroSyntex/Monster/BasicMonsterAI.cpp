@@ -31,6 +31,9 @@ ABasicMonsterAI::ABasicMonsterAI()
 	bReplicates = true;
 	SetReplicateMovement(true);
 
+	NetUpdateFrequency = 20.f;
+	MinNetUpdateFrequency = 10.f;
+
 	MonsterHP = 100.0f;
 	MonsterAD = 20.0f;
 	ChaseSpeed = 0.0f;
