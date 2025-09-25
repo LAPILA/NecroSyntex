@@ -7,6 +7,9 @@
 #include "NecroSyntex/Monster/MonsterAnimInstance.h"
 #include "Components/BoxComponent.h"
 #include "Components/SphereComponent.h"
+#include "Components/CapsuleComponent.h"
+#include "NecroSyntex/PlayerController/NecroSyntexPlayerController.h"
+#include "NecroSyntex/Character/PlayerCharacter.h"
 #include <Net/UnrealNetwork.h>
 
 AEliteMonsterAI::AEliteMonsterAI()
@@ -257,4 +260,59 @@ void AEliteMonsterAI::AttackSkillStart(float delayTime)
 	GetWorld()->GetTimerManager().SetTimer(skillDelayTime, this, &AEliteMonsterAI::CallAttackSkill, delayTime, false);
 }
 
+float AEliteMonsterAI::TakeDamage_Implementation(float DamageAmount, struct FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
+{
+	CanAttack = false;
+	// 이미 죽은 상태면 처리하지 않음
+	if (MonsterHP <= 0.0f) {
+		return 0.0f;
+	}
+
+	FString DebugMsg1 = FString::Printf(TEXT("DamageAmount123 = %.2f"), DamageAmount);
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, DebugMsg1);
+
+	// 데미지를 입힌 플레이어의 컨트롤러
+	ANecroSyntexPlayerController* DPC = Cast<ANecroSyntexPlayerController>(EventInstigator);
+	APlayerCharacter* DPA = Cast<APlayerCharacter>(DPC->GetPawn());
+
+	if (!DPA) {
+		//UE_LOG(LogTemp, Warning, TEXT(""));
+		return 0.0f;
+	}
+
+	GetWorld()->GetTimerManager().SetTimer(AttackRestoreTimerHandle, this, &ABasicMonsterAI::AttackCoolTime, 0.02f, false);
+
+	MonsterHP -= DamageAmount + DPA->DopingDamageBuff;
+
+	if (!hitCool) {
+		UAnimInstance* MonsterAnim = GetMesh()->GetAnimInstance();
+		UMonsterAnimInstance* MonsterAnimInstance = Cast<UMonsterAnimInstance>(MonsterAnim);
+		if (!MonsterAnimInstance->isScreamSkillTime) {
+			hitCool = true;
+			if (DamageAmount > 0) {
+				PlayHitAnimation();
+				DelayedAnimation(0.6f);
+			}
+		}
+	}
+	// 사망 처리
+	if (MonsterHP <= 0.0f) {
+		UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+		UMonsterAnimInstance* MonsterAnim = Cast<UMonsterAnimInstance>(AnimInstance);
+
+		MonsterAnim->DieTime = true;
+
+		//MonsterStopMove();
+		MoveStop_Implementation();
+
+		GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		if (GetMesh())
+		{
+			GetMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		}
+
+		PlayDeathAnimation();
+	}
+	return DamageAmount;
+}
 

@@ -7,6 +7,8 @@
 #include "EliteMonsterAI.h"
 #include "TenAxe_MonsterAI.h"
 #include "Components/BoxComponent.h"
+#include "Components/SphereComponent.h"
+#include "NecroSyntex/Character/PlayerCharacter.h"
 #include "Components/StaticMeshComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Engine/World.h"
@@ -21,7 +23,10 @@ AM_Spawner::AM_Spawner()
 	isSpawn = false;
 
 	Spawner = CreateDefaultSubobject<UBoxComponent>(TEXT("SpawnPoint"));
+	spawnArea = CreateDefaultSubobject<USphereComponent>(TEXT("spawnArea"));
+
 	RootComponent = Spawner;
+	spawnArea->SetupAttachment(RootComponent);
 
 	CurrentMonsterCount = 0;
 	MaxMonster = 50;
@@ -30,6 +35,7 @@ AM_Spawner::AM_Spawner()
 
 	isSpawn = false;
 	isWave = false;
+	isDelete = false;
 
 	RegionTag = "Survival";
 }
@@ -39,6 +45,10 @@ void AM_Spawner::BeginPlay()
 {
 	Super::BeginPlay();
 
+	if (spawnArea) {
+		spawnArea->OnComponentBeginOverlap.AddDynamic(this, &AM_Spawner::OnSpawnAreaOverlapBegin);
+		spawnArea->OnComponentEndOverlap.AddDynamic(this, &AM_Spawner::OnSpawnAreaOverlapEnd);
+	}
 	//StartSpawnMonster(MonsterSpawnSpeed);
 }
 
@@ -78,6 +88,8 @@ void AM_Spawner::Tick(float DeltaTime)
 		//ABasicMonsterAI* PlayMonster = WRLD->SpawnActor<ABasicMonsterAI>(MyMonster[0], Location, Rotation);
 		ABasicMonsterAI* PlayMonster = SpawnRandomMonster(WRLD, Location, Rotation);
 
+		DeleteSpawner();
+
 		if (PlayMonster) {
 			CurrentMonsterCount++;
 		}
@@ -112,7 +124,7 @@ ABasicMonsterAI* AM_Spawner::SpawnRandomMonster(UWorld* World, FVector Location,
 			SpawnedMonster->MonsterHP = spawnHealth[i];
 			
 			SpawnedMonster->MonsterAD = spawnAttackPower[i];
-			SpawnedMonster->ChaseSpeed = chaseSpeed[i]; //BT에서 Speed가 조절돼서 사실 그닥 중요하지 않음.
+			//SpawnedMonster->ChaseSpeed = chaseSpeed[i]; //BT에서 Speed가 조절돼서 사실 그닥 중요하지 않음.
 			//FString DebugMsg1 = FString::Printf(TEXT("Spawn complete. ChaseSpeed = %.2f"), SpawnedMonster->ChaseSpeed);
 			//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, DebugMsg1);
 			return SpawnedMonster;
@@ -125,7 +137,7 @@ ABasicMonsterAI* AM_Spawner::SpawnRandomMonster(UWorld* World, FVector Location,
 void AM_Spawner::StartSpawnMonster(float SpawnSpeed)
 {
 	isSpawn = true;
-	MonsterSpawnSpeed = SpawnSpeed;
+	//MonsterSpawnSpeed = SpawnSpeed;
 }
 
 void AM_Spawner::StopSpawnMonster()
@@ -143,4 +155,26 @@ void AM_Spawner::DelayedFunction(float DelayTime)
 void AM_Spawner::ResetMonsterCount()
 {
 	CurrentMonsterCount = 0;
+}
+
+void AM_Spawner::DeleteSpawner()
+{
+	if (isDelete) {
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("Delete Call"));
+		Destroy();
+	}
+}
+
+void AM_Spawner::OnSpawnAreaOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	if (OtherActor->IsA(APlayerCharacter::StaticClass())) {
+		StartSpawnMonster(0);
+	}
+}
+
+void AM_Spawner::OnSpawnAreaOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
+{
+	if (OtherActor->IsA(APlayerCharacter::StaticClass())) {
+		StopSpawnMonster();
+	}
 }

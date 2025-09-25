@@ -23,94 +23,87 @@ void UMonsterSkillNotify::Notify(USkeletalMeshComponent* MeshComp, UAnimSequence
 	if (!Monster)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Monster is nullptr"));
-		return; // Monster가 nullptr이면 더 이상 진행하지 않음
+		return;
 	}
 
 	if (isScreamSkill) {
 		for (AActor* Target : Monster->GetScreamOverlappingPlayers()) {
 			APlayerCharacter* player = Cast<APlayerCharacter>(Target);
 			if (player) {
-				GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("player"));
-				//player->GetCharacterMovement()->MaxWalkSpeed = 100.0f;
-				originWalkSpeed = player->WalkSpeed;
-				originRunningSpeed = player->RunningSpeed;
-				targetPlayer.Add(player);
-				TWeakObjectPtr<APlayerCharacter>    WPlayer = player;
-				TWeakObjectPtr<UMonsterSkillNotify> WThis = this;
-				FTimerHandle Tmp;
-				if (!IsValid(player)) {
-					return;
-				}
-				if (!IsValid(player->UDC->LegEnforce)) {
-					player->GetWorldTimerManager().SetTimer(
-						Tmp,
-						FTimerDelegate::CreateLambda([WThis, WPlayer]()
-							{
-								// 0.2초 뒤 재확인
-								if (!WThis.IsValid() || !WPlayer.IsValid())
-									return;
 
-								APlayerCharacter* P = WPlayer.Get();
-								if (!IsValid(P->UDC) || !IsValid(P->UDC->LegEnforce))
-									return;
+				// 안전한 실행을 위해 약한 포인터(Weak Pointer)로 캡처합니다.
+				TWeakObjectPtr<UMonsterSkillNotify> WeakThis = this;
+				TWeakObjectPtr<APlayerCharacter> WeakPlayer = player;
+				FTimerHandle DelayTimerHandle;
 
-								WThis->Doping_LegForce(P);
-							}),
-						0.1f,
-						false
-					);
-					continue;
-				}
-				if (!IsValid(player->UDC->Painless)) {
-					return;
-				}
-				if (!IsValid(player->UDC->FinalEmber)) {
-					return;
-				}
-				if (!IsValid(player->UDC->SolidFortress)) {
-					return;
-				}
-				if (!IsValid(player->UDC->ParadoxofGuardianship)) {
-					return;
-				}
-				if (!IsValid(player->UDC->CurseofChaos)) {
-					return;
-				}
+				// 월드의 타이머 관리자를 통해 0.1초 뒤에 람다 함수를 실행하도록 예약합니다.
+				GetWorld()->GetTimerManager().SetTimer(
+					DelayTimerHandle,
+					[WeakThis, WeakPlayer]() // 람다 함수 시작
+					{
+						// 0.1초 뒤에 오브젝트가 유효한지 먼저 확인합니다.
+						if (!WeakThis.IsValid() || !WeakPlayer.IsValid())
+						{
+							return;
+						}
 
-				//다리강화 도핑
-				if (player->UDC->LegEnforce->GetBuff() || player->UDC->LegEnforce->GetDeBuff()) {
-					Doping_LegForce(player);
-				}
-				else if (player->UDC->Painless->GetBuff() || player->UDC->LegEnforce->GetDeBuff()) {
-					//무통증 도핑
-					Doping_PainLess(player);
-				}
-				else if (player->UDC->FinalEmber->GetBuff() || player->UDC->FinalEmber->GetDeBuff()) {
-					//마지막 불꽃 도핑
-					Doping_FinalEmber(player);
-				}
-				else if (player->UDC->SolidFortress->GetBuff() || player->UDC->SolidFortress->GetDeBuff()) {
-					//단단한 요새 도핑
-					Doping_SolidFortress(player);
-				}
-				else if (player->UDC->ParadoxofGuardianship->GetBuff() || player->UDC->ParadoxofGuardianship->GetDeBuff()) {
-					//수호의 역설 도핑
-					Doping_Paradox(player);
-				}
-				else if (player->UDC->CurseofChaos->GetBuff() || player->UDC->CurseofChaos->GetDeBuff()) {
-					//혼돈의 저주 도핑
-					Doping_CurseofChaos(player);
-				}
-				else {//status is not buff and debuff.
-					GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("normal status"));
-					slowWalkSpeed = FMath::Max(0.0f, originWalkSpeed - 300.0f);//로 수치 조정.
-					slowRunningSpeed = FMath::Max(0.0f, originRunningSpeed - 300.0f);
-					player->WalkSpeed = slowWalkSpeed;
-					player->RunningSpeed = slowRunningSpeed;
-					player->GetCharacterMovement()->MaxWalkSpeed = slowWalkSpeed;
-					GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Timer start"));
-					player->GetWorldTimerManager().SetTimer(RestoreHandle, this, &UMonsterSkillNotify::RestoredSpeed, 5.0f, false);
-				}
+						// 실제 포인터를 가져옵니다.
+						UMonsterSkillNotify* StrongThis = WeakThis.Get();
+						APlayerCharacter* StrongPlayer = WeakPlayer.Get();
+
+						// -----------------------------------------------------
+						// ▼ 기존의 모든 도핑 관련 로직을 이곳으로 이동시킵니다.▼
+						// -----------------------------------------------------
+						StrongThis->originWalkSpeed = StrongPlayer->WalkSpeed;
+						StrongThis->originRunningSpeed = StrongPlayer->RunningSpeed;
+						StrongThis->targetPlayer.Add(StrongPlayer);
+
+						// ... (기존 UDC 유효성 검사 로직)
+						if (!IsValid(StrongPlayer->UDC) || !IsValid(StrongPlayer->UDC->LegEnforce)) {
+							// 이 부분은 필요에 따라 유지하거나 조정할 수 있습니다.
+							// 0.1초 딜레이 후에도 유효하지 않을 경우를 대비한 코드입니다.
+							return;
+						}
+
+						// 다리강화 도핑
+						if (StrongPlayer->UDC->LegEnforce->GetBuff() || StrongPlayer->UDC->LegEnforce->GetDeBuff()) {
+							StrongThis->Doping_LegForce(StrongPlayer);
+						}
+						else if (StrongPlayer->UDC->Painless->GetBuff() || StrongPlayer->UDC->Painless->GetDeBuff()) {
+							// 무통증 도핑
+							StrongThis->Doping_PainLess(StrongPlayer);
+						}
+						else if (StrongPlayer->UDC->FinalEmber->GetBuff() || StrongPlayer->UDC->FinalEmber->GetDeBuff()) {
+							// 마지막 불꽃 도핑
+							StrongThis->Doping_FinalEmber(StrongPlayer);
+						}
+						else if (StrongPlayer->UDC->SolidFortress->GetBuff() || StrongPlayer->UDC->SolidFortress->GetDeBuff()) {
+							// 단단한 요새 도핑
+							StrongThis->Doping_SolidFortress(StrongPlayer);
+						}
+						else if (StrongPlayer->UDC->ParadoxofGuardianship->GetBuff() || StrongPlayer->UDC->ParadoxofGuardianship->GetDeBuff()) {
+							// 수호의 역설 도핑
+							StrongThis->Doping_Paradox(StrongPlayer);
+						}
+						else if (StrongPlayer->UDC->CurseofChaos->GetBuff() || StrongPlayer->UDC->CurseofChaos->GetDeBuff()) {
+							// 혼돈의 저주 도핑
+							StrongThis->Doping_CurseofChaos(StrongPlayer);
+						}
+						else { // status is not buff and debuff.
+							GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("normal status"));
+							StrongThis->slowWalkSpeed = FMath::Max(0.0f, StrongThis->originWalkSpeed - StrongThis->normalNumber); // 변수 사용
+							StrongThis->slowRunningSpeed = FMath::Max(0.0f, StrongThis->originRunningSpeed - StrongThis->normalNumber); // 변수 사용
+							StrongPlayer->WalkSpeed = StrongThis->slowWalkSpeed;
+							StrongPlayer->RunningSpeed = StrongThis->slowRunningSpeed;
+							StrongPlayer->GetCharacterMovement()->MaxWalkSpeed = StrongThis->slowWalkSpeed;
+							GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Timer start"));
+							StrongPlayer->GetWorldTimerManager().SetTimer(StrongThis->RestoreHandle, StrongThis, &UMonsterSkillNotify::RestoredSpeed, 5.0f, false);
+						}
+
+					},
+					0.1f,  // 지연 시간 (초)
+					false  // 반복하지 않음
+				);
 			}
 			else {
 				GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("nonononoeeeeee"));
@@ -345,5 +338,20 @@ void UMonsterSkillNotify::Doping_CurseofChaos(APlayerCharacter* player)
 		player->GetWorldTimerManager().SetTimer(RestoreHandle, this, &UMonsterSkillNotify::RestoredSpeed, 5.0f, false);
 	}
 }
+
+//void UMonsterSkillNotify::CallScreamSkill()
+//{
+//	
+//}
+//
+//void UMonsterSkillNotify::Multicast_CallScreamSkill()
+//{
+//
+//}
+//
+//void UMonsterSkillNotify::OnRep_IsScream()
+//{
+//
+//}
 
 
