@@ -9,6 +9,7 @@
 #include "NecroSyntex/Mission/MissionTrigger.h"
 #include "NecroSyntex/NecroSyntexGameState.h"
 #include "NecroSyntex/Character/PlayerCharacter.h"
+#include "NecroSyntex/Monster/EliteMonsterAI.h"
 #include "Net/UnrealNetwork.h"
 
 // Sets default values for this component's properties
@@ -253,13 +254,26 @@ void UMissionComp::StartBossMission()
 {
     ActiveMonsterSpawner();
 
-    GameStateAndUIUpdate(true);
+    TArray<AActor*> BossMonster;
+    UGameplayStatics::GetAllActorsOfClass(GetWorld(), AEliteMonsterAI::StaticClass(), BossMonster);
+
+    for (AActor* Actor : BossMonster)
+    {
+
+        AEliteMonsterAI* ABossMonster = Cast<AEliteMonsterAI>(Actor);
+        if (ABossMonster) {
+            ABossMonster->HealthBarVisible();
+        }
+    }
+
 
     CurrentGameMode->LevelMissionStart();
+    GameStateAndUIUpdate(true);
 }
 
 void UMissionComp::BossMissionSuccess()
 {
+    EndBossMission();
 
     CurrentGameMode->LevelMissionSuccess();
 }
@@ -273,7 +287,10 @@ void UMissionComp::BossMissionFail()
 void UMissionComp::EndBossMission()
 {
 
+    MissionSet("None", "None", 0.0f);
     CurrentGameMode->CallMissionEndEvent();
+
+    GameStateAndUIUpdate(false);
 }
 
 //Game State Update

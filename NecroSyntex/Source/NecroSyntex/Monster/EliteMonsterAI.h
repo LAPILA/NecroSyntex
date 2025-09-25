@@ -112,4 +112,13 @@ public:
 	//boss mission (by Teahyuck[pahu])
 	UFUNCTION(Server, Reliable)
 	void BossKill_MissionSuccess();
+
+	UFUNCTION(BlueprintImplementableEvent)
+	void HealthBarUpdate();
+
+	UFUNCTION(BlueprintImplementableEvent)
+	void HealthBarVisible();
+
+	UFUNCTION(BlueprintImplementableEvent)
+	void HealthBarHidden();
 };

@@ -293,6 +293,8 @@ float AEliteMonsterAI::TakeDamage_Implementation(float DamageAmount, struct FDam
 	GetWorld()->GetTimerManager().SetTimer(AttackRestoreTimerHandle, this, &ABasicMonsterAI::AttackCoolTime, 0.02f, false);
 
 	MonsterHP -= DamageAmount + DPA->DopingDamageBuff;
+	
+	HealthBarUpdate();
 
 	if (!hitCool) {
 		UAnimInstance* MonsterAnim = GetMesh()->GetAnimInstance();
@@ -308,6 +310,7 @@ float AEliteMonsterAI::TakeDamage_Implementation(float DamageAmount, struct FDam
 	// »ç¸Á Ã³¸®
 	if (MonsterHP <= 0.0f) {
 		BossKill_MissionSuccess();
+		HealthBarHidden();
 
 		UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
 		UMonsterAnimInstance* MonsterAnim = Cast<UMonsterAnimInstance>(AnimInstance);
@@ -327,4 +330,3 @@ float AEliteMonsterAI::TakeDamage_Implementation(float DamageAmount, struct FDam
 	}
 	return DamageAmount;
 }
-
