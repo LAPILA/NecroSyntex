@@ -102,5 +102,10 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void AttackSkillStart(float delayTime);
 
+	//UFUNCTION(BlueprintNativeEvent, Category = "Damage")
+	//virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
+
+	virtual float TakeDamage_Implementation(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
+	
 	FTimerHandle skillDelayTime;
 };
