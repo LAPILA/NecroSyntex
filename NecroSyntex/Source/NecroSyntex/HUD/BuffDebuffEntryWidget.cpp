@@ -2,18 +2,20 @@
 #include "Components/Image.h"
 #include "Components/ProgressBar.h"
 
-void UBuffDebuffEntryWidget::InitializeEntry(UTexture2D* InIcon, float InTotalDuration, float InStartTime)
+void UBuffDebuffEntryWidget::InitializeEntry(UTexture2D* InIcon, float InTotalDuration, float InStartTime, FLinearColor InColor)
 {
 	if (IconImage && InIcon)
 	{
 		IconImage->SetBrushFromTexture(InIcon);
 	}
-
+	IconImage->SetColorAndOpacity(InColor);
 	TotalDuration = InTotalDuration;
 	StartTime = InStartTime;
 
 	if (DurationBar)
 	{
+		DurationBar->SetFillColorAndOpacity(InColor);
+
 		DurationBar->SetVisibility(TotalDuration > 0 ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
 	}
 

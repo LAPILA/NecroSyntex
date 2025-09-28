@@ -1,3 +1,5 @@
+// BuffDebuffContainerWidget.cpp
+
 #include "BuffDebuffContainerWidget.h"
 #include "BuffDebuffEntryWidget.h"
 #include "Components/HorizontalBox.h"
@@ -7,11 +9,12 @@ void UBuffDebuffContainerWidget::UpdateBuffs(const TArray<FActiveBuff>& ActiveBu
 {
 	if (!BuffBox || !DebuffBox || !EntryWidgetClass || !BuffDataTable) return;
 
-	// 기존에 표시되던 모든 아이콘을 깨끗하게 지웁니다.
 	BuffBox->ClearChildren();
 	DebuffBox->ClearChildren();
 
-	// 서버로부터 받은 최신 버프 목록을 기반으로 아이콘을 다시 생성합니다.
+	const FLinearColor BuffColor = FLinearColor(0.f, 1.f, 0.75f, 1.f);   // 민트색 (R=0, G=1, B=0.75)
+	const FLinearColor DebuffColor = FLinearColor(1.f, 0.2f, 0.2f, 1.f); // 다홍색 (R=1, G=0.2, B=0.2)
+
 	for (const FActiveBuff& Buff : ActiveBuffs)
 	{
 		const FBuffData* BuffData = BuffDataTable->FindRow<FBuffData>(Buff.BuffID, "");
@@ -20,13 +23,14 @@ void UBuffDebuffContainerWidget::UpdateBuffs(const TArray<FActiveBuff>& ActiveBu
 		UBuffDebuffEntryWidget* NewEntry = CreateWidget<UBuffDebuffEntryWidget>(this, EntryWidgetClass);
 		if (NewEntry)
 		{
-			NewEntry->InitializeEntry(BuffData->Icon, Buff.Duration, Buff.StartTime);
-			if (GEngine)
-			{
-				FString DebugMsg = FString::Printf(TEXT("[Container] Sending to Entry -> BuffID: %s, Duration: %.1f, StartTime: %.1f"), *Buff.BuffID.ToString(), Buff.Duration, Buff.StartTime);
-				GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Cyan, DebugMsg);
-			}
-			// 버프/디버프 종류에 따라 알맞은 박스에 추가합니다.
+			// bIsBuff 값에 따라 버프/디버프 색상을 선택
+			const FLinearColor TargetColor = BuffData->bIsBuff ? BuffColor : DebuffColor;
+
+			const float ElapsedTime = GetWorld()->GetTimeSeconds() - Buff.StartTime;
+
+			// InitializeEntry 함수에 TargetColor를 함께 전달
+			NewEntry->InitializeEntry(BuffData->Icon, Buff.Duration, Buff.StartTime, TargetColor);
+
 			if (BuffData->bIsBuff)
 			{
 				BuffBox->AddChild(NewEntry);
