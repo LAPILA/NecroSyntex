@@ -79,36 +79,23 @@ void AMissionTrigger::OnBoxTriggerOverlapBegin(UPrimitiveComponent* OverlappedCo
 
 	if (APlayerCharacter* PC = Cast<APlayerCharacter>(OtherActor))
 	{
-		PlayerInTrigger++;
 
 		ANecroSyntexGameState* GS = Cast<ANecroSyntexGameState>(GetWorld()->GetGameState());
 		if (GS && !GS->OngoingMission)
 		{
 
-			if (GS->TotalPlayer == PlayerInTrigger)
+			if (ANecroSyntexGameMode* GM = Cast<ANecroSyntexGameMode>(UGameplayStatics::GetGameMode(this)))
 			{
-				if (ANecroSyntexGameMode* GM = Cast<ANecroSyntexGameMode>(UGameplayStatics::GetGameMode(this)))
-				{
-					//시작할 미션 설정
-					GM->MissionManager->MissionSet(MissionName, MissionRegion, MissionDuration);
-					GM->MissionManager->CMTSet(this);
+				//시작할 미션 설정
+				GM->MissionManager->MissionSet(MissionName, MissionRegion, MissionDuration);
+				GM->MissionManager->CMTSet(this);
 
-					//미션 시작 카운터 다운 시작 (도중에 영역 나가면 타이머 취소 및 초기화)
-					GM->MissionManager->MissionCountdownStart();
+				//미션 시작 카운터 다운 시작 (도중에 영역 나가면 타이머 취소 및 초기화)
+				GM->MissionManager->MissionCountdownStart();
 
-					GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Mission Trigger 3"));
+				TriggerMakeNoise();
+				OnTriggerTimer = true;
 
-					/*GetWorld()->GetTimerManager().SetTimer(
-						TriggerTimer,
-						[this]() { TriggerDestroy(); },
-						GM->MissionManager->count + 1.0f,
-						false
-					);*/
-
-					TriggerMakeNoise();
-					OnTriggerTimer = true;
-
-				}
 			}
 		}
 	}
@@ -123,19 +110,14 @@ void AMissionTrigger::OnBoxTriggerOverlapEnd(UPrimitiveComponent* OverlappedComp
 
 	if (APlayerCharacter* PC = Cast<APlayerCharacter>(OtherActor))
 	{
-		PlayerInTrigger--;
 		ANecroSyntexGameState* GS = Cast<ANecroSyntexGameState>(GetWorld()->GetGameState());
 		if (GS)
 		{
-			if (GS->TotalPlayer > PlayerInTrigger)
-			{
-				if (GS->MissionCountDownBool == true) {
-					if (ANecroSyntexGameMode* GM = Cast<ANecroSyntexGameMode>(UGameplayStatics::GetGameMode(this)))
-					{
-						GM->MissionManager->MissionCountdownCancel();
-						//GetWorld()->GetTimerManager().ClearTimer(TriggerTimer);
-						OnTriggerTimer = false;
-					}
+			if (GS->MissionCountDownBool == true) {
+				if (ANecroSyntexGameMode* GM = Cast<ANecroSyntexGameMode>(UGameplayStatics::GetGameMode(this)))
+				{
+					GM->MissionManager->MissionCountdownCancel();
+					OnTriggerTimer = false;
 				}
 			}
 		}
