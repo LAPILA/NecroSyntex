@@ -8,6 +8,7 @@
 #include "Sound/SoundCue.h"
 #include "NecroSyntex\Monster\BasicMonsterAI.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "GameFramework/PlayerState.h"
 
 void AShotgun::FireShotgun(const TArray<FVector_NetQuantize>& HitTargets)
 {
@@ -173,16 +174,32 @@ void AShotgun::FireShotgun(const TArray<FVector_NetQuantize>& HitTargets)
 
 		if (!HasAuthority() && bUseServerSideRewind)
 		{
-			PlayerOwnerCharacter = PlayerOwnerCharacter == nullptr ? Cast<APlayerCharacter>(OwnerPawn) : PlayerOwnerCharacter;
-			NecroSyntexPlayerOwnerController = NecroSyntexPlayerOwnerController == nullptr ? Cast<ANecroSyntexPlayerController>(InstigatorController) : NecroSyntexPlayerOwnerController;
-			if (NecroSyntexPlayerOwnerController && PlayerOwnerCharacter && PlayerOwnerCharacter->GetLagCompensation() && PlayerOwnerCharacter->IsLocallyControlled())
+			if (PlayerOwnerCharacter == nullptr)
 			{
-				PlayerOwnerCharacter->GetLagCompensation()->ShotgunServerScoreRequest(
+				PlayerOwnerCharacter = Cast<APlayerCharacter>(OwnerPawn);
+			}
+			if (NecroSyntexPlayerOwnerController == nullptr)
+			{
+				NecroSyntexPlayerOwnerController = Cast<ANecroSyntexPlayerController>(InstigatorController);
+			}
+
+			ULagCompensationComponent* LagComp = (PlayerOwnerCharacter) ? PlayerOwnerCharacter->GetLagCompensation() : nullptr;
+
+			if (NecroSyntexPlayerOwnerController &&
+				LagComp &&
+				PlayerOwnerCharacter->IsLocallyControlled() &&
+				NecroSyntexPlayerOwnerController->GetPlayerState<APlayerState>() != nullptr)
+			{
+				LagComp->ShotgunServerScoreRequest(
 					HitCharacters,
 					Start,
 					HitTargets,
 					NecroSyntexPlayerOwnerController->GetServerTime() - NecroSyntexPlayerOwnerController->SingleTripTime
 				);
+			}
+			else
+			{
+				UE_LOG(LogTemp, Warning, TEXT("AShotgun::FireShotgun - SSR request skipped: Controller, LagComp, or PlayerState is not ready."));
 			}
 		}
 	}
