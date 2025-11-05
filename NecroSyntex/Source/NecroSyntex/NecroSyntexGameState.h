@@ -50,6 +50,9 @@ public:
 	int32 SurvivingPlayer = 0;
 
 	UPROPERTY(Replicated, BlueprintReadOnly)
+	int32 DeathCount = 0;
+
+	UPROPERTY(Replicated, BlueprintReadOnly)
 	float MissionCountDown;
 
 	UPROPERTY(Replicated, BlueprintReadOnly)

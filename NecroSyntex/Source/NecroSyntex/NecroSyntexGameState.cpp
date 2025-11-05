@@ -19,6 +19,7 @@ void ANecroSyntexGameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>
 	DOREPLIFETIME(ANecroSyntexGameState, CurrentMission);
 	DOREPLIFETIME(ANecroSyntexGameState, TotalPlayer);
 	DOREPLIFETIME(ANecroSyntexGameState, SurvivingPlayer);
+	DOREPLIFETIME(ANecroSyntexGameState, DeathCount);
 	DOREPLIFETIME(ANecroSyntexGameState, MissionCountDown);
 	DOREPLIFETIME(ANecroSyntexGameState, MissionCountDownBool);
 	DOREPLIFETIME(ANecroSyntexGameState, OngoingMission);
@@ -70,8 +71,9 @@ void ANecroSyntexGameState::PlayerDeathUpdate_Implementation()
 {
 
 	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Player DIe!"));
+	DeathCount++;
 	SurvivingPlayer--;
-	if (SurvivingPlayer <= 0)
+	if (DeathCount == PlayerArray.Num())
 	{
 		ANecroSyntexGameMode* NecroSyntexGameMode = GetWorld()->GetAuthGameMode<ANecroSyntexGameMode>();
 		NecroSyntexGameMode->MissionManager->CurrentMissionFail();
@@ -90,4 +92,5 @@ void ANecroSyntexGameState::PlayerDeathUpdate_Implementation()
 void ANecroSyntexGameState::PlayerReviveUpdate_Implementation()
 {
 	SurvivingPlayer++;
+	DeathCount--;
 }
