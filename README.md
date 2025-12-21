@@ -9,6 +9,15 @@
   <img src="https://img.shields.io/badge/Unreal%20Engine-5.3-blue?style=for-the-badge&logo=unrealengine" alt="Unreal Engine 5.3">
   <img src="https://img.shields.io/badge/C++-17-blue?style=for-the-badge&logo=cplusplus" alt="C++17">
   <img src="https://img.shields.io/badge/Network-Multiplayer-brightgreen?style=for-the-badge" alt="Multiplayer">
+  <a href="https://store.steampowered.com/app/4026230/NECROSYNTEX/">
+    <img src="https://img.shields.io/badge/Steam-Store-black?style=for-the-badge&logo=steam" alt="Steam Store">
+  </a>
+</p>
+
+<p align="center">
+  <a href="https://store.steampowered.com/app/4026230/NECROSYNTEX/">
+    <strong>🎮 Steam 상점 페이지 바로가기 (Click)</strong>
+  </a>
 </p>
 
 ---
@@ -33,7 +42,7 @@
 *<p align="center">다양한 총기와 도핑 스킬을 활용한 전략적인 PVE 전투.</p>*
 </div>
 
-다양한 총기를 사용한 **3인칭 슈팅(TPS)** 전투를 기반으로, '도핑' 시스템을 통해 **캐릭터의 능력치를 일시적으로 강화**하여 위기를 극복하는 전략적인 플레이가 가능합니다. 
+다양한 총기를 사용한 **3인칭 슈팅(TPS)** 전투를 기반으로, '도핑' 시스템을 통해 **캐릭터의 능력치를 일시적으로 강화**하여 위기를 극복하는 전략적인 플레이가 가능합니다. 
 모든 발사, 피격 판정, 버프 적용은 **서버 권위적**으로 처리되며, `LagCompensationComponent`를 통해 클라이언트의 랙을 보상하여 정확한 피격 판정을 보장합니다.
 
 <br>
@@ -115,7 +124,7 @@
                 <li>미션의 성공/실패 조건 판정 및 클라이언트 UI 동기화</li>
               </ul>
           </li>
-          <li><strong>게임플레이 시스템 블루프rint 연동 및 확장</strong></li>
+          <li><strong>게임플레이 시스템 블루프린트 연동 및 확장</strong></li>
         </ul>
       </td>
     </tr>
